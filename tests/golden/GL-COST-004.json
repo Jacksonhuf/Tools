@@ -1,0 +1,21 @@
+{
+  "golden_id": "GL-COST-004",
+  "tc_ids": ["TC-UNIT-COST-004"],
+  "engine": "cost_reverse",
+  "notes": "Given publish from GL-COST-003, implied margin should round-trip to 20%",
+  "input": {
+    "landed_cost_mxn": 1000,
+    "publish_price_mxn": 1538.46,
+    "fee_template": {
+      "commission_pct_of_price": 15,
+      "payment_pct_of_price": 0,
+      "fulfillment_fixed_mxn": 0
+    },
+    "tax_strategy": "PRICE_EXCLUDES_IVA",
+    "iva_rate": 0
+  },
+  "expected": {
+    "implied_margin_pct": 20,
+    "tolerance": 0.01
+  }
+}

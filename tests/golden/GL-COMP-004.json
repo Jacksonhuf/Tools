@@ -1,0 +1,13 @@
+{
+  "golden_id": "GL-COMP-004",
+  "tc_ids": ["TC-UNIT-COMP-004"],
+  "engine": "aggregate_anchor",
+  "input": {
+    "anchor_type": "median",
+    "observations_mxn": [100, 200, 300],
+    "channel": "MERCADO_LIBRE"
+  },
+  "expected": {
+    "anchor_price_mxn": 200
+  }
+}

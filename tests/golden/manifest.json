@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "fixtures": [
+    "GL-COST-001.json",
+    "GL-COST-002.json",
+    "GL-COST-003.json",
+    "GL-COST-004.json",
+    "GL-COST-005.json",
+    "GL-COST-006.json",
+    "GL-COMP-001.json",
+    "GL-COMP-002.json",
+    "GL-COMP-003.json",
+    "GL-COMP-004.json",
+    "GL-COMP-006.json",
+    "GL-FLOOR-001.json",
+    "GL-FLOOR-002.json"
+  ]
+}

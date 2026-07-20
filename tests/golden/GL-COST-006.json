@@ -1,0 +1,13 @@
+{
+  "golden_id": "GL-COST-006",
+  "tc_ids": ["TC-UNIT-COST-006"],
+  "engine": "round_price",
+  "notes": "END_99: round down to nearest x.xx99 below raw price",
+  "input": {
+    "raw_price_mxn": 1538.46,
+    "rounding_rule": { "type": "END_99", "decimals": 2 }
+  },
+  "expected": {
+    "publish_price_mxn": 1537.99
+  }
+}

@@ -24,7 +24,7 @@
 | E2E | 关键用户路径、双通道 UI | Playwright |
 | NFR | 性能、安全、熔断 | k6、渗透扫描清单 |
 
-黄金用例文件路径（实现任务）：`tests/golden/*.json`，每条注明 `golden_id` 与本文 TC 对应。
+黄金用例文件路径：`tests/golden/*.json`（清单见 `tests/golden/manifest.json`），每条注明 `golden_id` 与本文 TC 对应。
 
 ---
 

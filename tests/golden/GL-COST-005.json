@@ -1,0 +1,27 @@
+{
+  "golden_id": "GL-COST-005",
+  "tc_ids": ["TC-UNIT-COST-005"],
+  "engine": "cost_forward",
+  "notes": "PRICE_INCLUDES_IVA: list=1160 => net_of_tax_base=1000, iva_amount=160 at 16%",
+  "input": {
+    "pricing_mode": "cost",
+    "landed_cost_mxn": 500,
+    "target_margin_pct": 0,
+    "fee_template": {
+      "commission_pct_of_price": 0,
+      "payment_pct_of_price": 0,
+      "fulfillment_fixed_mxn": 0
+    },
+    "tax_strategy": "PRICE_INCLUDES_IVA",
+    "iva_rate": 0.16,
+    "rounding_rule": { "type": "NONE", "decimals": 2 },
+    "override_net_before_tax_mxn": 1000
+  },
+  "expected": {
+    "publish_price_mxn": 1160,
+    "layers": {
+      "IVA_DISPLAY": { "amount_mxn": 160 },
+      "LIST_PRICE": { "amount_mxn": 1160 }
+    }
+  }
+}

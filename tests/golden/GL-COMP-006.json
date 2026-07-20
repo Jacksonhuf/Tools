@@ -1,0 +1,23 @@
+{
+  "golden_id": "GL-COMP-006",
+  "tc_ids": ["TC-UNIT-COMP-006"],
+  "engine": "competitive",
+  "notes": "Only MERCADO_LIBRE observations participate when channel is ML",
+  "input": {
+    "pricing_mode": "competitive_with_floor",
+    "channel": "MERCADO_LIBRE",
+    "anchor_type": "min",
+    "competitor_observations": [
+      { "channel": "MERCADO_LIBRE", "effective_price_mxn": 450 },
+      { "channel": "AMAZON_MX", "effective_price_mxn": 399 }
+    ],
+    "offset": { "type": "PERCENT", "value": 0 },
+    "floor_price_mxn": 300,
+    "rounding_rule": { "type": "NONE", "decimals": 2 }
+  },
+  "expected": {
+    "anchor_price_mxn": 450,
+    "publish_price_mxn": 450,
+    "ignored_channels": ["AMAZON_MX"]
+  }
+}

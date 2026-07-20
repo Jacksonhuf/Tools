@@ -1,0 +1,12 @@
+{
+  "golden_id": "GL-COMP-003",
+  "tc_ids": ["TC-UNIT-COMP-003"],
+  "engine": "apply_offset",
+  "input": {
+    "anchor_price_mxn": 1000,
+    "offset": { "type": "PERCENT", "value": -1 }
+  },
+  "expected": {
+    "match_price_mxn": 990
+  }
+}

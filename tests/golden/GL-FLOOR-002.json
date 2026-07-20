@@ -1,0 +1,34 @@
+{
+  "golden_id": "GL-FLOOR-002",
+  "tc_ids": ["TC-UNIT-FLOOR-002"],
+  "engine": "floor",
+  "notes": "Increase Amazon FBA fixed fee => floor should increase",
+  "input": {
+    "landed_cost_mxn": 600,
+    "min_margin_pct": 12,
+    "channel": "AMAZON_MX",
+    "fee_template_variants": [
+      {
+        "label": "fba_low",
+        "commission_pct_of_price": 15,
+        "payment_pct_of_price": 0,
+        "fulfillment_fixed_mxn": 30
+      },
+      {
+        "label": "fba_high",
+        "commission_pct_of_price": 15,
+        "payment_pct_of_price": 0,
+        "fulfillment_fixed_mxn": 80
+      }
+    ],
+    "tax_strategy": "PRICE_EXCLUDES_IVA",
+    "iva_rate": 0,
+    "rounding_rule": { "type": "NONE", "decimals": 2 }
+  },
+  "expected": {
+    "floor_fba_low_mxn": 862.33,
+    "floor_fba_high_mxn": 931.51,
+    "assert": "floor_fba_high_mxn > floor_fba_low_mxn",
+    "tolerance": 0.02
+  }
+}

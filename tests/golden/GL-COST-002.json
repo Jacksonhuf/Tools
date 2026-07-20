@@ -1,0 +1,19 @@
+{
+  "golden_id": "GL-COST-002",
+  "tc_ids": ["TC-UNIT-COST-002"],
+  "engine": "landed_cost",
+  "notes": "duty = cogs_mxn * 5%; landed = 1000 + 50",
+  "input": {
+    "cogs_amount": 1000,
+    "cogs_currency": "MXN",
+    "fx": { "base": "MXN", "quote": "MXN", "rate": 1, "buffer_pct": 0 },
+    "freight_alloc_mxn": 0,
+    "tariff_rate": 0.05,
+    "customs_fee_mxn": 0
+  },
+  "expected": {
+    "cogs_mxn": 1000,
+    "duty_mxn": 50,
+    "landed_cost_mxn": 1050
+  }
+}

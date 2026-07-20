@@ -99,7 +99,7 @@
 | ID | 任务 | 优先级 | 依赖 | 验收标准 / 测试 |
 |----|------|--------|------|-----------------|
 | P0-E7-01 | 落地 `tests/golden/GL-COST-*.json`（test-cases §17） | P0 | P0-E4 | ci-unit-engine 全绿 |
-| P0-E7-02 | 落地 `tests/golden/GL-COMP-*.json` | P0 | P0-E4-03 | TC-UNIT-COMP-* |
+| P0-E7-02 | 落地 `tests/golden/GL-COMP-*.json` + GL-FLOOR | P0 | P0-E4-03 | TC-UNIT-COMP-* / FLOOR |
 | P0-E7-03 | 引擎变更门禁：PR 必跑 ci-unit-engine | P0 | P0-E1-07 | 分支保护 |
 | P0-E7-04 | 术语表 i18n key（瀑布层、IVA） | P1 | P0-E6-02 | 三语完整 |
 
@@ -305,3 +305,4 @@
 |------|------|------|
 | v1.0 | 2026-07-20 | 初版，对齐 PRD v1.0 |
 | v1.1 | 2026-07-20 | 新增 SDD/测试追溯；P0-E7/E8、DOC、各阶段 TC 验收列 |
+| v1.1.1 | 2026-07-20 | 黄金用例 JSON 已落盘 `tests/golden/`（13 fixtures） |
