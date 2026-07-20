@@ -105,7 +105,27 @@
 | **阅读** | SDD §11；任务 P0-E6-01、02、05、06 |
 | **实现** | `apps/web`（Vite + React + i18next）：定价页、瀑布图、毛利滑杆/竞品价、模拟与发布；BFF CORS；`tests/web/waterfall.test.ts` |
 | **测试** | `npm test` — **26 passed**；`npm run build` 含 web |
-| **下一步** | Loop 5：PostgreSQL + SKU CRUD（P0-E1-04 / P0-E2-01）或双列 ML/Amazon UI（P1-E3-05） |
+| **下一步** | Loop 5：PostgreSQL |
+
+### Loop 5 — PostgreSQL 与仓储层（P0-E1-04 / P0-E4-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-20 |
+| **阅读** | SDD §5.1、§5.3、§5.5 |
+| **实现** | `packages/db`、`CatalogRepository`、docker-compose、BFF 启动 migrate+seed |
+| **测试** | `npm test` — **28 passed**（含 pg-mem 集成） |
+| **下一步** | Loop 6：SKU API + 双列 UI |
+
+### Loop 6 — SKU CRUD 与双渠道瀑布（P0-E2-01 / P1-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-20 |
+| **阅读** | SDD §5.1、§9.3；任务 P0-E2-01、P1-E3-05、P0-E6-06 |
+| **实现** | `GET/PATCH /api/v1/skus`；Amazon listing seed；Web 双列 ML/Amazon、`ChannelPricingColumn`、分渠道竞品价与发布 |
+| **测试** | `npm test` — **31 passed** |
+| **下一步** | Loop 7：P1 ML/Amazon 授权只读 或 调价单 API（P0-E5-01） |
 
 ---
 
@@ -131,3 +151,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.1 | 2026-07-20 | Loop 2 |
 | v1.2 | 2026-07-20 | Loop 3 |
 | v1.3 | 2026-07-20 | Loop 4 |
+| v1.4 | 2026-07-20 | Loop 5 |

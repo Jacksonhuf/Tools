@@ -113,4 +113,27 @@ export class PostgresCatalogRepository implements CatalogRepository {
     const r = await this.pool.query(`SELECT COUNT(*)::int AS c FROM price_versions`);
     return r.rows[0].c as number;
   }
+
+  async listSkus(tenantId: string): Promise<import("../fixtures.js").SkuRecord[]> {
+    const r = await this.pool.query(
+      `SELECT * FROM skus WHERE tenant_id = $1 ORDER BY sku_code`,
+      [tenantId]
+    );
+    return r.rows.map((row) => rowToSku(row));
+  }
+
+  async updateSkuLandedCost(
+    tenantId: string,
+    skuId: string,
+    landed_cost_mxn: number
+  ) {
+    const r = await this.pool.query(
+      `UPDATE skus SET landed_cost_mxn = $3
+       WHERE tenant_id = $1 AND id = $2
+       RETURNING *`,
+      [tenantId, skuId, landed_cost_mxn]
+    );
+    if (r.rowCount === 0) return undefined;
+    return rowToSku(r.rows[0]);
+  }
 }

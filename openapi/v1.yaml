@@ -5,7 +5,26 @@ info:
   description: Mercado Libre + Amazon MX cross-border pricing (SDD §10)
 servers:
   - url: http://localhost:3000
-paths:
+  paths:
+  /api/v1/skus:
+    get:
+      summary: List SKUs (P0-E2-01)
+      responses:
+        "200":
+          description: SKU list
+    patch:
+      summary: Not used at collection level
+  /api/v1/skus/{skuId}:
+    patch:
+      summary: Update SKU landed cost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                landed_cost_mxn:
+                  type: number
   /health:
     get:
       summary: Health check

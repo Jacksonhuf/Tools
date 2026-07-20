@@ -3,6 +3,7 @@ import {
   DEMO_SKU,
   getListing as memGetListing,
   getSku as memGetSku,
+  listSkusForTenant,
   type ListingRecord,
   type SkuRecord,
 } from "../fixtures.js";
@@ -54,8 +55,27 @@ export class MemoryCatalogRepository implements CatalogRepository {
     return countVersions();
   }
 
+  async listSkus(tenantId: string): Promise<SkuRecord[]> {
+    return listSkusForTenant(tenantId);
+  }
+
+  async updateSkuLandedCost(
+    tenantId: string,
+    skuId: string,
+    landed_cost_mxn: number
+  ): Promise<SkuRecord | undefined> {
+    const sku = await this.getSku(tenantId, skuId);
+    if (!sku) return undefined;
+    sku.landed_cost_mxn = landed_cost_mxn;
+    if (skuId === DEMO_SKU.id && tenantId === DEMO_SKU.tenant_id) {
+      DEMO_SKU.landed_cost_mxn = landed_cost_mxn;
+    }
+    return sku;
+  }
+
   resetForTests(): void {
     resetVersionsForTests();
+    DEMO_SKU.landed_cost_mxn = 1000;
   }
 }
 

@@ -54,13 +54,29 @@ export const DEMO_LISTING_ML: ListingRecord = {
   channel: "MERCADO_LIBRE",
 };
 
+export const DEMO_LISTING_AMAZON: ListingRecord = {
+  id: "listing-amz-001",
+  sku_id: DEMO_SKU.id,
+  channel: "AMAZON_MX",
+};
+
+const LISTINGS = [DEMO_LISTING_ML, DEMO_LISTING_AMAZON];
+
 export function getListing(
   tenantId: string,
   listingId: string
 ): (ListingRecord & { sku: SkuRecord }) | undefined {
   if (tenantId !== DEMO_SKU.tenant_id) return undefined;
-  if (listingId !== DEMO_LISTING_ML.id) return undefined;
-  return { ...DEMO_LISTING_ML, sku: DEMO_SKU };
+  const listing = LISTINGS.find((l) => l.id === listingId);
+  if (!listing) return undefined;
+  const sku = getSku(tenantId, listing.sku_id);
+  if (!sku) return undefined;
+  return { ...listing, sku };
+}
+
+export function listSkusForTenant(tenantId: string): SkuRecord[] {
+  const sku = getSku(tenantId, DEMO_SKU.id);
+  return sku ? [sku] : [];
 }
 
 export function getSku(

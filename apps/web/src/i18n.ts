@@ -25,6 +25,9 @@ const resources = {
       publishOk: "Published version",
       publishFail: "Publish rejected",
       landedCost: "Landed cost",
+      saveLanded: "Save landed cost",
+      landedSaved: "Landed cost updated",
+      simulateBoth: "Simulate both channels",
     },
   },
   "zh-CN": {
@@ -50,6 +53,9 @@ const resources = {
       publishOk: "已发布版本",
       publishFail: "发布被拒绝",
       landedCost: "到岸成本",
+      saveLanded: "保存到岸成本",
+      landedSaved: "到岸成本已更新",
+      simulateBoth: "双渠道模拟",
     },
   },
   "es-MX": {
@@ -75,6 +81,9 @@ const resources = {
       publishOk: "Versión publicada",
       publishFail: "Publicación rechazada",
       landedCost: "Costo landed",
+      saveLanded: "Guardar costo landed",
+      landedSaved: "Costo actualizado",
+      simulateBoth: "Simular ambos canales",
     },
   },
 };

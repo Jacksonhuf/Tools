@@ -103,6 +103,10 @@ export async function seedDemoData(connectionString: string): Promise<void> {
       `INSERT INTO listings (id, tenant_id, sku_id, channel) VALUES ($1, $2, $3, $4)`,
       ["listing-ml-001", "tenant-demo", "demo-sku-001", "MERCADO_LIBRE"]
     );
+    await client.query(
+      `INSERT INTO listings (id, tenant_id, sku_id, channel) VALUES ($1, $2, $3, $4)`,
+      ["listing-amz-001", "tenant-demo", "demo-sku-001", "AMAZON_MX"]
+    );
   } finally {
     await client.end();
   }

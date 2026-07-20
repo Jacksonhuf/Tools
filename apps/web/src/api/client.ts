@@ -1,9 +1,14 @@
 const DEMO_SKU = "demo-sku-001";
-const DEMO_LISTING_ML = "listing-ml-001";
+
+const LISTING_BY_CHANNEL = {
+  MERCADO_LIBRE: "listing-ml-001",
+  AMAZON_MX: "listing-amz-001",
+} as const;
+
 const AUTH = "dev-token";
 const TENANT = "tenant-demo";
 
-export type Channel = "MERCADO_LIBRE" | "AMAZON_MX";
+export type Channel = keyof typeof LISTING_BY_CHANNEL;
 
 function headers(locale: string): HeadersInit {
   return {
@@ -14,10 +19,34 @@ function headers(locale: string): HeadersInit {
   };
 }
 
-export async function fetchPricingContext(
+export async function fetchSkus(locale: string) {
+  const res = await fetch(`/api/v1/skus`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`skus ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{
+      id: string;
+      sku_code: string;
+      name: string;
+      landed_cost_mxn: number;
+    }>;
+  }>;
+}
+
+export async function patchSkuLandedCost(
   locale: string,
-  channel: Channel
+  skuId: string,
+  landed_cost_mxn: number
 ) {
+  const res = await fetch(`/api/v1/skus/${skuId}`, {
+    method: "PATCH",
+    headers: headers(locale),
+    body: JSON.stringify({ landed_cost_mxn }),
+  });
+  if (!res.ok) throw new Error(`patch sku ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPricingContext(locale: string, channel: Channel) {
   const res = await fetch(
     `/api/v1/skus/${DEMO_SKU}/pricing-context?channel=${channel}`,
     { headers: headers(locale) }
@@ -41,16 +70,15 @@ export async function simulatePricing(
 
 export async function publishPrice(
   locale: string,
+  channel: Channel,
   explicit_price_mxn: number
 ) {
-  const res = await fetch(
-    `/api/v1/listings/${DEMO_LISTING_ML}/price-versions`,
-    {
-      method: "POST",
-      headers: headers(locale),
-      body: JSON.stringify({ explicit_price_mxn, reason: "web-ui" }),
-    }
-  );
+  const listingId = LISTING_BY_CHANNEL[channel];
+  const res = await fetch(`/api/v1/listings/${listingId}/price-versions`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ explicit_price_mxn, reason: "web-ui" }),
+  });
   const json = await res.json();
   return { ok: res.ok, status: res.status, json };
 }

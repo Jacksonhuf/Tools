@@ -141,6 +141,53 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/skus", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skus = await catalog.listSkus(tenantId);
+    const locale = c.get("locale");
+    return c.json({
+      items: skus.map((s) => ({
+        id: s.id,
+        sku_code: s.sku_code,
+        name: s.name,
+        landed_cost_mxn: s.landed_cost_mxn,
+        landed_cost: formatMoney({
+          locale,
+          currency: "MXN",
+          amount: s.landed_cost_mxn,
+        }),
+      })),
+    });
+  });
+
+  app.patch("/api/v1/skus/:skuId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as { landed_cost_mxn?: number };
+    if (body.landed_cost_mxn === undefined || body.landed_cost_mxn < 0) {
+      throw new HTTPException(400, { message: "INVALID_LANDED_COST" });
+    }
+    const updated = await catalog.updateSkuLandedCost(
+      tenantId,
+      c.req.param("skuId"),
+      body.landed_cost_mxn
+    );
+    if (!updated) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const locale = c.get("locale");
+    return c.json({
+      id: updated.id,
+      sku_code: updated.sku_code,
+      name: updated.name,
+      landed_cost_mxn: updated.landed_cost_mxn,
+      landed_cost: formatMoney({
+        locale,
+        currency: "MXN",
+        amount: updated.landed_cost_mxn,
+      }),
+    });
+  });
+
   app.post("/api/v1/skus/:skuId/pricing/simulate", async (c) => {
     const tenantId = c.get("tenantId");
     const sku = await catalog.getSku(tenantId, c.req.param("skuId"));

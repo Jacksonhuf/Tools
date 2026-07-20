@@ -11,4 +11,5 @@
 | [docs/development-progress.md](docs/development-progress.md) | **Development Loop 进度** |
 | [tests/golden/](tests/golden/) | 定价引擎黄金用例 JSON（13 条） |
 | [openapi/v1.yaml](openapi/v1.yaml) | BFF OpenAPI 初稿 |
-| [apps/web/](apps/web/) | Web 管理端（瀑布、模拟、三语） |
+| [docker-compose.yml](docker-compose.yml) | 本地 PostgreSQL |
+| [packages/db/](packages/db/) | 迁移与 seed |

@@ -19,6 +19,12 @@ export interface CatalogRepository {
     reason?: string;
   }): Promise<PriceVersionRecord>;
   countVersions(): Promise<number>;
+  listSkus(tenantId: string): Promise<SkuRecord[]>;
+  updateSkuLandedCost(
+    tenantId: string,
+    skuId: string,
+    landed_cost_mxn: number
+  ): Promise<SkuRecord | undefined>;
   resetForTests?(): void;
 }
 
