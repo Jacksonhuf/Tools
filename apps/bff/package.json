@@ -9,11 +9,14 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@mx-pricing/db": "*",
     "@mx-pricing/i18n-format": "*",
     "@mx-pricing/pricing-engine": "*",
-    "hono": "^4.6.12"
+    "hono": "^4.6.12",
+    "pg": "^8.13.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1"
+    "@types/node": "^22.10.1",
+    "@types/pg": "^8.11.10"
   }
 }

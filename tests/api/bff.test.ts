@@ -1,13 +1,18 @@
 import { describe, expect, it, beforeEach } from "vitest";
-import { createApp } from "../../apps/bff/src/app.js";
-import { countVersions, resetVersionsForTests } from "../../apps/bff/src/version-store.js";
+import { createTestApp } from "../../apps/bff/src/app.js";
 
 const AUTH = { Authorization: "Bearer dev-token" };
 const TENANT = { "X-Tenant-Id": "tenant-demo" };
 
+function testApp() {
+  const { app, catalog } = createTestApp();
+  catalog.resetForTests?.();
+  return { app, catalog };
+}
+
 describe("TC-API-AUTH-001", () => {
   it("returns 401 without token", async () => {
-    const app = createApp();
+    const { app } = testApp();
     const res = await app.request("/api/v1/skus/demo-sku-001/pricing-context");
     expect(res.status).toBe(401);
   });
@@ -15,7 +20,7 @@ describe("TC-API-AUTH-001", () => {
 
 describe("TC-API-AUTH-002 tenant isolation", () => {
   it("returns 404 for wrong tenant", async () => {
-    const app = createApp();
+    const { app } = testApp();
     const res = await app.request("/api/v1/skus/demo-sku-001/pricing-context", {
       headers: {
         ...AUTH,
@@ -28,7 +33,7 @@ describe("TC-API-AUTH-002 tenant isolation", () => {
 
 describe("TC-API-VER-004 pricing-context", () => {
   it("returns active and formatted amounts", async () => {
-    const app = createApp();
+    const { app } = testApp();
     const res = await app.request(
       "/api/v1/skus/demo-sku-001/pricing-context?channel=MERCADO_LIBRE",
       { headers: { ...AUTH, ...TENANT, "Accept-Language": "es-MX" } }
@@ -46,10 +51,8 @@ describe("TC-API-VER-004 pricing-context", () => {
 });
 
 describe("TC-API-VER-005 simulate does not persist", () => {
-  beforeEach(() => resetVersionsForTests());
-
   it("POST simulate twice without new version rows", async () => {
-    const app = createApp();
+    const { app, catalog } = testApp();
     const body = JSON.stringify({
       channel: "MERCADO_LIBRE",
       pricing_mode: "cost",
@@ -70,15 +73,13 @@ describe("TC-API-VER-005 simulate does not persist", () => {
       headers,
       body,
     });
-    expect(countVersions()).toBe(0);
+    expect(await catalog.countVersions()).toBe(0);
   });
 });
 
 describe("TC-API-ADJ-003 price-versions publish", () => {
-  beforeEach(() => resetVersionsForTests());
-
   it("creates active version when guards pass", async () => {
-    const app = createApp();
+    const { app, catalog } = testApp();
     const res = await app.request("/api/v1/listings/listing-ml-001/price-versions", {
       method: "POST",
       headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
@@ -91,11 +92,11 @@ describe("TC-API-ADJ-003 price-versions publish", () => {
     const json = (await res.json()) as { version_id: string; state: string };
     expect(json.state).toBe("active");
     expect(json.version_id).toMatch(/^ver-/);
-    expect(countVersions()).toBe(1);
+    expect(await catalog.countVersions()).toBe(1);
   });
 
   it("rejects price below min margin", async () => {
-    const app = createApp();
+    const { app } = testApp();
     const res = await app.request("/api/v1/listings/listing-ml-001/price-versions", {
       method: "POST",
       headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
@@ -107,7 +108,7 @@ describe("TC-API-ADJ-003 price-versions publish", () => {
 
 describe("simulate guard on low margin", () => {
   it("returns BELOW_MIN_MARGIN when target margin under policy", async () => {
-    const app = createApp();
+    const { app } = testApp();
     const res = await app.request("/api/v1/skus/demo-sku-001/pricing/simulate", {
       method: "POST",
       headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },

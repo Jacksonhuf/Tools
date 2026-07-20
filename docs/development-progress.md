@@ -51,7 +51,10 @@
 | P0-E4-06 | 部分 | Loop 1 |
 | P0-E4-07 | 完成 | Loop 2 |
 | P0-E5-05 | 部分 | Loop 3（`POST .../price-versions`） |
-| P0-E6-03 | 完成 | Loop 2 |
+| P0-E6-01 | 部分 | Loop 4（Vite + React） |
+| P0-E6-02 | 部分 | Loop 4（zh/en/es-MX） |
+| P0-E6-05 | 完成 | Loop 4 |
+| P0-E6-06 | 部分 | Loop 4（竞争模式表单） |
 | P0-E7-01 | 完成 | Loop 1 |
 | P0-E7-02 | 完成 | Loop 1 |
 | P0-E7-03 | 完成 | Loop 1 |
@@ -89,7 +92,17 @@
 | **阅读** | SDD §5.5、§10.3；test-cases §5 TC-INT-VER-002 |
 | **实现** | `POST /api/v1/listings/{listingId}/price-versions`；Guard 422；`version-store` supersede；`pricing-context` 读 active version |
 | **测试** | `npm test` — **24 passed** |
-| **下一步** | Loop 4：Web 瀑布 UI（P0-E6-05）或 PostgreSQL（P0-E1-04） |
+| **下一步** | Loop 4：Web UI |
+
+### Loop 4 — Web 瀑布与三语（P0-E6-01 / P0-E6-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-20 |
+| **阅读** | SDD §11；任务 P0-E6-01、02、05、06 |
+| **实现** | `apps/web`（Vite + React + i18next）：定价页、瀑布图、毛利滑杆/竞品价、模拟与发布；BFF CORS；`tests/web/waterfall.test.ts` |
+| **测试** | `npm test` — **26 passed**；`npm run build` 含 web |
+| **下一步** | Loop 5：PostgreSQL + SKU CRUD（P0-E1-04 / P0-E2-01）或双列 ML/Amazon UI（P1-E3-05） |
 
 ---
 
@@ -97,7 +110,8 @@
 
 ```bash
 npm ci && npm run build && npm test
-npm run start -w @mx-pricing/bff   # PORT=3000, Bearer dev-token
+npm run dev:bff    # :3000
+npm run dev:web    # :5173 → proxy /api
 ```
 
 Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-demo`
@@ -111,3 +125,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.0 | 2026-07-20 | Loop 1 |
 | v1.1 | 2026-07-20 | Loop 2 |
 | v1.2 | 2026-07-20 | Loop 3 |
+| v1.3 | 2026-07-20 | Loop 4 |

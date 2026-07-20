@@ -6,9 +6,12 @@ import {
   checkMinMargin,
   type GuardCode,
 } from "@mx-pricing/pricing-engine";
-import { getSku, getListing } from "./fixtures.js";
 import { buildPricingContext, runSimulate } from "./pricing-service.js";
-import { createVersion, listVersions } from "./version-store.js";
+import {
+  type CatalogRepository,
+  getCatalogRepository,
+  MemoryCatalogRepository,
+} from "./repositories/index.js";
 
 export type AppEnv = {
   Variables: {
@@ -19,7 +22,12 @@ export type AppEnv = {
 
 const DEV_TOKEN = "dev-token";
 
-export function createApp() {
+export interface CreateAppOptions {
+  catalog?: CatalogRepository;
+}
+
+export function createApp(options: CreateAppOptions = {}) {
+  const catalog = options.catalog ?? getCatalogRepository();
   const app = new Hono<AppEnv>();
 
   app.use(
@@ -50,12 +58,16 @@ export function createApp() {
   });
 
   app.get("/health", (c) =>
-    c.json({ status: "ok", service: "mx-pricing-bff" })
+    c.json({
+      status: "ok",
+      service: "mx-pricing-bff",
+      catalog: catalog.driver,
+    })
   );
 
-  app.get("/api/v1/skus/:skuId/pricing-context", (c) => {
+  app.get("/api/v1/skus/:skuId/pricing-context", async (c) => {
     const tenantId = c.get("tenantId");
-    const sku = getSku(tenantId, c.req.param("skuId"));
+    const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
@@ -63,7 +75,7 @@ export function createApp() {
       | "MERCADO_LIBRE"
       | "AMAZON_MX"
       | undefined;
-    const versions = listVersions(sku.id);
+    const versions = await catalog.listVersions(sku.id);
     const active = versions.find(
       (v) => v.state === "active" && v.channel === (channel ?? "MERCADO_LIBRE")
     );
@@ -86,7 +98,7 @@ export function createApp() {
 
   app.post("/api/v1/listings/:listingId/price-versions", async (c) => {
     const tenantId = c.get("tenantId");
-    const listing = getListing(tenantId, c.req.param("listingId"));
+    const listing = await catalog.getListing(tenantId, c.req.param("listingId"));
     if (!listing) {
       throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
     }
@@ -113,11 +125,13 @@ export function createApp() {
         422
       );
     }
-    const version = createVersion({
+    const version = await catalog.createVersion({
+      tenant_id: tenantId,
       sku_id: sku.id,
       channel: listing.channel,
       state: "active",
       publish_price_mxn: body.explicit_price_mxn,
+      reason: body.reason,
     });
     return c.json({
       version_id: version.id,
@@ -129,7 +143,7 @@ export function createApp() {
 
   app.post("/api/v1/skus/:skuId/pricing/simulate", async (c) => {
     const tenantId = c.get("tenantId");
-    const sku = getSku(tenantId, c.req.param("skuId"));
+    const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
@@ -139,6 +153,14 @@ export function createApp() {
   });
 
   return app;
+}
+
+export function createTestApp(): {
+  app: ReturnType<typeof createApp>;
+  catalog: MemoryCatalogRepository;
+} {
+  const catalog = new MemoryCatalogRepository();
+  return { app: createApp({ catalog }), catalog };
 }
 
 export function createPublicApp() {
