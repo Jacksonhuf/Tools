@@ -5,8 +5,9 @@
 | 关联 PRD | [PRD-mexico-cross-border-pricing.md](./PRD-mexico-cross-border-pricing.md) |
 | 关联 SDD | [solution-design.md](./solution-design.md) |
 | 关联测试 | [test-cases.md](./test-cases.md) |
+| 进度（Development Loop） | [development-progress.md](./development-progress.md) |
 | 版本 | v1.1 |
-| 说明 | 任务按阶段分组；`[P]`=可并行；优先级 P0 最高；验收可引用 **TC-*** 测试编号 |
+| 说明 | 任务按阶段分组；**开发流程见 [development-progress.md](./development-progress.md)** |
 
 **图例**
 

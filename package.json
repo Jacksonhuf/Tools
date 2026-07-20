@@ -1,0 +1,16 @@
+{
+  "name": "mx-pricing",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:golden": "vitest run tests/golden/golden.test.ts",
+    "build": "npm run build -w @mx-pricing/pricing-engine"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  }
+}

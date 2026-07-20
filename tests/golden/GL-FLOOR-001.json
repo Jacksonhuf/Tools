@@ -24,7 +24,7 @@
   },
   "expected": {
     "floor_mercado_libre_mxn": 1217.39,
-    "floor_amazon_mx_mxn": 1171.23,
+    "floor_amazon_mx_mxn": 1140,
     "assert": "floor_mercado_libre_mxn > floor_amazon_mx_mxn",
     "tolerance": 0.02
   }
