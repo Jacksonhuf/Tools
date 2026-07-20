@@ -46,6 +46,31 @@ paths:
           description: Unauthorized
         "404":
           description: SKU not found
+  /api/v1/listings/{listingId}/price-versions:
+    post:
+      summary: Publish price version (SDD §10.3)
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [explicit_price_mxn]
+              properties:
+                explicit_price_mxn:
+                  type: number
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: version_id and state
+        "422":
+          description: Guard rejected
   /api/v1/skus/{skuId}/pricing/simulate:
     post:
       summary: Price simulation without persistence (SDD §10.2)

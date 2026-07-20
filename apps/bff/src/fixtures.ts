@@ -42,6 +42,27 @@ export const DEMO_SKU: SkuRecord = {
   },
 };
 
+export interface ListingRecord {
+  id: string;
+  sku_id: string;
+  channel: "MERCADO_LIBRE" | "AMAZON_MX";
+}
+
+export const DEMO_LISTING_ML: ListingRecord = {
+  id: "listing-ml-001",
+  sku_id: DEMO_SKU.id,
+  channel: "MERCADO_LIBRE",
+};
+
+export function getListing(
+  tenantId: string,
+  listingId: string
+): (ListingRecord & { sku: SkuRecord }) | undefined {
+  if (tenantId !== DEMO_SKU.tenant_id) return undefined;
+  if (listingId !== DEMO_LISTING_ML.id) return undefined;
+  return { ...DEMO_LISTING_ML, sku: DEMO_SKU };
+}
+
 export function getSku(
   tenantId: string,
   skuId: string

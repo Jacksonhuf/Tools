@@ -10,3 +10,4 @@
 | [docs/development-task-list.md](docs/development-task-list.md) | 分阶段开发任务清单 v1.1 |
 | [docs/development-progress.md](docs/development-progress.md) | **Development Loop 进度** |
 | [tests/golden/](tests/golden/) | 定价引擎黄金用例 JSON（13 条） |
+| [openapi/v1.yaml](openapi/v1.yaml) | BFF OpenAPI 初稿 |

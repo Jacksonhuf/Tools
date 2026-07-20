@@ -22,7 +22,7 @@
 | ID | 任务 | 优先级 | 依赖 | 验收标准 |
 |----|------|--------|------|----------|
 | DOC-01 | 维护 PRD / SDD / 测试用例版本一致 | P0 | — | 变更互相引用 |
-| DOC-02 | 从 SDD §10 生成 OpenAPI 初稿并随实现更新 | P0 | SDD | `openapi/v1.yaml` 可校验 |
+| DOC-02 | 从 SDD §10 生成 OpenAPI 初稿并随实现更新 | P0 | SDD | `openapi/v1.yaml` 可校验 — **Loop 2 已提交核心路径** |
 | DOC-03 | `packages/pricing-engine` 模块边界按 SDD §15 落盘 | P0 | P0-E1-01 | 目录与文档一致 |
 
 ---

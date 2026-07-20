@@ -74,6 +74,37 @@ describe("TC-API-VER-005 simulate does not persist", () => {
   });
 });
 
+describe("TC-API-ADJ-003 price-versions publish", () => {
+  beforeEach(() => resetVersionsForTests());
+
+  it("creates active version when guards pass", async () => {
+    const app = createApp();
+    const res = await app.request("/api/v1/listings/listing-ml-001/price-versions", {
+      method: "POST",
+      headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        explicit_price_mxn: 1600,
+        reason: "manual",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { version_id: string; state: string };
+    expect(json.state).toBe("active");
+    expect(json.version_id).toMatch(/^ver-/);
+    expect(countVersions()).toBe(1);
+  });
+
+  it("rejects price below min margin", async () => {
+    const app = createApp();
+    const res = await app.request("/api/v1/listings/listing-ml-001/price-versions", {
+      method: "POST",
+      headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
+      body: JSON.stringify({ explicit_price_mxn: 1100 }),
+    });
+    expect(res.status).toBe(422);
+  });
+});
+
 describe("simulate guard on low margin", () => {
   it("returns BELOW_MIN_MARGIN when target margin under policy", async () => {
     const app = createApp();

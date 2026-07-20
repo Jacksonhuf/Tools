@@ -47,8 +47,10 @@
 | P0-E4-02 | 完成 | Loop 1 |
 | P0-E4-03 | 完成 | Loop 1 |
 | P0-E4-04 | 部分 | Loop 2（BFF 简化 waterfall） |
+| P0-E4-05 | 部分 | Loop 3（内存 Version + supersede） |
 | P0-E4-06 | 部分 | Loop 1 |
 | P0-E4-07 | 完成 | Loop 2 |
+| P0-E5-05 | 部分 | Loop 3（`POST .../price-versions`） |
 | P0-E6-03 | 完成 | Loop 2 |
 | P0-E7-01 | 完成 | Loop 1 |
 | P0-E7-02 | 完成 | Loop 1 |

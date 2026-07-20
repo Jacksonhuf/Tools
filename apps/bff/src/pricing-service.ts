@@ -137,6 +137,17 @@ export function buildPricingContext(
     rounding_rule: { type: "NONE", decimals: 2 },
   });
 
+  const defaultActive: {
+    version_id?: string;
+    publish_price_mxn: number;
+    publish_price: ReturnType<typeof money>;
+    channel: "MERCADO_LIBRE" | "AMAZON_MX";
+  } = {
+    publish_price_mxn: costActive.publish_price_mxn,
+    publish_price: money(costActive.publish_price_mxn),
+    channel: "MERCADO_LIBRE" as const,
+  };
+
   return {
     sku: {
       id: sku.id,
@@ -161,11 +172,7 @@ export function buildPricingContext(
     listings: [],
     versions: {
       suggested: null,
-      active: {
-        publish_price_mxn: costActive.publish_price_mxn,
-        publish_price: money(costActive.publish_price_mxn),
-        channel: "MERCADO_LIBRE",
-      },
+      active: defaultActive,
     },
   };
 }
