@@ -8,6 +8,10 @@ export default defineConfig({
         __dirname,
         "packages/pricing-engine/src/index.ts"
       ),
+      "@mx-pricing/i18n-format": resolve(
+        __dirname,
+        "packages/i18n-format/src/index.ts"
+      ),
     },
   },
   test: {

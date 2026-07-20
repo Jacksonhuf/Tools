@@ -1,0 +1,77 @@
+openapi: 3.0.3
+info:
+  title: MX Pricing BFF API
+  version: 0.1.0
+  description: Mercado Libre + Amazon MX cross-border pricing (SDD §10)
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /api/v1/skus/{skuId}/pricing-context:
+    get:
+      summary: Pricing context (SDD §10.1)
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [MERCADO_LIBRE, AMAZON_MX]
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Tenant-Id
+          in: header
+          schema:
+            type: string
+        - name: Accept-Language
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pricing context payload
+        "401":
+          description: Unauthorized
+        "404":
+          description: SKU not found
+  /api/v1/skus/{skuId}/pricing/simulate:
+    post:
+      summary: Price simulation without persistence (SDD §10.2)
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, pricing_mode]
+              properties:
+                channel:
+                  type: string
+                  enum: [MERCADO_LIBRE, AMAZON_MX]
+                pricing_mode:
+                  type: string
+                target_margin_pct:
+                  type: number
+                competitor_price_mxn:
+                  type: number
+      responses:
+        "200":
+          description: waterfall, publish_price_mxn, guards

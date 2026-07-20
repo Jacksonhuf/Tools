@@ -1,0 +1,19 @@
+{
+  "name": "@mx-pricing/bff",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "node --watch dist/server.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@mx-pricing/i18n-format": "*",
+    "@mx-pricing/pricing-engine": "*",
+    "hono": "^4.6.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1"
+  }
+}
