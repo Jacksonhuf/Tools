@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { parseAcceptLanguage, formatMoney, type AppLocale } from "@mx-pricing/i18n-format";
 import {
@@ -21,7 +22,19 @@ const DEV_TOKEN = "dev-token";
 export function createApp() {
   const app = new Hono<AppEnv>();
 
+  app.use(
+    "*",
+    cors({
+      origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+      allowHeaders: ["Authorization", "Content-Type", "X-Tenant-Id", "Accept-Language"],
+    })
+  );
+
   app.use("*", async (c, next) => {
+    if (c.req.method === "OPTIONS" || c.req.path === "/health") {
+      await next();
+      return;
+    }
     const auth = c.req.header("Authorization");
     if (!auth?.startsWith("Bearer ")) {
       throw new HTTPException(401, { message: "UNAUTHORIZED" });

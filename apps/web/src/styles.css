@@ -1,0 +1,103 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f4f6f8;
+  color: #1a1a1a;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+
+.controls label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.controls select,
+.controls input[type="number"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem;
+}
+
+.controls input[type="range"] {
+  width: 100%;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+button.primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.waterfall {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.waterfall-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 100px;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.bar-track {
+  background: #e2e8f0;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: #3b82f6;
+  height: 100%;
+}
+
+.highlight {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.message {
+  color: #047857;
+}

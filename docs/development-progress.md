@@ -22,7 +22,7 @@
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
-| P0 定价内核 | 进行中 | Loop 1–2：引擎 + BFF simulate |
+| P0 定价内核 | 进行中 | Loop 4：Web 瀑布 + 三语 |
 | P1 双通道 | 未开始 | — |
 | P2 竞品 | 未开始 | — |
 | P3 回写 | 未开始 | — |
@@ -79,7 +79,17 @@
 | **阅读** | SDD §10 API；test-cases §5、§11；任务 P0-E4-07、P0-E6-03、P0-E1-02 |
 | **实现** | `packages/i18n-format`；`apps/bff`（Hono）：`GET pricing-context`、`POST simulate`；内存 `version-store`（simulate 不写库）；`openapi/v1.yaml` |
 | **测试** | `npm test` — **21 passed**（golden 14 + i18n 2 + API 5） |
-| **下一步** | Loop 3：`POST price-versions` + 内存/PostgreSQL Version（P0-E4-05、P0-E5-05）；或 Web SPA 瀑布页（P0-E6-05） |
+| **下一步** | Loop 3：Version 发布 |
+
+### Loop 3 — Price Version 发布（P0-E4-05 / P0-E5-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-20 |
+| **阅读** | SDD §5.5、§10.3；test-cases §5 TC-INT-VER-002 |
+| **实现** | `POST /api/v1/listings/{listingId}/price-versions`；Guard 422；`version-store` supersede；`pricing-context` 读 active version |
+| **测试** | `npm test` — **24 passed** |
+| **下一步** | Loop 4：Web 瀑布 UI（P0-E6-05）或 PostgreSQL（P0-E1-04） |
 
 ---
 
@@ -100,3 +110,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 |------|------|------|
 | v1.0 | 2026-07-20 | Loop 1 |
 | v1.1 | 2026-07-20 | Loop 2 |
+| v1.2 | 2026-07-20 | Loop 3 |
