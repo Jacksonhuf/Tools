@@ -22,7 +22,7 @@
 
 | 阶段 | 状态 | 说明 |
 |------|------|------|
-| P0 定价内核 | 进行中 | Loop 4：Web 瀑布 + 三语 |
+| P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
 | P1 双通道 | 未开始 | — |
 | P2 竞品 | 未开始 | — |
 | P3 回写 | 未开始 | — |
@@ -36,7 +36,10 @@
 |---------|------|-----------|
 | DOC-02 | 部分 | Loop 2（`openapi/v1.yaml` 核心路径） |
 | DOC-03 | 完成 | Loop 1 |
-| P0-E1-01 | 部分 | Loop 2（`apps/bff` + workspaces） |
+| P0-E1-04 | 部分 | Loop 5（`packages/db` + docker-compose） |
+| P0-E2-01 | 部分 | Loop 5（SKU 表 + seed） |
+| P0-E4-05 | 部分 | Loop 5（PG `price_versions`） |
+| P0-E8-02 | 部分 | Loop 5（`tests/int/postgres-catalog`） |
 | P0-E1-02 | 部分 | Loop 2（BFF 路由、401、health） |
 | P0-E1-03 | 部分 | Loop 2（Bearer + X-Tenant-Id） |
 | P0-E1-07 | 完成 | Loop 1 |
@@ -110,8 +113,10 @@
 
 ```bash
 npm ci && npm run build && npm test
-npm run dev:bff    # :3000
-npm run dev:web    # :5173 → proxy /api
+npm run db:up       # PostgreSQL
+export DATABASE_URL=postgresql://mx:mx@localhost:5432/mx_pricing
+npm run db:migrate
+npm run dev:bff     # 自动 migrate+seed（设 DATABASE_URL 时）
 ```
 
 Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-demo`
