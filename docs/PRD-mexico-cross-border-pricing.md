@@ -278,5 +278,10 @@
 
 ## 15. 附录
 
-- 研发任务拆解见：[development-task-list.md](./development-task-list.md)
-- 文档变更记录：v1.0 初版，汇总架构、双模式、混合 Agent、双通道、动态调价设计。
+| 文档 | 说明 |
+|------|------|
+| [solution-design.md](./solution-design.md) | 方案设计（SDD）v1.0 |
+| [test-cases.md](./test-cases.md) | 测试用例 v1.0 |
+| [development-task-list.md](./development-task-list.md) | 开发任务清单 |
+
+文档变更记录：v1.0 初版 PRD；配套 SDD / 测试用例 / 任务清单见上表。
