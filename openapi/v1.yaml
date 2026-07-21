@@ -149,6 +149,9 @@ paths:
   /api/v1/channels/adapters/status:
     get:
       summary: Channel publish/pull adapter driver (mock vs http_stub)
+  /api/v1/reports/pricing-snapshot:
+    get:
+      summary: Pricing snapshot export (JSON or CSV)
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)

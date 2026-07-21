@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   batchChannelPublish,
   DEMO_SKU,
+  downloadPricingSnapshotCsv,
   fetchOpsMetrics,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
@@ -172,6 +173,13 @@ export function OpsCenterPage() {
         </button>
         <button type="button" onClick={() => void runReconcile()}>
           {t("opsRunReconcile")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-export-pricing-csv"
+          onClick={() => void downloadPricingSnapshotCsv(locale, DEMO_SKU)}
+        >
+          {t("opsExportPricingCsv")}
         </button>
       </section>
 

@@ -615,6 +615,24 @@ export async function fetchOpsMetrics(locale: string) {
   return res.json() as Promise<OpsMetricsSnapshot>;
 }
 
+export async function downloadPricingSnapshotCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/reports/pricing-snapshot?format=csv&sku_id=${encodeURIComponent(skuId)}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`pricing-snapshot ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pricing-snapshot-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function reconcileListing(
   locale: string,
   listingId: string,
