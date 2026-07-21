@@ -174,3 +174,18 @@ paths:
           schema:
             type: string
             enum: [7d, 30d]
+  /api/v1/listings/{listingId}/ingest/status:
+    get:
+      summary: Ingest tier schedule (SDD §8.1)
+  /api/v1/listings/{listingId}/ingest/run:
+    post:
+      summary: Run mock competitor ingest (P2-E2)
+  /api/v1/listings/{listingId}/repricing-events/flush:
+    post:
+      summary: Flush 5min debounce window (SDD §8.4)
+  /api/v1/listings/{listingId}/repricing-events:
+    get:
+      summary: List CompetitorPriceChanged events
+  /api/v1/repricing-events/{eventId}/process:
+    post:
+      summary: Process event into suggested version (P2-E3-04)

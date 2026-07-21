@@ -319,4 +319,48 @@ export async function fetchPriceHistory(
   }>;
 }
 
+export async function fetchIngestStatus(locale: string, listingId: string) {
+  const res = await fetch(`/api/v1/listings/${listingId}/ingest/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`ingest status ${res.status}`);
+  return res.json() as Promise<{
+    tier: string;
+    next_run_at: string;
+    interval_ms: number;
+  }>;
+}
+
+export async function runIngest(locale: string, listingId: string) {
+  const res = await fetch(`/api/v1/listings/${listingId}/ingest/run`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`ingest run ${res.status}`);
+  return res.json() as Promise<{
+    observations_created: number;
+    tier: string;
+  }>;
+}
+
+export async function flushRepricingEvents(locale: string, listingId: string) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/repricing-events/flush`,
+    { method: "POST", headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`flush ${res.status}`);
+  return res.json() as Promise<{
+    event: { id: string; type: string } | null;
+  }>;
+}
+
+export async function processRepricingEvent(locale: string, eventId: string) {
+  const res = await fetch(`/api/v1/repricing-events/${eventId}/process`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`process event ${res.status}`);
+  return res.json() as Promise<{ version_id?: string; state?: string }>;
+}
+
 export { DEMO_SKU };

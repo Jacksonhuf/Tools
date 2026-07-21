@@ -24,7 +24,7 @@
 |------|------|------|
 | P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
-| P2 竞品 | 进行中 | Loop 10：Offer + 观测 |
+| P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
 | P3 回写 | 未开始 | — |
 | P4 Agent | 未开始 | — |
 
@@ -72,6 +72,9 @@
 | P2-E1-01 | 部分 | Loop 10（Competitor Offer CRUD） |
 | P2-E1-03 | 部分 | Loop 10（手工 price_observations） |
 | P2-E1-04 | 部分 | Loop 10（median anchor 汇总） |
+| P2-E2-01 | 部分 | Loop 11（Tier 调度 + mock ingest） |
+| P2-E3-01 | 部分 | Loop 11（CompetitorPriceChanged 入队） |
+| P2-E3-04 | 部分 | Loop 11（process → suggested version） |
 
 ---
 
@@ -177,6 +180,16 @@
 | **测试** | `npm test` — **43 passed**（`tests/api/competitors.test.ts`） |
 | **下一步** | P2-E2 采集管道 Tier 调度、事件 CompetitorPriceChanged |
 
+### Loop 11 — 采集占位与去抖事件（P2-E2 / P2-E3）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §8.1–8.5；test-cases TC-INT-EVT-001–004、TC-INT-ING-005；任务 P2-E2-01、P2-E3-01/04 |
+| **实现** | 迁移 `005_repricing_events`；内存去抖 5min；`ingest/run` mock 采集；`repricing-events/flush` + `process` → `suggested` Version；观测变更接入 debounce |
+| **测试** | `npm test` — **48 passed**（`tests/api/repricing-events.test.ts`） |
+| **下一步** | P2-E3 动态规则 CRUD、Stale 冻结 |
+
 ---
 
 ## 本地命令
@@ -207,3 +220,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.7 | 2026-07-21 | Loop 8 |
 | v1.8 | 2026-07-21 | Loop 9 |
 | v1.9 | 2026-07-21 | Loop 10 |
+| v2.0 | 2026-07-21 | Loop 11 |

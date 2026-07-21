@@ -5,6 +5,10 @@ import {
   createCompetitorOffer,
   fetchCompetitorOffers,
   fetchPriceHistory,
+  fetchIngestStatus,
+  flushRepricingEvents,
+  processRepricingEvent,
+  runIngest,
   type CompetitorOfferRow,
 } from "../api/client";
 
@@ -28,6 +32,7 @@ export function CompetitorsPage() {
   const [includeShipping, setIncludeShipping] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ingestTier, setIngestTier] = useState("T1");
 
   const load = useCallback(async () => {
     setError(null);
@@ -42,6 +47,8 @@ export function CompetitorsPage() {
       );
       const hist = await fetchPriceHistory(locale, listingId, "7d");
       setHistoryCount(hist.observations.length);
+      const ingest = await fetchIngestStatus(locale, listingId);
+      setIngestTier(ingest.tier);
     } catch (e) {
       setError(String(e));
     }
@@ -85,6 +92,26 @@ export function CompetitorsPage() {
     }
   };
 
+  const runPipeline = async () => {
+    setError(null);
+    setMessage(null);
+    try {
+      const ing = await runIngest(locale, listingId);
+      const flushed = await flushRepricingEvents(locale, listingId);
+      if (flushed.event?.id) {
+        const proc = await processRepricingEvent(locale, flushed.event.id);
+        setMessage(
+          `${t("pipelineDone")}: ingest=${ing.observations_created}, ${t("suggestedVersion")}=${proc.version_id ?? "—"}`
+        );
+      } else {
+        setMessage(t("pipelineNoEvent"));
+      }
+      await load();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   const listingLabel =
     listingId === "listing-ml-001" ? t("mercadoLibre") : t("amazonMx");
 
@@ -114,8 +141,12 @@ export function CompetitorsPage() {
         <p>
           {t("anchorMedian")}:{" "}
           {anchorMedian != null ? `${anchorMedian} MXN` : "—"} ·{" "}
-          {t("historyPoints", { count: historyCount })} ({listingLabel})
+          {t("historyPoints", { count: historyCount })} ({listingLabel}) ·{" "}
+          {t("ingestTier")}: {ingestTier}
         </p>
+        <button type="button" className="primary" onClick={() => void runPipeline()}>
+          {t("runIngestPipeline")}
+        </button>
       </section>
 
       <section className="card">

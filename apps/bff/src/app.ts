@@ -40,6 +40,19 @@ import {
 import { computeEffectivePrice } from "./competitor-normalize.js";
 import { buildCompetitorAnchorSummary } from "./competitor-summary.js";
 import { getListingIdForChannel } from "./fixtures.js";
+import {
+  type RepricingRepository,
+  getRepricingRepository,
+  MemoryRepricingRepository,
+} from "./repositories/repricing-index.js";
+import {
+  ensureIngestSchedule,
+  flushListingDebounce,
+  notifyObservationChange,
+  processRepricingEvent,
+  runMockIngest,
+} from "./repricing/runtime.js";
+import { tierIntervalMs } from "./repricing/tier.js";
 
 export type AppEnv = {
   Variables: {
@@ -55,6 +68,7 @@ export interface CreateAppOptions {
   adjustments?: AdjustmentRepository;
   shops?: ShopRepository;
   competitors?: CompetitorRepository;
+  repricing?: RepricingRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -62,6 +76,7 @@ export function createApp(options: CreateAppOptions = {}) {
   const adjustments = options.adjustments ?? getAdjustmentRepository();
   const shops = options.shops ?? getShopRepository();
   const competitors = options.competitors ?? getCompetitorRepository();
+  const repricing = options.repricing ?? getRepricingRepository();
   const listingAdapter = new MockChannelListingAdapter();
   const app = new Hono<AppEnv>();
 
@@ -517,6 +532,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (effective_price <= 0) {
       throw new HTTPException(400, { message: "INVALID_PRICE" });
     }
+    const previous = await competitors.latestObservation(offerId);
     const observation = await competitors.addObservation({
       offer_id: offerId,
       observed_at: body.observed_at ?? new Date().toISOString(),
@@ -525,6 +541,17 @@ export function createApp(options: CreateAppOptions = {}) {
       shipping_addon: body.shipping_addon ?? 0,
       effective_price,
       raw_json: body.source ? { source: body.source } : undefined,
+    });
+    await notifyObservationChange(repricing, tenantId, {
+      listing_id: offer.listing_id,
+      channel: offer.channel,
+      offer_id: offerId,
+      previous_effective: previous?.effective_price ?? null,
+      observation: {
+        id: observation.id,
+        effective_price: observation.effective_price,
+        observed_at: observation.observed_at,
+      },
     });
     return c.json(observation, 201);
   });
@@ -547,6 +574,84 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/listings/:listingId/ingest/status", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const schedule = await ensureIngestSchedule(repricing, listingId);
+    return c.json({
+      listing_id: listingId,
+      tier: schedule.tier,
+      next_run_at: schedule.next_run_at,
+      interval_ms: tierIntervalMs(schedule.tier),
+    });
+  });
+
+  app.post("/api/v1/listings/:listingId/ingest/run", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    try {
+      const result = await runMockIngest(
+        catalog,
+        competitors,
+        repricing,
+        tenantId,
+        listingId
+      );
+      return c.json(result);
+    } catch (e) {
+      if (String(e).includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/listings/:listingId/repricing-events/flush", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const event = await flushListingDebounce(repricing, tenantId, listingId);
+    return c.json({ event });
+  });
+
+  app.get("/api/v1/listings/:listingId/repricing-events", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const items = await repricing.listEvents(tenantId, listingId);
+    return c.json({ items });
+  });
+
+  app.post("/api/v1/repricing-events/:eventId/process", async (c) => {
+    const tenantId = c.get("tenantId");
+    const eventId = c.req.param("eventId");
+    try {
+      const result = await processRepricingEvent(
+        catalog,
+        competitors,
+        repricing,
+        tenantId,
+        eventId
+      );
+      return c.json(result);
+    } catch (e) {
+      if (String(e).includes("EVENT_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "EVENT_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
   return app;
 }
 
@@ -556,22 +661,26 @@ export function createTestApp(): {
   adjustments: MemoryAdjustmentRepository;
   shops: MemoryShopRepository;
   competitors: MemoryCompetitorRepository;
+  repricing: MemoryRepricingRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
   const shopsRepo = new MemoryShopRepository();
   const competitorsRepo = new MemoryCompetitorRepository();
+  const repricingRepo = new MemoryRepricingRepository();
   return {
     app: createApp({
       catalog,
       adjustments,
       shops: shopsRepo,
       competitors: competitorsRepo,
+      repricing: repricingRepo,
     }),
     catalog,
     adjustments,
     shops: shopsRepo,
     competitors: competitorsRepo,
+    repricing: repricingRepo,
   };
 }
 
