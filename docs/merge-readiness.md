@@ -1,4 +1,4 @@
-# PR / 合并就绪检查（Development Loop 31）
+# PR / 合并就绪检查（Development Loop 32）
 
 在合并 `cursor/prd-and-task-docs-1936` → `main` 前建议确认：
 
@@ -21,10 +21,11 @@ GitHub Actions：
 - `GET /api/v1/product/readiness` — `all_accepted: true` 表示 P3+P4 验收目录均为绿
 - `GET /api/v1/agent/milestones` — 分项 `p3_readiness` / `p4_readiness`
 - `GET /api/v1/channels/sandbox/status` + `.../events` — 渠道沙箱模式与事件账本
+- `GET /api/v1/channels/adapters/status` — publish/pull 驱动（mock / http_stub）
 
 ## 文档
 
-- [development-progress.md](./development-progress.md) — Loop 1–31 日志
+- [development-progress.md](./development-progress.md) — Loop 1–32 日志
 - [p3-acceptance-checklist.md](./p3-acceptance-checklist.md)
 - [p4-acceptance-checklist.md](./p4-acceptance-checklist.md)
 - [channel-sandbox.md](./channel-sandbox.md)

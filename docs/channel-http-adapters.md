@@ -39,9 +39,35 @@ BFF 默认使用进程内 **mock** 适配器。对接外部渠道网关或 sidec
 
 - `GET /api/v1/channels/adapters/status` — `driver`、`publish_http_url_configured`、`ready`、`note`
 
+## Web UI（Loop 32）
+
+Channels 页展示 **Channel adapters** 卡片（`data-testid=channel-adapter-status`），含 driver、ready、HTTP 是否配置。Playwright：`channels-sandbox.spec.ts`（TC-E2E-CH-002）。
+
+## 网关联调示例
+
+本地 sidecar 可监听 `8787` 并返回上述 JSON。BFF：
+
+```bash
+export CHANNEL_ADAPTER_DRIVER=http_stub
+export CHANNEL_HTTP_PUBLISH_URL=http://127.0.0.1:8787/publish
+export CHANNEL_HTTP_LISTING_PULL_URL=http://127.0.0.1:8787/pull
+```
+
+Publish 请求体示例：
+
+```json
+{
+  "channel": "MERCADO_LIBRE",
+  "shop_id": "shop-ml-demo",
+  "external_ref": "listing-ml-001",
+  "price_mxn": 1680
+}
+```
+
 ## 测试
 
 - `tests/api/channel-http-adapter.test.ts` — TC-API-CH-HTTP-001
 - `tests/api/channel-adapter-status.test.ts`
+- `tests/e2e/web/channels-sandbox.spec.ts` — TC-E2E-CH-001/002
 
 生产沙箱切换仍见 [channel-sandbox-production.md](./channel-sandbox-production.md)。

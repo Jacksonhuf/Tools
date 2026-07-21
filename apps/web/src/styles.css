@@ -162,6 +162,24 @@ button.primary {
   border-color: #2563eb;
 }
 
+.adapter-status-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+.adapter-status-dl dt {
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.adapter-status-dl dd {
+  margin: 0;
+}
+
 .batch-table {
   width: 100%;
   border-collapse: collapse;

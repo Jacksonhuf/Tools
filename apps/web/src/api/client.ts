@@ -255,6 +255,22 @@ export async function fetchChannelSandboxEvents(locale: string, limit = 20) {
   return res.json() as Promise<{ items: ChannelSandboxEvent[] }>;
 }
 
+export interface ChannelAdapterStatus {
+  driver: string;
+  publish_http_url_configured: boolean;
+  listing_pull_http_url_configured: boolean;
+  ready: boolean;
+  note: string;
+}
+
+export async function fetchChannelAdapterStatus(locale: string) {
+  const res = await fetch(`/api/v1/channels/adapters/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`adapter status ${res.status}`);
+  return res.json() as Promise<ChannelAdapterStatus>;
+}
+
 export async function fetchShops(locale: string) {
   const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);

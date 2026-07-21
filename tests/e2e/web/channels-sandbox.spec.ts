@@ -35,6 +35,13 @@ test.describe("Channels sandbox UI", () => {
   test("sandbox badge and events table list channel_publish", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("nav-channels").click();
+    await expect(page.getByTestId("channel-adapter-status")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("channel-adapter-driver")).toHaveText("mock");
+    await expect(page.getByTestId("channel-adapter-ready")).toContainText(
+      /Ready|就绪|Listo/i
+    );
     await expect(page.getByTestId("channel-sandbox-badge")).toBeVisible({
       timeout: 15_000,
     });

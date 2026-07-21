@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  fetchChannelAdapterStatus,
   fetchChannelSandboxEvents,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -8,6 +9,7 @@ import {
   publishShopChannelPrice,
   pullShopListing,
   startShopOAuth,
+  type ChannelAdapterStatus,
   type ChannelSandboxEvent,
   type ShopSummary,
 } from "../api/client";
@@ -25,18 +27,23 @@ export function ChannelsPage() {
   const [error, setError] = useState<string | null>(null);
   const [sandboxNote, setSandboxNote] = useState<string | null>(null);
   const [sandboxEvents, setSandboxEvents] = useState<ChannelSandboxEvent[]>([]);
+  const [adapterStatus, setAdapterStatus] = useState<ChannelAdapterStatus | null>(
+    null
+  );
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, sandbox, events] = await Promise.all([
+      const [data, sandbox, events, adapters] = await Promise.all([
         fetchShops(locale),
         fetchChannelSandboxStatus(locale),
         fetchChannelSandboxEvents(locale, 25),
+        fetchChannelAdapterStatus(locale),
       ]);
       setShops(data.items);
       setSandboxNote(sandbox.enabled ? sandbox.note : null);
       setSandboxEvents(sandbox.enabled ? events.items : []);
+      setAdapterStatus(adapters);
     } catch (e) {
       setError(String(e));
     }
@@ -72,6 +79,7 @@ export function ChannelsPage() {
         setMessage(
           `${t("channelPublishOk")}: ${json.channel_price_mxn} MXN${retried}`
         );
+        await load();
       } else if (!ok && json.publish_status === "failed") {
         setError(`${t("channelPublishFail")}: ${json.error_code}`);
       }
@@ -89,6 +97,7 @@ export function ChannelsPage() {
       setMessage(
         `${t("listingPulled")}: ${result.snapshot.external_item_id} → ${result.snapshot.price_mxn} MXN`
       );
+      await load();
     } catch (e) {
       setError(String(e));
     }
@@ -108,6 +117,52 @@ export function ChannelsPage() {
       )}
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
+
+      {adapterStatus && (
+        <section className="card" data-testid="channel-adapter-status">
+          <h2>{t("channelAdapterTitle")}</h2>
+          <p className="hint">{adapterStatus.note}</p>
+          <dl className="adapter-status-dl">
+            <div>
+              <dt>{t("channelAdapterDriver")}</dt>
+              <dd>
+                <code data-testid="channel-adapter-driver">
+                  {adapterStatus.driver}
+                </code>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("batchStatus")}</dt>
+              <dd>
+                <span
+                  className={`status status-${adapterStatus.ready ? "connected" : "disconnected"}`}
+                  data-testid="channel-adapter-ready"
+                >
+                  {adapterStatus.ready
+                    ? t("channelAdapterReady")
+                    : t("channelAdapterNotReady")}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("channelAdapterPublishHttp")}</dt>
+              <dd>
+                {adapterStatus.publish_http_url_configured
+                  ? t("channelAdapterConfigured")
+                  : t("channelAdapterNotConfigured")}
+              </dd>
+            </div>
+            <div>
+              <dt>{t("channelAdapterPullHttp")}</dt>
+              <dd>
+                {adapterStatus.listing_pull_http_url_configured
+                  ? t("channelAdapterConfigured")
+                  : t("channelAdapterNotConfigured")}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       <section className="card">
         <h2>{t("shopList")}</h2>

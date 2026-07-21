@@ -402,6 +402,16 @@
 | **测试** | `npm test` — **109 passed**（PG 6 skipped）；`ci-postgres-int` — **6** PG 用例 |
 | **下一步** | 合并 PR #1、渠道网关联调、Web 展示 adapter 状态 |
 
+### Loop 32 — Channels 适配器状态 UI（TC-E2E-CH-002 / 网关联调文档）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 31 下一步；`channel-http-adapters` |
+| **实现** | `fetchChannelAdapterStatus` + Channels 适配器卡片；发布/拉取后刷新沙箱事件；`channel-http-adapters` 网关示例；Playwright CH-002 |
+| **测试** | `npm test` — **109 passed**；`npm run test:e2e` — **4 passed** |
+| **下一步** | 合并 PR #1、sidecar 样例服务、P5 监控与告警占位 |
+
 ---
 
 ## 本地命令
@@ -453,4 +463,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.6 | 2026-07-21 | Loop 27 |
 | v3.7 | 2026-07-21 | Loop 28 |
 | v3.8 | 2026-07-21 | Loop 29 |
-| v4.0 | 2026-07-21 | Loop 31 |
+| v4.1 | 2026-07-21 | Loop 32 |
