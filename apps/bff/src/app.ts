@@ -32,6 +32,14 @@ import {
   getShopRepository,
   MemoryShopRepository,
 } from "./repositories/shop-index.js";
+import {
+  type CompetitorRepository,
+  getCompetitorRepository,
+  MemoryCompetitorRepository,
+} from "./repositories/competitor-index.js";
+import { computeEffectivePrice } from "./competitor-normalize.js";
+import { buildCompetitorAnchorSummary } from "./competitor-summary.js";
+import { getListingIdForChannel } from "./fixtures.js";
 
 export type AppEnv = {
   Variables: {
@@ -46,12 +54,14 @@ export interface CreateAppOptions {
   catalog?: CatalogRepository;
   adjustments?: AdjustmentRepository;
   shops?: ShopRepository;
+  competitors?: CompetitorRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const catalog = options.catalog ?? getCatalogRepository();
   const adjustments = options.adjustments ?? getAdjustmentRepository();
   const shops = options.shops ?? getShopRepository();
+  const competitors = options.competitors ?? getCompetitorRepository();
   const listingAdapter = new MockChannelListingAdapter();
   const app = new Hono<AppEnv>();
 
@@ -117,6 +127,26 @@ export function createApp(options: CreateAppOptions = {}) {
         }),
         channel: active.channel as "MERCADO_LIBRE" | "AMAZON_MX",
       };
+    }
+    const ch = channel ?? "MERCADO_LIBRE";
+    const listingId = getListingIdForChannel(ch);
+    if (listingId) {
+      const offers = await competitors.listOffers(listingId);
+      const withLatest = await Promise.all(
+        offers.map(async (o) => {
+          const latest = await competitors.latestObservation(o.id);
+          return {
+            ...o,
+            latest_effective_mxn: latest?.effective_price ?? null,
+          };
+        })
+      );
+      Object.assign(ctx, {
+        competitors: {
+          offers: withLatest,
+          anchor: buildCompetitorAnchorSummary(withLatest),
+        },
+      });
     }
     return c.json(ctx);
   });
@@ -405,6 +435,118 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ shop_id: shopId, snapshot });
   });
 
+  app.get("/api/v1/listings/:listingId/competitors", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const offers = await competitors.listOffers(listingId);
+    const withLatest = await Promise.all(
+      offers.map(async (o) => {
+        const latest = await competitors.latestObservation(o.id);
+        return {
+          ...o,
+          latest_effective_mxn: latest?.effective_price ?? null,
+          latest_observed_at: latest?.observed_at ?? null,
+        };
+      })
+    );
+    return c.json({
+      listing_id: listingId,
+      channel: listing.channel,
+      items: withLatest,
+      anchor: buildCompetitorAnchorSummary(withLatest),
+    });
+  });
+
+  app.post("/api/v1/listings/:listingId/competitors", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      external_ref: string;
+      label?: string;
+      seller_id?: string;
+      is_primary?: boolean;
+    };
+    if (!body.external_ref?.trim()) {
+      throw new HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+    }
+    const offer = await competitors.createOffer({
+      listing_id: listingId,
+      channel: listing.channel,
+      external_ref: body.external_ref.trim(),
+      label: body.label,
+      seller_id: body.seller_id,
+      is_primary: body.is_primary,
+    });
+    return c.json(offer, 201);
+  });
+
+  app.post("/api/v1/competitor-offers/:offerId/observations", async (c) => {
+    const tenantId = c.get("tenantId");
+    const offerId = c.req.param("offerId");
+    const offer = await competitors.getOffer(offerId);
+    if (!offer) {
+      throw new HTTPException(404, { message: "OFFER_NOT_FOUND" });
+    }
+    const listing = await catalog.getListing(tenantId, offer.listing_id);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      list_price?: number;
+      sale_price?: number;
+      shipping_addon?: number;
+      include_shipping?: boolean;
+      observed_at?: string;
+      source?: string;
+    };
+    const include_shipping = body.include_shipping ?? false;
+    const effective_price = computeEffectivePrice({
+      list_price: body.list_price,
+      sale_price: body.sale_price,
+      shipping_addon: body.shipping_addon,
+      include_shipping,
+    });
+    if (effective_price <= 0) {
+      throw new HTTPException(400, { message: "INVALID_PRICE" });
+    }
+    const observation = await competitors.addObservation({
+      offer_id: offerId,
+      observed_at: body.observed_at ?? new Date().toISOString(),
+      list_price: body.list_price ?? null,
+      sale_price: body.sale_price ?? null,
+      shipping_addon: body.shipping_addon ?? 0,
+      effective_price,
+      raw_json: body.source ? { source: body.source } : undefined,
+    });
+    return c.json(observation, 201);
+  });
+
+  app.get("/api/v1/listings/:listingId/price-history", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const range = c.req.query("range") ?? "7d";
+    const days = range === "30d" ? 30 : 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const observations = await competitors.listObservations(listingId, since);
+    return c.json({
+      listing_id: listingId,
+      range,
+      observations,
+    });
+  });
+
   return app;
 }
 
@@ -413,15 +555,23 @@ export function createTestApp(): {
   catalog: MemoryCatalogRepository;
   adjustments: MemoryAdjustmentRepository;
   shops: MemoryShopRepository;
+  competitors: MemoryCompetitorRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
   const shopsRepo = new MemoryShopRepository();
+  const competitorsRepo = new MemoryCompetitorRepository();
   return {
-    app: createApp({ catalog, adjustments, shops: shopsRepo }),
+    app: createApp({
+      catalog,
+      adjustments,
+      shops: shopsRepo,
+      competitors: competitorsRepo,
+    }),
     catalog,
     adjustments,
     shops: shopsRepo,
+    competitors: competitorsRepo,
   };
 }
 

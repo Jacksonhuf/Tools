@@ -157,3 +157,20 @@ paths:
   /api/v1/shops/{shopId}/listings/pull:
     post:
       summary: Mock pullListing (TC-INT-CH-001/002)
+  /api/v1/listings/{listingId}/competitors:
+    get:
+      summary: List competitor offers (SDD §10.6)
+    post:
+      summary: Bind competitor offer to listing
+  /api/v1/competitor-offers/{offerId}/observations:
+    post:
+      summary: Manual price observation (P2-E1-03)
+  /api/v1/listings/{listingId}/price-history:
+    get:
+      summary: Observation history for listing
+      parameters:
+        - name: range
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d]

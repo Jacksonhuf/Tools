@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { PricingPage } from "./components/PricingPage";
 import { AdjustmentBatchesPage } from "./components/AdjustmentBatchesPage";
 import { ChannelsPage } from "./components/ChannelsPage";
+import { CompetitorsPage } from "./components/CompetitorsPage";
 
-type Tab = "pricing" | "adjustments" | "channels";
+type Tab = "pricing" | "adjustments" | "channels" | "competitors";
 
 export function App() {
   const { t, i18n } = useTranslation();
@@ -46,13 +47,22 @@ export function App() {
         >
           {t("navChannels")}
         </button>
+        <button
+          type="button"
+          className={tab === "competitors" ? "active" : ""}
+          onClick={() => setTab("competitors")}
+        >
+          {t("navCompetitors")}
+        </button>
       </nav>
       {tab === "pricing" ? (
         <PricingPage />
       ) : tab === "adjustments" ? (
         <AdjustmentBatchesPage />
-      ) : (
+      ) : tab === "channels" ? (
         <ChannelsPage />
+      ) : (
+        <CompetitorsPage />
       )}
     </>
   );

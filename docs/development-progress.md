@@ -24,7 +24,7 @@
 |------|------|------|
 | P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
-| P2 竞品 | 未开始 | — |
+| P2 竞品 | 进行中 | Loop 10：Offer + 观测 |
 | P3 回写 | 未开始 | — |
 | P4 Agent | 未开始 | — |
 
@@ -69,6 +69,9 @@
 | P1-E1-03 | 部分 | Loop 9（ML OAuth URL 占位 + mock） |
 | P1-E1-04 | 部分 | Loop 9（Amazon LWA URL 占位 + mock） |
 | P1-E2-01 | 部分 | Loop 9（MockChannelListingAdapter.pullListing） |
+| P2-E1-01 | 部分 | Loop 10（Competitor Offer CRUD） |
+| P2-E1-03 | 部分 | Loop 10（手工 price_observations） |
+| P2-E1-04 | 部分 | Loop 10（median anchor 汇总） |
 
 ---
 
@@ -164,6 +167,16 @@
 | **测试** | `npm test` — **39 passed**（`tests/api/shops.test.ts`） |
 | **下一步** | P2-E1 竞品 Offer CRUD、手工录入观测 |
 
+### Loop 10 — 竞品 Offer 与手工观测（P2-E1）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §5.4、§8.2、§10.6；任务 P2-E1-01/03/04 |
+| **实现** | 迁移 `004_competitors`；`CompetitorRepository`；竞品 CRUD API、观测录入、effective 归一化、median anchor；`pricing-context` 竞品摘要；Web「竞品」页 |
+| **测试** | `npm test` — **43 passed**（`tests/api/competitors.test.ts`） |
+| **下一步** | P2-E2 采集管道 Tier 调度、事件 CompetitorPriceChanged |
+
 ---
 
 ## 本地命令
@@ -193,3 +206,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.6 | 2026-07-21 | Loop 7 |
 | v1.7 | 2026-07-21 | Loop 8 |
 | v1.8 | 2026-07-21 | Loop 9 |
+| v1.9 | 2026-07-21 | Loop 10 |

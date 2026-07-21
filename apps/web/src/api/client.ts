@@ -238,4 +238,85 @@ export async function pullShopListing(
   };
 }
 
+export interface CompetitorOfferRow {
+  id: string;
+  listing_id: string;
+  channel: Channel;
+  external_ref: string;
+  label: string | null;
+  is_primary: boolean;
+  latest_effective_mxn: number | null;
+  latest_observed_at?: string | null;
+}
+
+export async function fetchCompetitorOffers(locale: string, listingId: string) {
+  const res = await fetch(`/api/v1/listings/${listingId}/competitors`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`competitors ${res.status}`);
+  return res.json() as Promise<{
+    items: CompetitorOfferRow[];
+    anchor: {
+      count: number;
+      min_mxn: number | null;
+      median_mxn: number | null;
+      primary_mxn: number | null;
+    };
+  }>;
+}
+
+export async function createCompetitorOffer(
+  locale: string,
+  listingId: string,
+  body: {
+    external_ref: string;
+    label?: string;
+    seller_id?: string;
+    is_primary?: boolean;
+  }
+) {
+  const res = await fetch(`/api/v1/listings/${listingId}/competitors`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`create competitor ${res.status}`);
+  return res.json();
+}
+
+export async function addCompetitorObservation(
+  locale: string,
+  offerId: string,
+  body: {
+    list_price?: number;
+    sale_price?: number;
+    shipping_addon?: number;
+    include_shipping?: boolean;
+    source?: string;
+  }
+) {
+  const res = await fetch(`/api/v1/competitor-offers/${offerId}/observations`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`observation ${res.status}`);
+  return res.json();
+}
+
+export async function fetchPriceHistory(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/price-history?range=${range}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`price-history ${res.status}`);
+  return res.json() as Promise<{
+    observations: Array<{ effective_price: number; observed_at: string }>;
+  }>;
+}
+
 export { DEMO_SKU };

@@ -88,3 +88,10 @@ export function getSku(
   }
   return DEMO_SKU;
 }
+
+export function getListingIdForChannel(
+  channel: ListingRecord["channel"]
+): string | undefined {
+  const listing = LISTINGS.find((l) => l.channel === channel);
+  return listing?.id;
+}
