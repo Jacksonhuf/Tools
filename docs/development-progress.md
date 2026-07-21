@@ -85,7 +85,7 @@
 | P4-E1-02 | 部分 | Loop 19（agent tools + audit） |
 | P4-E1-03 | 部分 | Loop 21–23（Copilot 三语 + digest） |
 | P4-E1-06 | 部分 | Loop 20–22（NL compile + HTTP LLM + 多轮会话） |
-| P4-E1-07 | 部分 | Loop 23（daily digest API 占位） |
+| P4-E1-07 | 部分 | Loop 23–24（digest + dispatch/schedule 占位） |
 
 ---
 
@@ -321,6 +321,16 @@
 | **测试** | `npm test` — **89 passed**（agent-digest、copilot-narrative） |
 | **下一步** | Digest 邮件/调度占位、Copilot 诊断意图（simulate 叙事）、P3 里程碑收尾 |
 
+### Loop 24 — Digest 调度占位与 Copilot 试算叙事（P4-E1-07 / P3 收尾）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 23 下一步；P3 回写里程碑 |
+| **实现** | `PUT/GET digest/schedule`、`POST digest/daily/dispatch`（email_stub）、`GET digest/dispatches`；Copilot 识别 simulate 意图 → `tool_simulate` 三语叙事；P3 里程碑标记为进行中 |
+| **测试** | `npm test` — **91 passed**（digest-dispatch、copilot simulate） |
+| **下一步** | 真实邮件/队列集成、P4 里程碑验收、E2E Web 冒烟 |
+
 ---
 
 ## 本地命令
@@ -364,3 +374,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.0 | 2026-07-21 | Loop 21 |
 | v3.1 | 2026-07-21 | Loop 22 |
 | v3.2 | 2026-07-21 | Loop 23 |
+| v3.3 | 2026-07-21 | Loop 24 |

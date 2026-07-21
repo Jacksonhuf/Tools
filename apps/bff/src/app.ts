@@ -118,6 +118,13 @@ import {
   upsertDigestSchedule,
 } from "./agent-digest-dispatch.js";
 import {
+  enqueueDailyDigestJob,
+  listDigestQueuedJobs,
+  processDigestQueue,
+  resetDigestJobQueueForTests,
+} from "./digest-job-queue.js";
+import { evaluateAgentReadiness } from "./agent-readiness.js";
+import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
@@ -1096,6 +1103,10 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listAgentTools() });
   });
 
+  app.get("/api/v1/agent/readiness", async (c) => {
+    return c.json(evaluateAgentReadiness());
+  });
+
   app.get("/api/v1/rule-compiler/status", async (c) => {
     return c.json(getRuleCompilerStatus());
   });
@@ -1221,6 +1232,53 @@ export function createApp(options: CreateAppOptions = {}) {
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
     return c.json({ items: listDigestDispatches(tenantId, limit) });
+  });
+
+  app.post("/api/v1/agent/digest/daily/enqueue", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      date?: string;
+      channels?: Array<"email_stub" | "webhook_queue">;
+    };
+    const job = enqueueDailyDigestJob({
+      tenant_id: tenantId,
+      locale,
+      date: body.date,
+      channels: body.channels,
+    });
+    return c.json({ job });
+  });
+
+  app.get("/api/v1/agent/digest/jobs", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
+    return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+  });
+
+  app.post("/api/v1/agent/digest/jobs/process", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as { limit?: number };
+    const limit =
+      body.limit != null ? Math.min(20, Math.max(1, body.limit)) : 5;
+    const out = await processDigestQueue(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      limit
+    );
+    for (const job of out.processed) {
+      if (job.status === "completed") {
+        await agentAudit.recordInvocation({
+          tenant_id: tenantId,
+          tool_name: "tool_digest_dispatch",
+          session_id: null,
+          arguments_json: { job_id: job.job_id, queued: true },
+          result_summary: `digest:${job.job_id}`,
+        });
+      }
+    }
+    return c.json(out);
   });
 
   app.get("/api/v1/agent/copilot/sessions/:sessionId", async (c) => {

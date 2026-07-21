@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "test": "vitest run",
+    "test:smoke": "vitest run tests/e2e/smoke-flow.test.ts",
     "test:golden": "vitest run tests/golden/golden.test.ts",
     "test:api": "vitest run tests/api/bff.test.ts",
     "build": "npm run build -w @mx-pricing/pricing-engine && npm run build -w @mx-pricing/i18n-format && npm run build -w @mx-pricing/channel-adapters && npm run build -w @mx-pricing/db && npm run build -w @mx-pricing/bff && npm run build -w @mx-pricing/web",

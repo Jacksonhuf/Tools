@@ -250,6 +250,18 @@ paths:
   /api/v1/agent/digest/dispatches:
     get:
       summary: Recent digest dispatch jobs
+  /api/v1/agent/readiness:
+    get:
+      summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)
+  /api/v1/agent/digest/daily/enqueue:
+    post:
+      summary: Enqueue digest job for async worker
+  /api/v1/agent/digest/jobs:
+    get:
+      summary: List queued digest jobs
+  /api/v1/agent/digest/jobs/process:
+    post:
+      summary: Process queued digest jobs (email_stub / webhook_queue)
   /api/v1/agent/copilot/sessions:
     post:
       summary: Start Copilot multi-turn session (SDD §12)

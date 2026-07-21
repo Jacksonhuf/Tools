@@ -6,12 +6,15 @@ import {
   createCopilotSession,
   DEMO_SKU,
   fetchAgentToolAudit,
+  enqueueDailyDigest,
+  fetchAgentReadiness,
   fetchAgentTools,
   dispatchDailyAgentDigest,
   fetchDailyAgentDigest,
   fetchRuleCompilerStatus,
   invokeAgentTool,
   LISTING_BY_CHANNEL,
+  processDigestJobs,
   sendCopilotMessage,
   type Channel,
   type CopilotChatMessage,
@@ -46,6 +49,7 @@ export function CopilotPage() {
   const [chatInput, setChatInput] = useState("");
   const [digestNarrative, setDigestNarrative] = useState<string | null>(null);
   const [digestEmailStub, setDigestEmailStub] = useState<string | null>(null);
+  const [p4Ready, setP4Ready] = useState<boolean | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -81,6 +85,22 @@ export function CopilotPage() {
     }
   };
 
+  const runDigestQueue = async () => {
+    setError(null);
+    try {
+      const enq = await enqueueDailyDigest(locale);
+      const proc = await processDigestJobs(locale, 1);
+      const done = proc.processed[0];
+      setMessage(
+        `${t("copilotDigestQueueOk")}: ${enq.job.job_id} → ${done?.status ?? "?"}`
+      );
+      await loadDigest();
+      await refreshAudit();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   const runDigestDispatch = async () => {
     setError(null);
     try {
@@ -104,12 +124,14 @@ export function CopilotPage() {
   useEffect(() => {
     void (async () => {
       try {
-        const [toolRes, status] = await Promise.all([
+        const [toolRes, status, readiness] = await Promise.all([
           fetchAgentTools(locale),
           fetchRuleCompilerStatus(locale),
+          fetchAgentReadiness(locale),
         ]);
         setTools(toolRes.items);
         setCompilerLabel(`${status.driver} — ${status.note}`);
+        setP4Ready(readiness.ready);
         await refreshAudit();
         await loadDigest();
       } catch {
@@ -242,6 +264,11 @@ export function CopilotPage() {
     <div className="page page-wide">
       <h1>{t("copilotTitle")}</h1>
       <p className="hint">{t("copilotHint")}</p>
+      {p4Ready != null && (
+        <p className="hint" data-testid="p4-readiness">
+          P4: {p4Ready ? t("copilotP4Ready") : t("copilotP4NotReady")}
+        </p>
+      )}
       {compilerLabel && (
         <p className="hint" data-testid="compiler-status">
           {t("copilotCompilerStatus")}: {compilerLabel}
@@ -262,6 +289,9 @@ export function CopilotPage() {
             </button>
             <button type="button" onClick={() => void runDigestDispatch()}>
               {t("copilotDigestDispatch")}
+            </button>
+            <button type="button" onClick={() => void runDigestQueue()}>
+              {t("copilotDigestQueue")}
             </button>
           </div>
         </section>

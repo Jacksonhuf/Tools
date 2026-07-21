@@ -142,6 +142,10 @@ const resources = {
       copilotDigestRefresh: "Refresh digest",
       copilotDigestDispatch: "Run digest (email stub)",
       copilotDigestEmailStub: "Last email stub",
+      copilotDigestQueue: "Enqueue & process queue",
+      copilotDigestQueueOk: "Digest queue job",
+      copilotP4Ready: "milestone checks passed",
+      copilotP4NotReady: "milestone checks failing",
     },
   },
   "zh-CN": {
@@ -280,6 +284,10 @@ const resources = {
       copilotDigestRefresh: "刷新摘要",
       copilotDigestDispatch: "运行摘要（邮件占位）",
       copilotDigestEmailStub: "最近邮件占位",
+      copilotDigestQueue: "入队并处理",
+      copilotDigestQueueOk: "摘要队列任务",
+      copilotP4Ready: "里程碑检查通过",
+      copilotP4NotReady: "里程碑检查未通过",
     },
   },
   "es-MX": {
@@ -423,6 +431,10 @@ const resources = {
       copilotDigestRefresh: "Actualizar resumen",
       copilotDigestDispatch: "Ejecutar resumen (email simulado)",
       copilotDigestEmailStub: "Último email simulado",
+      copilotDigestQueue: "Encolar y procesar",
+      copilotDigestQueueOk: "Trabajo de cola",
+      copilotP4Ready: "hitos aprobados",
+      copilotP4NotReady: "hitos pendientes",
     },
   },
 };

@@ -720,6 +720,40 @@ export async function fetchDailyAgentDigest(locale: string, date?: string) {
   }>;
 }
 
+export async function fetchAgentReadiness(locale: string) {
+  const res = await fetch(`/api/v1/agent/readiness`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`readiness ${res.status}`);
+  return res.json() as Promise<{
+    ready: boolean;
+    milestone: string;
+    checks: Array<{ id: string; passed: boolean; detail: string }>;
+  }>;
+}
+
+export async function enqueueDailyDigest(locale: string) {
+  const res = await fetch(`/api/v1/agent/digest/daily/enqueue`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ channels: ["email_stub", "webhook_queue"] }),
+  });
+  if (!res.ok) throw new Error(`digest enqueue ${res.status}`);
+  return res.json() as Promise<{ job: { job_id: string; status: string } }>;
+}
+
+export async function processDigestJobs(locale: string, limit = 5) {
+  const res = await fetch(`/api/v1/agent/digest/jobs/process`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ limit }),
+  });
+  if (!res.ok) throw new Error(`digest process ${res.status}`);
+  return res.json() as Promise<{
+    processed: Array<{ job_id: string; status: string }>;
+  }>;
+}
+
 export async function dispatchDailyAgentDigest(locale: string) {
   const res = await fetch(`/api/v1/agent/digest/daily/dispatch`, {
     method: "POST",
