@@ -358,6 +358,8 @@
 
 ```bash
 npm ci && npm run build && npm test
+npm run test:smoke    # API E2E scaffold
+npm run test:e2e      # Playwright (starts BFF + web preview)
 npm run db:up       # PostgreSQL
 export DATABASE_URL=postgresql://mx:mx@localhost:5432/mx_pricing
 npm run db:migrate
@@ -397,3 +399,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.2 | 2026-07-21 | Loop 23 |
 | v3.3 | 2026-07-21 | Loop 24 |
 | v3.4 | 2026-07-21 | Loop 25 |
+| v3.5 | 2026-07-21 | Loop 26 |
