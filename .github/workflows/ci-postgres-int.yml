@@ -1,0 +1,36 @@
+name: ci-postgres-int
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+
+jobs:
+  postgres-bff-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mx
+          POSTGRES_PASSWORD: mx
+          POSTGRES_DB: mx_pricing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mx -d mx_pricing"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://mx:mx@localhost:5432/mx_pricing
+      RUN_PG_INTEGRATION: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx vitest run tests/int/postgres-bff-smoke.test.ts

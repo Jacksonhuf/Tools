@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  fetchChannelSandboxEvents,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
   publishShopChannelPrice,
   pullShopListing,
   startShopOAuth,
+  type ChannelSandboxEvent,
   type ShopSummary,
 } from "../api/client";
 
@@ -22,16 +24,19 @@ export function ChannelsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sandboxNote, setSandboxNote] = useState<string | null>(null);
+  const [sandboxEvents, setSandboxEvents] = useState<ChannelSandboxEvent[]>([]);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, sandbox] = await Promise.all([
+      const [data, sandbox, events] = await Promise.all([
         fetchShops(locale),
         fetchChannelSandboxStatus(locale),
+        fetchChannelSandboxEvents(locale, 25),
       ]);
       setShops(data.items);
       setSandboxNote(sandbox.enabled ? sandbox.note : null);
+      setSandboxEvents(sandbox.enabled ? events.items : []);
     } catch (e) {
       setError(String(e));
     }
@@ -151,6 +156,43 @@ export function ChannelsPage() {
           </tbody>
         </table>
       </section>
+
+      {sandboxNote && (
+        <section className="card">
+          <h2>{t("channelSandboxEventsTitle")}</h2>
+          {sandboxEvents.length === 0 ? (
+            <p className="hint" data-testid="channel-sandbox-events-empty">
+              {t("channelSandboxNoEvents")}
+            </p>
+          ) : (
+            <table
+              className="batch-table shop-table"
+              data-testid="channel-sandbox-events"
+            >
+              <thead>
+                <tr>
+                  <th>{t("channelSandboxEventTime")}</th>
+                  <th>{t("channelSandboxEventType")}</th>
+                  <th>{t("channel")}</th>
+                  <th>{t("channelSandboxListing")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sandboxEvents.map((ev) => (
+                  <tr key={ev.id}>
+                    <td>{new Date(ev.created_at).toLocaleString(locale)}</td>
+                    <td>
+                      <code>{ev.event_type}</code>
+                    </td>
+                    <td>{channelLabel(ev.channel)}</td>
+                    <td>{ev.listing_id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -21,4 +21,6 @@
 
 ## 测试
 
-`tests/api/channel-sandbox.test.ts`；Playwright 调价审批见 `tests/e2e/web/adjustment-approval.spec.ts`（TC-E2E-ADJ-004）。
+`tests/api/channel-sandbox.test.ts`；Playwright 调价审批见 `tests/e2e/web/adjustment-approval.spec.ts`（TC-E2E-ADJ-004）；渠道沙箱 UI 见 `channels-sandbox.spec.ts`（TC-E2E-CH-001）。
+
+Web：Channels 页在沙箱开启时展示 **Recent sandbox events** 表格（`data-testid=channel-sandbox-events`），发布/拉取后刷新列表。

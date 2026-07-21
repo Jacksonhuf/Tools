@@ -41,7 +41,7 @@
 | P0-E6-06 | 完成 | Loop 6 |
 | P1-E3-05 | 部分 | Loop 6（Web 双列） |
 | P0-E4-05 | 部分 | Loop 5（PG `price_versions`） |
-| P0-E8-02 | 部分 | Loop 5（`tests/int/postgres-catalog`） |
+| P0-E8-02 | 部分 | Loop 29（`postgres-bff-smoke` + `ci-postgres-int`） |
 | P0-E1-02 | 部分 | Loop 2（BFF 路由、401、health） |
 | P0-E1-03 | 部分 | Loop 2（Bearer + X-Tenant-Id） |
 | P0-E1-07 | 完成 | Loop 1 |
@@ -362,6 +362,26 @@
 | **测试** | `npm test` — **102 passed**；`npm run test:e2e` — **2 passed** |
 | **下一步** | 合并 main、扩展 Playwright 调价流、渠道沙箱 |
 
+### Loop 28 — 渠道沙箱与调价审批 Playwright（TC-E2E-ADJ-004 / P1 沙箱）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 27 下一步；`channel-sandbox`；TC-E2E-ADJ-004 |
+| **实现** | `channel-sandbox-ledger` + `GET channels/sandbox/*`；publish/pull 事件；Channels 沙箱提示；Playwright `adjustment-approval.spec.ts`；`docs/channel-sandbox.md` |
+| **测试** | `npm test` — **104 passed**；`npm run test:e2e` — **3 passed** |
+| **下一步** | 合并 PR #1、扩展渠道沙箱 UI 事件列表、PostgreSQL 全链路 CI |
+
+### Loop 29 — 沙箱事件 UI 与 PostgreSQL CI（TC-E2E-CH-001 / TC-INT-PG-001）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 28 下一步；`merge-readiness`；P0-E8-02 |
+| **实现** | Channels 页沙箱事件表 + `fetchChannelSandboxEvents`；`postgres-bff-smoke.test.ts`；`ci-postgres-int`；Playwright `channels-sandbox.spec.ts`；更新 `merge-readiness` |
+| **测试** | `npm test` — **104 passed**；`ci-postgres-int` 另跑 **2** PG 用例；`npm run test:e2e` — **4 passed** |
+| **下一步** | 合并 PR #1、PG CI 扩展 shop/adjustment 仓储、生产 `CHANNEL_SANDBOX_MODE=false` 运维说明 |
+
 ---
 
 ## 本地命令
@@ -411,3 +431,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.4 | 2026-07-21 | Loop 25 |
 | v3.5 | 2026-07-21 | Loop 26 |
 | v3.6 | 2026-07-21 | Loop 27 |
+| v3.8 | 2026-07-21 | Loop 29 |

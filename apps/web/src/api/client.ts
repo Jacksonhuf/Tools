@@ -236,6 +236,25 @@ export async function fetchChannelSandboxStatus(locale: string) {
   }>;
 }
 
+export interface ChannelSandboxEvent {
+  id: string;
+  tenant_id: string;
+  listing_id: string;
+  channel: string;
+  event_type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+export async function fetchChannelSandboxEvents(locale: string, limit = 20) {
+  const res = await fetch(
+    `/api/v1/channels/sandbox/events?limit=${encodeURIComponent(String(limit))}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`sandbox events ${res.status}`);
+  return res.json() as Promise<{ items: ChannelSandboxEvent[] }>;
+}
+
 export async function fetchShops(locale: string) {
   const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);

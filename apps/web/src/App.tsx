@@ -46,6 +46,7 @@ export function App() {
           type="button"
           className={tab === "channels" ? "active" : ""}
           onClick={() => setTab("channels")}
+          data-testid="nav-channels"
         >
           {t("navChannels")}
         </button>
