@@ -452,6 +452,16 @@
 
 > **Loop 1–36** 已随 PR #1 合并；**Loop 37+** 从 `main` 开分支 `cursor/<描述>-1936`。
 
+### Loop 37 — Cross-channel Guard（P5-01 / TC-API-XCH-001）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **分支** | `cursor/cross-channel-guard-1936`（已合并 main） |
+| **实现** | `evaluateCrossChannelSpread`；`GET /skus/:id/cross-channel-guard`；定价页横幅 |
+| **测试** | `cross-channel-guard.test.ts` + unit TC-UNIT-XCH-* |
+| **下一步** | P5-03 报表导出 |
+
 ### Loop 38 — 定价报表导出（P5-03 / TC-API-RPT-001/002）
 
 | 项 | 内容 |
@@ -460,7 +470,7 @@
 | **分支** | `cursor/report-export-1936` |
 | **实现** | `pricing-report-service`；`GET /reports/pricing-snapshot`；Ops 导出 CSV；`pricing-reports-export.md` |
 | **测试** | `pricing-report.test.ts` |
-| **下一步** | OIDC 占位、合并 PR #2/#3 |
+| **下一步** | Loop 39+ OIDC、特性开关 |
 
 ---
 

@@ -94,6 +94,7 @@ import {
   createChannelPublishAdapter,
 } from "./channel-adapter-factory.js";
 import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
+import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import {
   buildPricingSnapshotRows,
   pricingSnapshotToCsv,
@@ -280,6 +281,16 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json(ctx);
+  });
+
+  app.get("/api/v1/skus/:skuId/cross-channel-guard", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const guard = await getCrossChannelGuardForSku(catalog, sku.id);
+    return c.json(guard);
   });
 
   app.post("/api/v1/listings/:listingId/price-versions", async (c) => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  fetchCrossChannelGuard,
   fetchPricingContext,
   fetchSkus,
   patchSkuLandedCost,
@@ -8,6 +9,7 @@ import {
   publishPrice,
   simulatePricing,
   type Channel,
+  type CrossChannelGuardResponse,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
 
@@ -30,18 +32,23 @@ export function PricingPage() {
   >({ MERCADO_LIBRE: null, AMAZON_MX: null });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [crossChannelWarning, setCrossChannelWarning] = useState<
+    CrossChannelGuardResponse["warning"]
+  >(null);
 
   const locale = i18n.language;
 
   const loadAll = useCallback(async () => {
     setError(null);
     try {
-      const [ml, amz, skuList] = await Promise.all([
+      const [ml, amz, skuList, xch] = await Promise.all([
         fetchPricingContext(locale, "MERCADO_LIBRE"),
         fetchPricingContext(locale, "AMAZON_MX"),
         fetchSkus(locale),
+        fetchCrossChannelGuard(locale),
       ]);
       setContextByChannel({ MERCADO_LIBRE: ml, AMAZON_MX: amz });
+      setCrossChannelWarning(xch.warning);
       const first = skuList.items[0];
       if (first) setLandedEdit(first.landed_cost_mxn);
     } catch (e) {
@@ -126,6 +133,14 @@ export function PricingPage() {
   return (
     <div className="page page-wide">
       {error && <p className="error">{error}</p>}
+      {crossChannelWarning && (
+        <p className="error" data-testid="cross-channel-guard-banner">
+          {t("crossChannelSpreadWarning", {
+            spread: crossChannelWarning.spread_pct,
+            max: crossChannelWarning.max_spread_pct,
+          })}
+        </p>
+      )}
 
       {mlCtx && (
         <section className="card">

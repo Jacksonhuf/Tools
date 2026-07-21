@@ -22,6 +22,8 @@ const resources = {
       floorAmazon: "Floor (Amazon)",
       guards: "Guards",
       noGuards: "No guard warnings",
+      crossChannelSpreadWarning:
+        "Cross-channel spread {{spread}}% exceeds limit {{max}}% (ML vs Amazon active prices).",
       publishOk: "Published version",
       publishFail: "Publish rejected",
       syncToChannel: "Sync active price to channel",
@@ -186,6 +188,8 @@ const resources = {
       floorAmazon: "底价 (Amazon)",
       guards: "护栏",
       noGuards: "无护栏告警",
+      crossChannelSpreadWarning:
+        "跨渠道价差 {{spread}}% 超过上限 {{max}}%（ML 与 Amazon 生效价）。",
       publishOk: "已发布版本",
       publishFail: "发布被拒绝",
       syncToChannel: "同步生效价到渠道",
@@ -346,6 +350,8 @@ const resources = {
       floorAmazon: "Piso (Amazon)",
       guards: "Protecciones",
       noGuards: "Sin alertas",
+      crossChannelSpreadWarning:
+        "Diferencial entre canales {{spread}}% supera el límite {{max}}% (precios activos ML vs Amazon).",
       publishOk: "Versión publicada",
       publishFail: "Publicación rechazada",
       syncToChannel: "Sincronizar precio activo al canal",
