@@ -245,6 +245,16 @@
 | **测试** | `npm test` — **64 passed**（idempotency + RECON-001） |
 | **下一步** | P3-E1 auto_pending、TC-NFR-REL-003 |
 
+### Loop 17 — auto_pending 与采集失败不降价（P3-E1-03 / P3-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | PRD 动态动作；TC-NFR-REL-003；SDD §13 |
+| **实现** | `auto_pending` 动作 → `pending` Version；采集 `CHANNEL_UNAVAILABLE` 熔断 + `ingest_failed`；`INGEST_FAILED_NO_DOWNGRADE` 守卫；迁移 `008` |
+| **测试** | `npm test` — **67 passed**（NFR-REL-003 + auto_pending） |
+| **下一步** | P3 营业时间窗、Version 审计 TC-INT-VER-003 |
+
 ---
 
 ## 本地命令
@@ -281,3 +291,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.3 | 2026-07-21 | Loop 14 |
 | v2.4 | 2026-07-21 | Loop 15 |
 | v2.5 | 2026-07-21 | Loop 16 |
+| v2.6 | 2026-07-21 | Loop 17 |

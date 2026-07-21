@@ -1,4 +1,4 @@
-export type RepricingAction = "suggest" | "pending" | "auto_active";
+export type RepricingAction = "suggest" | "pending" | "auto_pending" | "auto_active";
 
 export interface OffsetJson {
   type: "PERCENT" | "FIXED_MXN";
@@ -39,6 +39,11 @@ export interface ListingStaleState {
   competitor_stale_since: string | null;
 }
 
+export interface ListingIngestGuardState {
+  ingest_failed: boolean;
+  ingest_failed_at: string | null;
+}
+
 export interface ListingHealthRepository {
   readonly driver: "memory" | "postgres";
   getStale(listingId: string): Promise<ListingStaleState>;
@@ -47,5 +52,7 @@ export interface ListingHealthRepository {
     frozen: boolean,
     since?: string | null
   ): Promise<void>;
+  getIngestGuard(listingId: string): Promise<ListingIngestGuardState>;
+  setIngestFailed(listingId: string, failed: boolean): Promise<void>;
   resetForTests?(): void;
 }

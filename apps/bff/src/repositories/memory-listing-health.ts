@@ -3,6 +3,11 @@ const staleByListing = new Map<
   { frozen: boolean; since: string | null }
 >();
 
+const ingestFailedByListing = new Map<
+  string,
+  { failed: boolean; at: string | null }
+>();
+
 export class MemoryListingHealthRepository {
   readonly driver = "memory" as const;
 
@@ -25,7 +30,26 @@ export class MemoryListingHealthRepository {
     });
   }
 
+  async getIngestGuard(listingId: string): Promise<{
+    ingest_failed: boolean;
+    ingest_failed_at: string | null;
+  }> {
+    const g = ingestFailedByListing.get(listingId);
+    return {
+      ingest_failed: g?.failed ?? false,
+      ingest_failed_at: g?.at ?? null,
+    };
+  }
+
+  async setIngestFailed(listingId: string, failed: boolean): Promise<void> {
+    ingestFailedByListing.set(listingId, {
+      failed,
+      at: failed ? new Date().toISOString() : null,
+    });
+  }
+
   resetForTests(): void {
     staleByListing.clear();
+    ingestFailedByListing.clear();
   }
 }

@@ -14,10 +14,17 @@ export class MockChannelListingAdapter implements ListingPullAdapter {
   /** Override pull price by external ref (TC-INT-RECON-001) */
   priceByRef = new Map<string, number>();
 
+  /** Next pullListing throws CHANNEL_UNAVAILABLE (TC-NFR-REL-003) */
+  failNextPull = false;
+
   async pullListing(
     shop: ChannelShopRef,
     externalRef: string
   ): Promise<ListingSnapshot> {
+    if (this.failNextPull) {
+      this.failNextPull = false;
+      throw new Error("CHANNEL_UNAVAILABLE");
+    }
     const now = new Date().toISOString();
     const price =
       this.priceByRef.get(externalRef) ?? MOCK_PRICES[shop.channel];

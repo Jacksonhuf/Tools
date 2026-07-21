@@ -54,6 +54,7 @@ import {
   notifyObservationChange,
   processRepricingEvent,
   runMockIngest,
+  IngestFailedError,
 } from "./repricing/runtime.js";
 import { tierIntervalMs } from "./repricing/tier.js";
 import {
@@ -635,6 +636,7 @@ export function createApp(options: CreateAppOptions = {}) {
       tier: schedule.tier,
       next_run_at: schedule.next_run_at,
       interval_ms: tierIntervalMs(schedule.tier),
+      ...(await listingHealth.getIngestGuard(listingId)),
     });
   });
 
@@ -646,11 +648,16 @@ export function createApp(options: CreateAppOptions = {}) {
         catalog,
         competitors,
         repricing,
+        listingHealth,
+        listingAdapter,
         tenantId,
         listingId
       );
       return c.json(result);
     } catch (e) {
+      if (e instanceof IngestFailedError) {
+        return c.json({ error: "INGEST_FAILED" }, 503);
+      }
       if (String(e).includes("LISTING_NOT_FOUND")) {
         throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
       }
@@ -731,6 +738,7 @@ export function createApp(options: CreateAppOptions = {}) {
       action: body.action as
         | "suggest"
         | "pending"
+        | "auto_pending"
         | "auto_active"
         | undefined,
       anchor_type: body.anchor_type as string | undefined,

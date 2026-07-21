@@ -374,6 +374,8 @@ export async function fetchIngestStatus(locale: string, listingId: string) {
     tier: string;
     next_run_at: string;
     interval_ms: number;
+    ingest_failed?: boolean;
+    ingest_failed_at?: string | null;
   }>;
 }
 

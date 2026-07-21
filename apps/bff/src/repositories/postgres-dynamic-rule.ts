@@ -141,4 +141,33 @@ export class PostgresListingHealthRepository {
       [listingId, frozen, frozen ? (since ?? new Date().toISOString()) : null]
     );
   }
+
+  async getIngestGuard(listingId: string) {
+    const res = await this.pool.query(
+      `SELECT ingest_failed, ingest_failed_at FROM listings WHERE id = $1`,
+      [listingId]
+    );
+    if (!res.rowCount) {
+      return { ingest_failed: false, ingest_failed_at: null };
+    }
+    const row = res.rows[0];
+    return {
+      ingest_failed: Boolean(row.ingest_failed),
+      ingest_failed_at: row.ingest_failed_at
+        ? new Date(row.ingest_failed_at).toISOString()
+        : null,
+    };
+  }
+
+  async setIngestFailed(listingId: string, failed: boolean): Promise<void> {
+    await this.pool.query(
+      `UPDATE listings SET ingest_failed = $2,
+              ingest_failed_at = $3 WHERE id = $1`,
+      [
+        listingId,
+        failed,
+        failed ? new Date().toISOString() : null,
+      ]
+    );
+  }
 }

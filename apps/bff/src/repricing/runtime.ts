@@ -1,4 +1,4 @@
-import { MockChannelListingAdapter } from "@mx-pricing/channel-adapters";
+import type { ListingPullAdapter } from "@mx-pricing/channel-adapters";
 import { computeCompetitive, computeFloorPrice } from "@mx-pricing/pricing-engine";
 import type { CatalogRepository } from "../repositories/index.js";
 import type { CompetitorRepository } from "../repositories/competitor-index.js";
@@ -20,8 +20,14 @@ import {
 import { nextRunFromNow, type IngestTier } from "./tier.js";
 import { evaluateListingStale } from "./stale.js";
 import { checkDynamicRepricingGuards } from "./guards.js";
+import { versionStateForAction } from "./action.js";
 
-const mockPull = new MockChannelListingAdapter();
+export class IngestFailedError extends Error {
+  constructor() {
+    super("INGEST_FAILED");
+    this.name = "IngestFailedError";
+  }
+}
 
 export async function ensureIngestSchedule(
   repricing: RepricingRepository,
@@ -93,6 +99,8 @@ export async function runMockIngest(
   catalog: CatalogRepository,
   competitors: CompetitorRepository,
   repricing: RepricingRepository,
+  listingHealth: ListingHealthRepository,
+  listingAdapter: ListingPullAdapter,
   tenantId: string,
   listingId: string
 ): Promise<{ observations_created: number; tier: IngestTier }> {
@@ -103,42 +111,48 @@ export async function runMockIngest(
   const schedule = await ensureIngestSchedule(repricing, listingId);
   const offers = await competitors.listOffers(listingId);
   let created = 0;
-  for (const offer of offers) {
-    const prev = await competitors.latestObservation(offer.id);
-    const snap = await mockPull.pullListing(
-      {
-        shop_id: "ingest-mock",
+  try {
+    for (const offer of offers) {
+      const prev = await competitors.latestObservation(offer.id);
+      const snap = await listingAdapter.pullListing(
+        {
+          shop_id: "ingest-mock",
+          channel: offer.channel,
+          external_seller_id: "INGEST",
+        },
+        offer.external_ref
+      );
+      const effective = computeEffectivePrice({
+        sale_price: snap.price_mxn,
+        include_shipping: false,
+      });
+      if (prev && prev.effective_price === effective) {
+        continue;
+      }
+      const observation = await competitors.addObservation({
+        offer_id: offer.id,
+        observed_at: snap.synced_at,
+        sale_price: snap.price_mxn,
+        effective_price: effective,
+        raw_json: { source: "mock-ingest" },
+      });
+      created += 1;
+      await notifyObservationChange(repricing, tenantId, {
+        listing_id: listingId,
         channel: offer.channel,
-        external_seller_id: "INGEST",
-      },
-      offer.external_ref
-    );
-    const effective = computeEffectivePrice({
-      sale_price: snap.price_mxn,
-      include_shipping: false,
-    });
-    if (prev && prev.effective_price === effective) {
-      continue;
+        offer_id: offer.id,
+        previous_effective: prev?.effective_price ?? null,
+        observation: {
+          id: observation.id,
+          effective_price: observation.effective_price,
+          observed_at: observation.observed_at,
+        },
+      });
     }
-    const observation = await competitors.addObservation({
-      offer_id: offer.id,
-      observed_at: snap.synced_at,
-      sale_price: snap.price_mxn,
-      effective_price: effective,
-      raw_json: { source: "mock-ingest" },
-    });
-    created += 1;
-    await notifyObservationChange(repricing, tenantId, {
-      listing_id: listingId,
-      channel: offer.channel,
-      offer_id: offer.id,
-      previous_effective: prev?.effective_price ?? null,
-      observation: {
-        id: observation.id,
-        effective_price: observation.effective_price,
-        observed_at: observation.observed_at,
-      },
-    });
+    await listingHealth.setIngestFailed(listingId, false);
+  } catch (e) {
+    await listingHealth.setIngestFailed(listingId, true);
+    throw new IngestFailedError();
   }
   await repricing.upsertIngestSchedule({
     listing_id: listingId,
@@ -253,12 +267,16 @@ export async function processRepricingEvent(
     return { skipped: true, reason: "MIN_GAP" };
   }
 
-  const versionState =
-    rule.action === "pending"
-      ? "pending"
-      : rule.action === "auto_active"
-        ? "active"
-        : "suggested";
+  const versionState = versionStateForAction(rule.action);
+  const ingestGuard = await listingHealth.getIngestGuard(event.listing_id);
+  if (
+    versionState === "active" &&
+    active &&
+    comp.publish_price_mxn < active.publish_price_mxn &&
+    ingestGuard.ingest_failed
+  ) {
+    return { skipped: true, reason: "INGEST_FAILED_NO_DOWNGRADE" };
+  }
 
   const version = await catalog.createVersion({
     tenant_id: tenantId,

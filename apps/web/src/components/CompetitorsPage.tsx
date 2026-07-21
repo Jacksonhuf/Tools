@@ -38,6 +38,7 @@ export function CompetitorsPage() {
   const [ingestTier, setIngestTier] = useState("T1");
   const [ruleFrozen, setRuleFrozen] = useState(false);
   const [staleFrozen, setStaleFrozen] = useState(false);
+  const [ingestFailed, setIngestFailed] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -54,6 +55,7 @@ export function CompetitorsPage() {
       setHistoryCount(hist.observations.length);
       const ingest = await fetchIngestStatus(locale, listingId);
       setIngestTier(ingest.tier);
+      setIngestFailed(Boolean(ingest.ingest_failed));
       const dr = await fetchDynamicRule(locale, listingId);
       setRuleFrozen(dr.rule.frozen);
       setStaleFrozen(dr.stale.competitor_stale_frozen);
@@ -170,6 +172,9 @@ export function CompetitorsPage() {
               {" "}
               {t("ruleFrozen")}
             </span>
+          )}
+          {ingestFailed && (
+            <span className="status status-expired"> {t("ingestFailed")}</span>
           )}
         </p>
         {ruleFrozen && (
