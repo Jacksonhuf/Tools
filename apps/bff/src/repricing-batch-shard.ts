@@ -130,3 +130,139 @@ export async function runRepricingBatchShard(input: {
     skipped,
   };
 }
+
+export type RepricingShardRunResult = Exclude<
+  Awaited<ReturnType<typeof runRepricingBatchShard>>,
+  { error: "INVALID_SHARD" | "SKU_NOT_FOUND" }
+>;
+
+export async function runRepricingBatchAllShards(input: {
+  catalog: CatalogRepository;
+  competitors: CompetitorRepository;
+  repricing: RepricingRepository;
+  dynamicRules: DynamicRuleRepository;
+  listingHealth: ListingHealthRepository;
+  repricingActivity: RepricingActivityRepository;
+  tenantId: string;
+  skuId: string;
+  shardTotal: number;
+}): Promise<
+  | { error: "SKU_NOT_FOUND" }
+  | {
+      sku_id: string;
+      shard_total: number;
+      shards: RepricingShardRunResult[];
+      totals: { processed: number; skipped: number };
+    }
+> {
+  const sku = await input.catalog.getSku(input.tenantId, input.skuId);
+  if (!sku) {
+    return { error: "SKU_NOT_FOUND" };
+  }
+  const shards: RepricingShardRunResult[] = [];
+  for (let shardIndex = 0; shardIndex < input.shardTotal; shardIndex++) {
+    const result = await runRepricingBatchShard({
+      ...input,
+      shardIndex,
+    });
+    if ("error" in result) {
+      continue;
+    }
+    shards.push(result);
+  }
+  const processed = shards.reduce((n, s) => n + s.processed.length, 0);
+  const skipped = shards.reduce((n, s) => n + s.skipped.length, 0);
+  return {
+    sku_id: input.skuId,
+    shard_total: input.shardTotal,
+    shards,
+    totals: { processed, skipped },
+  };
+}
+
+export async function runRepricingBatchForTenant(input: {
+  catalog: CatalogRepository;
+  competitors: CompetitorRepository;
+  repricing: RepricingRepository;
+  dynamicRules: DynamicRuleRepository;
+  listingHealth: ListingHealthRepository;
+  repricingActivity: RepricingActivityRepository;
+  tenantId: string;
+  shardTotal: number;
+  skuIds?: string[];
+}): Promise<{
+  tenant_id: string;
+  shard_total: number;
+  skus: Array<
+    | { sku_id: string; error: "SKU_NOT_FOUND" }
+    | {
+        sku_id: string;
+        shard_total: number;
+        shards: RepricingShardRunResult[];
+        totals: { processed: number; skipped: number };
+      }
+  >;
+  totals: { processed: number; skipped: number };
+}> {
+  const skuRecords = input.skuIds?.length
+    ? (
+        await Promise.all(
+          input.skuIds.map((id) =>
+            input.catalog.getSku(input.tenantId, id)
+          )
+        )
+      ).map((sku, i) => ({ sku, id: input.skuIds![i] }))
+    : (await input.catalog.listSkus(input.tenantId)).map((sku) => ({
+        sku,
+        id: sku.id,
+      }));
+
+  const skus: Array<
+    | { sku_id: string; error: "SKU_NOT_FOUND" }
+    | {
+        sku_id: string;
+        shard_total: number;
+        shards: RepricingShardRunResult[];
+        totals: { processed: number; skipped: number };
+      }
+  > = [];
+
+  for (const { sku, id } of skuRecords) {
+    if (!sku) {
+      skus.push({ sku_id: id, error: "SKU_NOT_FOUND" });
+      continue;
+    }
+    const run = await runRepricingBatchAllShards({
+      catalog: input.catalog,
+      competitors: input.competitors,
+      repricing: input.repricing,
+      dynamicRules: input.dynamicRules,
+      listingHealth: input.listingHealth,
+      repricingActivity: input.repricingActivity,
+      tenantId: input.tenantId,
+      skuId: sku.id,
+      shardTotal: input.shardTotal,
+    });
+    if ("error" in run) {
+      skus.push({ sku_id: sku.id, error: run.error });
+      continue;
+    }
+    skus.push(run);
+  }
+
+  const processed = skus.reduce(
+    (n, s) => n + ("totals" in s ? s.totals.processed : 0),
+    0
+  );
+  const skipped = skus.reduce(
+    (n, s) => n + ("totals" in s ? s.totals.skipped : 0),
+    0
+  );
+
+  return {
+    tenant_id: input.tenantId,
+    shard_total: input.shardTotal,
+    skus,
+    totals: { processed, skipped },
+  };
+}

@@ -512,6 +512,15 @@
 | **测试** | `repricing-batch-shard.test.ts` |
 | **下一步** | 外部队列 worker、JWKS（Loop 43 PR）、跨 SKU 编排 |
 
+### Loop 45 — 分片编排与外部 worker（P5-05 扩展 / TC-API-REPR-BATCH-003）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `runRepricingBatchAllShards` / `runRepricingBatchForTenant`；`POST .../recompute-all`（SKU + tenant）；`tools/repricing-batch-worker/run.mjs` |
+| **文档** | `docs/repricing-batch-shard.md`（worker 环境变量） |
+| **测试** | `repricing-batch-shard.test.ts` TC-API-REPR-BATCH-003 |
+| **下一步** | JWKS RS256（Loop 43 PR）、持久化 job 队列 |
+
 ---
 
 ## 本地命令
@@ -568,3 +577,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v4.4 | 2026-07-21 | Loop 35 |
 | v4.7 | 2026-07-21 | Loop 39–42 Phase 2 收官 |
 | v4.8 | 2026-07-21 | Loop 44 P5-05 repricing batch shards |
+| v4.9 | 2026-07-21 | Loop 45 repricing batch worker + recompute-all |

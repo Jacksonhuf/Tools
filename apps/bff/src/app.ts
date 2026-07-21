@@ -80,6 +80,8 @@ import {
 import {
   planRepricingShards,
   runRepricingBatchShard,
+  runRepricingBatchAllShards,
+  runRepricingBatchForTenant,
 } from "./repricing-batch-shard.js";
 import {
   type RepricingActivityRepository,
@@ -1227,6 +1229,57 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw new HTTPException(400, { message: result.error });
     }
+    return c.json(result);
+  });
+
+  app.post("/api/v1/skus/:skuId/repricing-batch/recompute-all", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      shard_total?: number;
+    };
+    const shardTotal = body.shard_total ?? 2;
+    if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+    }
+    const result = await runRepricingBatchAllShards({
+      catalog,
+      competitors,
+      repricing,
+      dynamicRules,
+      listingHealth,
+      repricingActivity,
+      tenantId,
+      skuId,
+      shardTotal,
+    });
+    if ("error" in result) {
+      throw new HTTPException(404, { message: result.error });
+    }
+    return c.json(result);
+  });
+
+  app.post("/api/v1/repricing-batch/recompute-all", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      shard_total?: number;
+      sku_ids?: string[];
+    };
+    const shardTotal = body.shard_total ?? 2;
+    if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+    }
+    const result = await runRepricingBatchForTenant({
+      catalog,
+      competitors,
+      repricing,
+      dynamicRules,
+      listingHealth,
+      repricingActivity,
+      tenantId,
+      shardTotal,
+      skuIds: body.sku_ids,
+    });
     return c.json(result);
   });
 
