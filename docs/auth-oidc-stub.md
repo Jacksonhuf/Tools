@@ -7,6 +7,8 @@
 
 `oidc_stub` 模式除 `dev-token` 外接受 `Authorization: Bearer oidc-stub.<subject>`。
 
+进阶 JWT：`AUTH_DRIVER=oidc_jwt` — 见 [auth-jwt-hs256.md](./auth-jwt-hs256.md)、[auth-jwks-rs256.md](./auth-jwks-rs256.md)。
+
 `GET /api/v1/auth/status`
 
 测试：`tests/api/auth-oidc.test.ts`

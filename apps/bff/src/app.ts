@@ -158,7 +158,7 @@ import {
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
 } from "./repositories/agent-audit-index.js";
-import { getAuthStatus, validateBearerToken } from "./auth.js";
+import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
 import { getFeatureFlags } from "./feature-flags.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
@@ -223,7 +223,7 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(401, { message: "UNAUTHORIZED" });
     }
     const token = auth.slice("Bearer ".length);
-    const result = validateBearerToken(token);
+    const result = await validateBearerTokenAsync(token);
     if (!result.ok) {
       throw new HTTPException(401, { message: result.code });
     }
