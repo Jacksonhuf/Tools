@@ -23,7 +23,7 @@
 | 阶段 | 状态 | 说明 |
 |------|------|------|
 | P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
-| P1 双通道 | 未开始 | — |
+| P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
 | P2 竞品 | 未开始 | — |
 | P3 回写 | 未开始 | — |
 | P4 Agent | 未开始 | — |
@@ -64,7 +64,11 @@
 | P0-E7-01 | 完成 | Loop 1 |
 | P0-E7-02 | 完成 | Loop 1 |
 | P0-E7-03 | 完成 | Loop 1 |
-| P0-E8-03 | 部分 | Loop 2（`tests/api/bff.test.ts`） |
+| P0-E6-07 | 部分 | Loop 8（调价单 Web） |
+| P1-E1-02 | 部分 | Loop 9（加密凭证表 + 仓储） |
+| P1-E1-03 | 部分 | Loop 9（ML OAuth URL 占位 + mock） |
+| P1-E1-04 | 部分 | Loop 9（Amazon LWA URL 占位 + mock） |
+| P1-E2-01 | 部分 | Loop 9（MockChannelListingAdapter.pullListing） |
 
 ---
 
@@ -150,6 +154,16 @@
 | **测试** | `npm test` — **35 passed**（含 TC-API-ADJ-000 列表） |
 | **下一步** | P1 渠道 OAuth 占位、竞品采集管道 |
 
+### Loop 9 — 渠道 OAuth 占位与 mock 读价（P1-E1 / P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §4、§9、§15 `channel-adapters`；test-cases TC-INT-CH-001/002；任务 P1-E1-02–04、P1-E2-01 |
+| **实现** | 迁移 `003_shops`；`ShopRepository`；`GET/POST shops`、OAuth start/mock-complete、加密 token；`packages/channel-adapters` mock `pullListing`；Web「渠道」页 |
+| **测试** | `npm test` — **39 passed**（`tests/api/shops.test.ts`） |
+| **下一步** | P2-E1 竞品 Offer CRUD、手工录入观测 |
+
 ---
 
 ## 本地命令
@@ -178,3 +192,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.5 | 2026-07-20 | Loop 6 |
 | v1.6 | 2026-07-21 | Loop 7 |
 | v1.7 | 2026-07-21 | Loop 8 |
+| v1.8 | 2026-07-21 | Loop 9 |

@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PricingPage } from "./components/PricingPage";
 import { AdjustmentBatchesPage } from "./components/AdjustmentBatchesPage";
+import { ChannelsPage } from "./components/ChannelsPage";
 
-type Tab = "pricing" | "adjustments";
+type Tab = "pricing" | "adjustments" | "channels";
 
 export function App() {
   const { t, i18n } = useTranslation();
@@ -38,8 +39,21 @@ export function App() {
         >
           {t("navAdjustments")}
         </button>
+        <button
+          type="button"
+          className={tab === "channels" ? "active" : ""}
+          onClick={() => setTab("channels")}
+        >
+          {t("navChannels")}
+        </button>
       </nav>
-      {tab === "pricing" ? <PricingPage /> : <AdjustmentBatchesPage />}
+      {tab === "pricing" ? (
+        <PricingPage />
+      ) : tab === "adjustments" ? (
+        <AdjustmentBatchesPage />
+      ) : (
+        <ChannelsPage />
+      )}
     </>
   );
 }

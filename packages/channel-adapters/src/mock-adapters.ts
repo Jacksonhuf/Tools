@@ -1,0 +1,36 @@
+import type {
+  ChannelShopRef,
+  ListingPullAdapter,
+  ListingSnapshot,
+  SalesChannel,
+} from "./types.js";
+
+const MOCK_PRICES: Record<SalesChannel, number> = {
+  MERCADO_LIBRE: 1599,
+  AMAZON_MX: 1549,
+};
+
+export class MockChannelListingAdapter implements ListingPullAdapter {
+  async pullListing(
+    shop: ChannelShopRef,
+    externalRef: string
+  ): Promise<ListingSnapshot> {
+    const now = new Date().toISOString();
+    if (shop.channel === "AMAZON_MX") {
+      return {
+        external_item_id: externalRef,
+        external_asin: externalRef.startsWith("B0") ? externalRef : "B0MOCK001",
+        seller_sku: "MX-DEMO-001",
+        price_mxn: MOCK_PRICES.AMAZON_MX,
+        currency: "MXN",
+        synced_at: now,
+      };
+    }
+    return {
+      external_item_id: externalRef,
+      price_mxn: MOCK_PRICES.MERCADO_LIBRE,
+      currency: "MXN",
+      synced_at: now,
+    };
+  }
+}

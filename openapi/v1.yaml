@@ -140,3 +140,20 @@ paths:
   /api/v1/adjustment-batches/{batchId}/apply:
     post:
       summary: Apply batch and publish versions
+  /api/v1/shops:
+    get:
+      summary: List tenant shops (P1-E1)
+      responses:
+        "200":
+          description: Shop summaries without secrets
+    post:
+      summary: Create shop record
+  /api/v1/shops/{shopId}/oauth/start:
+    post:
+      summary: Start OAuth placeholder (ML / Amazon LWA)
+  /api/v1/shops/{shopId}/oauth/mock-complete:
+    post:
+      summary: Complete mock OAuth for local dev
+  /api/v1/shops/{shopId}/listings/pull:
+    post:
+      summary: Mock pullListing (TC-INT-CH-001/002)

@@ -214,6 +214,31 @@ button.primary {
   color: #065f46;
 }
 
+.status-disconnected {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-connected {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.hint {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+}
+
+.shop-actions button {
+  font-size: 0.85rem;
+}
+
 .listing-checks label {
   display: flex;
   flex-wrap: wrap;

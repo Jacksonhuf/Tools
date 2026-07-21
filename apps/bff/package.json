@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@mx-pricing/channel-adapters": "*",
     "@mx-pricing/db": "*",
     "@mx-pricing/i18n-format": "*",
     "@mx-pricing/pricing-engine": "*",

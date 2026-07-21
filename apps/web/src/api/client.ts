@@ -166,4 +166,76 @@ export async function applyAdjustmentBatch(locale: string, batchId: string) {
   return json as { batch: AdjustmentBatch; version_ids: string[] };
 }
 
+export type ShopAuthStatus = "disconnected" | "connected" | "expired";
+
+export interface ShopSummary {
+  id: string;
+  channel: Channel;
+  name: string;
+  external_seller_id: string | null;
+  auth_status: ShopAuthStatus;
+  token_expires_at: string | null;
+  created_at: string;
+}
+
+export async function fetchShops(locale: string) {
+  const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`shops ${res.status}`);
+  return res.json() as Promise<{ items: ShopSummary[] }>;
+}
+
+export async function startShopOAuth(locale: string, shopId: string) {
+  const res = await fetch(`/api/v1/shops/${shopId}/oauth/start`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`oauth start ${res.status}`);
+  return res.json() as Promise<{
+    state: string;
+    authorization_url: string;
+    channel: Channel;
+  }>;
+}
+
+export async function mockCompleteShopOAuth(
+  locale: string,
+  shopId: string,
+  state?: string
+) {
+  const res = await fetch(`/api/v1/shops/${shopId}/oauth/mock-complete`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(state ? { state } : {}),
+  });
+  if (!res.ok) throw new Error(`oauth complete ${res.status}`);
+  return res.json() as Promise<{ shop: ShopSummary }>;
+}
+
+export async function pullShopListing(
+  locale: string,
+  shopId: string,
+  external_ref: string
+) {
+  const res = await fetch(`/api/v1/shops/${shopId}/listings/pull`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ external_ref }),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "error" in json
+        ? String((json as { error: string }).error)
+        : `pull listing ${res.status}`
+    );
+  }
+  return json as {
+    snapshot: {
+      external_item_id: string;
+      external_asin?: string;
+      price_mxn: number;
+    };
+  };
+}
+
 export { DEMO_SKU };

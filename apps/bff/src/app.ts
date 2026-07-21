@@ -21,6 +21,17 @@ import {
   applyAdjustmentBatch,
   buildAdjustmentBatchInput,
 } from "./adjustment-service.js";
+import {
+  completeOAuthMock,
+  shopPublicView,
+  startOAuth,
+} from "./channel-oauth.js";
+import { MockChannelListingAdapter } from "@mx-pricing/channel-adapters";
+import {
+  type ShopRepository,
+  getShopRepository,
+  MemoryShopRepository,
+} from "./repositories/shop-index.js";
 
 export type AppEnv = {
   Variables: {
@@ -34,11 +45,14 @@ const DEV_TOKEN = "dev-token";
 export interface CreateAppOptions {
   catalog?: CatalogRepository;
   adjustments?: AdjustmentRepository;
+  shops?: ShopRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const catalog = options.catalog ?? getCatalogRepository();
   const adjustments = options.adjustments ?? getAdjustmentRepository();
+  const shops = options.shops ?? getShopRepository();
+  const listingAdapter = new MockChannelListingAdapter();
   const app = new Hono<AppEnv>();
 
   app.use(
@@ -301,6 +315,96 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(result);
   });
 
+  app.get("/api/v1/shops", async (c) => {
+    const items = await shops.listShops(c.get("tenantId"));
+    return c.json({ items: items.map(shopPublicView) });
+  });
+
+  app.post("/api/v1/shops", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      channel: "MERCADO_LIBRE" | "AMAZON_MX";
+      name: string;
+      external_seller_id?: string;
+    };
+    if (!body.channel || !body.name?.trim()) {
+      throw new HTTPException(400, { message: "INVALID_SHOP" });
+    }
+    const shop = await shops.createShop({
+      tenant_id: tenantId,
+      channel: body.channel,
+      name: body.name.trim(),
+      external_seller_id: body.external_seller_id,
+    });
+    return c.json(shopPublicView(shop), 201);
+  });
+
+  app.post("/api/v1/shops/:shopId/oauth/start", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const shop = await shops.getShop(tenantId, shopId);
+    if (!shop) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    const result = startOAuth(tenantId, shopId, shop.channel);
+    return c.json({
+      shop_id: shopId,
+      channel: shop.channel,
+      ...result,
+      mode: "placeholder",
+    });
+  });
+
+  app.post("/api/v1/shops/:shopId/oauth/mock-complete", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const body = (await c.req.json().catch(() => ({}))) as { state?: string };
+    const result = await completeOAuthMock(
+      shops,
+      tenantId,
+      shopId,
+      body.state
+    );
+    if ("error" in result) {
+      const status = result.error === "SHOP_NOT_FOUND" ? 404 : 400;
+      return c.json({ error: result.error }, status);
+    }
+    const shop = await shops.getShop(tenantId, shopId);
+    return c.json({
+      ...result,
+      shop: shop ? shopPublicView(shop) : null,
+    });
+  });
+
+  app.post("/api/v1/shops/:shopId/listings/pull", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const shop = await shops.getShop(tenantId, shopId);
+    if (!shop) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    if (shop.auth_status !== "connected" || !shop.external_seller_id) {
+      return c.json({ error: "AUTH_REQUIRED" }, 401);
+    }
+    const token = await shops.getAccessToken(shopId);
+    if (!token) {
+      return c.json({ error: "AUTH_EXPIRED" }, 401);
+    }
+    const body = (await c.req.json()) as { external_ref: string };
+    if (!body.external_ref) {
+      throw new HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+    }
+    const snapshot = await listingAdapter.pullListing(
+      {
+        shop_id: shopId,
+        channel: shop.channel,
+        external_seller_id: shop.external_seller_id,
+      },
+      body.external_ref
+    );
+    return c.json({ shop_id: shopId, snapshot });
+  });
+
   return app;
 }
 
@@ -308,10 +412,17 @@ export function createTestApp(): {
   app: ReturnType<typeof createApp>;
   catalog: MemoryCatalogRepository;
   adjustments: MemoryAdjustmentRepository;
+  shops: MemoryShopRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
-  return { app: createApp({ catalog, adjustments }), catalog, adjustments };
+  const shopsRepo = new MemoryShopRepository();
+  return {
+    app: createApp({ catalog, adjustments, shops: shopsRepo }),
+    catalog,
+    adjustments,
+    shops: shopsRepo,
+  };
 }
 
 export function createPublicApp() {

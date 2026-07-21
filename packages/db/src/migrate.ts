@@ -107,6 +107,16 @@ export async function seedDemoData(connectionString: string): Promise<void> {
       `INSERT INTO listings (id, tenant_id, sku_id, channel) VALUES ($1, $2, $3, $4)`,
       ["listing-amz-001", "tenant-demo", "demo-sku-001", "AMAZON_MX"]
     );
+    await client.query(
+      `INSERT INTO shops (id, tenant_id, channel, name) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO NOTHING`,
+      ["shop-ml-demo", "tenant-demo", "MERCADO_LIBRE", "Demo ML Shop"]
+    );
+    await client.query(
+      `INSERT INTO shops (id, tenant_id, channel, name) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO NOTHING`,
+      ["shop-amz-demo", "tenant-demo", "AMAZON_MX", "Demo Amazon MX"]
+    );
   } finally {
     await client.end();
   }
