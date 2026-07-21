@@ -18,6 +18,15 @@ export interface CatalogRepository {
     publish_price_mxn: number;
     reason?: string;
   }): Promise<PriceVersionRecord>;
+  updateVersionState(
+    versionId: string,
+    expectedState: VersionState,
+    newState: VersionState
+  ): Promise<PriceVersionRecord | undefined>;
+  setVersionChannelPublishStatus(
+    versionId: string,
+    status: PriceVersionRecord["channel_publish_status"]
+  ): Promise<void>;
   countVersions(): Promise<number>;
   listSkus(tenantId: string): Promise<SkuRecord[]>;
   updateSkuLandedCost(

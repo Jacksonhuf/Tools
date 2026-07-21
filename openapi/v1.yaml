@@ -206,3 +206,12 @@ paths:
   /api/v1/shops/{shopId}/channel-publish:
     post:
       summary: Publish mapped listing active price (shop scope)
+  /api/v1/channel-publish/batch:
+    post:
+      summary: Batch publish active prices (TC-INT-CH-006 partial success)
+  /api/v1/skus/{skuId}/repricing-queue:
+    get:
+      summary: Suggested and Pending versions for ops center
+  /api/v1/repricing-queue/promote-pending:
+    post:
+      summary: Batch promote Suggested to Pending (TC-E2E-OPS-002)

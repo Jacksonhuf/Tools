@@ -1,3 +1,4 @@
+import type { SalesChannel } from "./types.js";
 import type {
   ListingPublishAdapter,
   PublishPriceInput,
@@ -8,9 +9,18 @@ export class MockChannelPublishAdapter implements ListingPublishAdapter {
   /** Set to simulate publish failure (TC-INT-GUARD-004) */
   failNext = false;
 
+  /** Channels that always reject until cleared (TC-INT-CH-006) */
+  blockedChannels = new Set<SalesChannel>();
+
   async publishPrice(input: PublishPriceInput): Promise<PublishPriceResult> {
     if (this.failNext) {
       this.failNext = false;
+      return {
+        publish_status: "failed",
+        error_code: "CHANNEL_REJECTED",
+      };
+    }
+    if (this.blockedChannels.has(input.shop.channel)) {
       return {
         publish_status: "failed",
         error_code: "CHANNEL_REJECTED",

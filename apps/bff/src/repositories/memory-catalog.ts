@@ -12,6 +12,8 @@ import {
   createVersion,
   listVersions,
   resetVersionsForTests,
+  setVersionChannelPublishStatus,
+  updateVersionState,
   type PriceVersionRecord,
   type VersionState,
 } from "../version-store.js";
@@ -49,6 +51,23 @@ export class MemoryCatalogRepository implements CatalogRepository {
       state: input.state,
       publish_price_mxn: input.publish_price_mxn,
     });
+  }
+
+  async updateVersionState(
+    versionId: string,
+    expectedState: VersionState,
+    newState: VersionState
+  ): Promise<PriceVersionRecord | undefined> {
+    return updateVersionState(versionId, expectedState, newState);
+  }
+
+  async setVersionChannelPublishStatus(
+    versionId: string,
+    status: PriceVersionRecord["channel_publish_status"]
+  ): Promise<void> {
+    if (status) {
+      setVersionChannelPublishStatus(versionId, status);
+    }
   }
 
   async countVersions(): Promise<number> {

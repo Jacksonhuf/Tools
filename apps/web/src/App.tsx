@@ -4,8 +4,9 @@ import { PricingPage } from "./components/PricingPage";
 import { AdjustmentBatchesPage } from "./components/AdjustmentBatchesPage";
 import { ChannelsPage } from "./components/ChannelsPage";
 import { CompetitorsPage } from "./components/CompetitorsPage";
+import { OpsCenterPage } from "./components/OpsCenterPage";
 
-type Tab = "pricing" | "adjustments" | "channels" | "competitors";
+type Tab = "pricing" | "adjustments" | "channels" | "competitors" | "ops";
 
 export function App() {
   const { t, i18n } = useTranslation();
@@ -54,6 +55,13 @@ export function App() {
         >
           {t("navCompetitors")}
         </button>
+        <button
+          type="button"
+          className={tab === "ops" ? "active" : ""}
+          onClick={() => setTab("ops")}
+        >
+          {t("navOps")}
+        </button>
       </nav>
       {tab === "pricing" ? (
         <PricingPage />
@@ -61,8 +69,10 @@ export function App() {
         <AdjustmentBatchesPage />
       ) : tab === "channels" ? (
         <ChannelsPage />
-      ) : (
+      ) : tab === "competitors" ? (
         <CompetitorsPage />
+      ) : (
+        <OpsCenterPage />
       )}
     </>
   );

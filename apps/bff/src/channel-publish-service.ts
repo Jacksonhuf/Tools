@@ -61,6 +61,9 @@ export async function publishListingPrice(
         v.state === "active" && v.channel === listing.channel
     );
     if (!active) {
+      if (versionId) {
+        await catalog.setVersionChannelPublishStatus(versionId, "skipped");
+      }
       return { publish_status: "failed", error_code: "NO_ACTIVE_VERSION" };
     }
     price = active.publish_price_mxn;
@@ -101,11 +104,18 @@ export async function publishListingPrice(
     if (result.error_code === "CHANNEL_REJECTED") {
       await dynamicRules.upsertRule(listingId, { frozen: true });
     }
+    if (versionId) {
+      await catalog.setVersionChannelPublishStatus(versionId, "failed");
+    }
     return {
       publish_status: "failed",
       error_code: result.error_code ?? "PUBLISH_FAILED",
       rule_frozen: result.error_code === "CHANNEL_REJECTED",
     };
+  }
+
+  if (versionId) {
+    await catalog.setVersionChannelPublishStatus(versionId, "published");
   }
 
   return {
@@ -115,4 +125,95 @@ export async function publishListingPrice(
     retried,
     channel,
   };
+}
+
+export type BatchListingPublishStatus = "published" | "failed" | "skipped";
+
+export interface BatchPublishItem {
+  listing_id: string;
+  channel: SalesChannel;
+  publish_status: BatchListingPublishStatus;
+  channel_price_mxn?: number;
+  error_code?: string;
+  rule_frozen?: boolean;
+  retried?: boolean;
+  version_id?: string;
+  version_channel_publish_status?: BatchListingPublishStatus;
+}
+
+export type BatchPublishAggregateStatus =
+  | "all_published"
+  | "partial_success"
+  | "all_failed";
+
+export async function publishListingPriceBatch(
+  catalog: CatalogRepository,
+  shops: ShopRepository,
+  dynamicRules: DynamicRuleRepository,
+  publisher: ListingPublishAdapter,
+  tenantId: string,
+  listingIds: string[],
+  options: { retry_on_step?: boolean }
+): Promise<{
+  publish_status: BatchPublishAggregateStatus;
+  items: BatchPublishItem[];
+}> {
+  const items: BatchPublishItem[] = [];
+  for (const listingId of listingIds) {
+    try {
+      const result = await publishListingPrice(
+        catalog,
+        shops,
+        dynamicRules,
+        publisher,
+        tenantId,
+        listingId,
+        { retry_on_step: options.retry_on_step ?? true }
+      );
+      if (result.publish_status === "published") {
+        items.push({
+          listing_id: listingId,
+          channel: result.channel,
+          publish_status: "published",
+          channel_price_mxn: result.channel_price_mxn,
+          retried: result.retried,
+          version_id: result.version_id,
+          version_channel_publish_status: "published",
+        });
+      } else {
+        const listing = await catalog.getListing(tenantId, listingId);
+        const channel = (listing?.channel ?? "MERCADO_LIBRE") as SalesChannel;
+        const skipped = result.error_code === "NO_ACTIVE_VERSION";
+        items.push({
+          listing_id: listingId,
+          channel,
+          publish_status: skipped ? "skipped" : "failed",
+          error_code: result.error_code,
+          rule_frozen: result.rule_frozen,
+          version_channel_publish_status: skipped ? "skipped" : "failed",
+        });
+      }
+    } catch (e) {
+      if (String(e).includes("LISTING_NOT_FOUND")) {
+        throw e;
+      }
+      items.push({
+        listing_id: listingId,
+        channel: "MERCADO_LIBRE",
+        publish_status: "failed",
+        error_code: "PUBLISH_FAILED",
+      });
+    }
+  }
+
+  const published = items.filter((i) => i.publish_status === "published").length;
+  const failedOrSkipped = items.length - published;
+  let publish_status: BatchPublishAggregateStatus = "all_published";
+  if (published === 0 && failedOrSkipped > 0) {
+    publish_status = "all_failed";
+  } else if (published > 0 && failedOrSkipped > 0) {
+    publish_status = "partial_success";
+  }
+
+  return { publish_status, items };
 }

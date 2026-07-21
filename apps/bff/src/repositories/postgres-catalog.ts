@@ -109,6 +109,38 @@ export class PostgresCatalogRepository implements CatalogRepository {
     }
   }
 
+  async updateVersionState(
+    versionId: string,
+    expectedState: VersionState,
+    newState: VersionState
+  ): Promise<PriceVersionRecord | undefined> {
+    const numericId = versionId.replace(/^ver-/, "");
+    const r = await this.pool.query(
+      `UPDATE price_versions
+       SET state = $3
+       WHERE id = $1 AND state = $2
+       RETURNING id::text, sku_id, channel, state, publish_price_mxn, created_at`,
+      [numericId, expectedState, newState]
+    );
+    if (r.rowCount === 0) return undefined;
+    const row = r.rows[0];
+    return {
+      id: `ver-${row.id}`,
+      sku_id: row.sku_id,
+      channel: row.channel,
+      state: row.state as VersionState,
+      publish_price_mxn: Number(row.publish_price_mxn),
+      created_at: new Date(row.created_at).toISOString(),
+    };
+  }
+
+  async setVersionChannelPublishStatus(
+    _versionId: string,
+    _status: PriceVersionRecord["channel_publish_status"]
+  ): Promise<void> {
+    /* channel_publish_status column not in migration yet — no-op for postgres */
+  }
+
   async countVersions(): Promise<number> {
     const r = await this.pool.query(`SELECT COUNT(*)::int AS c FROM price_versions`);
     return r.rows[0].c as number;

@@ -2,6 +2,8 @@
 
 export type VersionState = "suggested" | "pending" | "active" | "superseded";
 
+export type ChannelPublishStatus = "published" | "failed" | "skipped";
+
 export interface PriceVersionRecord {
   id: string;
   sku_id: string;
@@ -9,6 +11,7 @@ export interface PriceVersionRecord {
   state: VersionState;
   publish_price_mxn: number;
   created_at: string;
+  channel_publish_status?: ChannelPublishStatus;
 }
 
 let versionSeq = 0;
@@ -43,6 +46,35 @@ export function createVersion(input: {
   }
   versions.push(record);
   return record;
+}
+
+export function getVersionById(
+  versionId: string
+): PriceVersionRecord | undefined {
+  return versions.find((v) => v.id === versionId);
+}
+
+export function updateVersionState(
+  versionId: string,
+  expectedState: VersionState,
+  newState: VersionState
+): PriceVersionRecord | undefined {
+  const v = versions.find((x) => x.id === versionId);
+  if (!v || v.state !== expectedState) {
+    return undefined;
+  }
+  v.state = newState;
+  return v;
+}
+
+export function setVersionChannelPublishStatus(
+  versionId: string,
+  status: ChannelPublishStatus
+): void {
+  const v = versions.find((x) => x.id === versionId);
+  if (v) {
+    v.channel_publish_status = status;
+  }
 }
 
 export function resetVersionsForTests(): void {

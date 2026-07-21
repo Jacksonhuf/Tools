@@ -461,4 +461,61 @@ export async function processRepricingEvent(locale: string, eventId: string) {
   return res.json() as Promise<{ version_id?: string; state?: string }>;
 }
 
+export interface RepricingQueueItem {
+  version_id: string;
+  listing_id: string;
+  channel: Channel;
+  state: "suggested" | "pending";
+  publish_price_mxn: number;
+  created_at: string;
+}
+
+export async function fetchRepricingQueue(locale: string, skuId: string) {
+  const res = await fetch(`/api/v1/skus/${skuId}/repricing-queue`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`repricing-queue ${res.status}`);
+  return res.json() as Promise<{ items: RepricingQueueItem[] }>;
+}
+
+export async function promoteRepricingToPending(
+  locale: string,
+  versionIds: string[]
+) {
+  const res = await fetch(`/api/v1/repricing-queue/promote-pending`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ version_ids: versionIds }),
+  });
+  if (!res.ok) throw new Error(`promote pending ${res.status}`);
+  return res.json() as Promise<{
+    updated: RepricingQueueItem[];
+    skipped: string[];
+  }>;
+}
+
+export type BatchChannelPublishResult = {
+  publish_status: "all_published" | "partial_success" | "all_failed";
+  items: Array<{
+    listing_id: string;
+    channel: Channel;
+    publish_status: "published" | "failed" | "skipped";
+    channel_price_mxn?: number;
+    error_code?: string;
+  }>;
+};
+
+export async function batchChannelPublish(
+  locale: string,
+  listingIds: string[]
+) {
+  const res = await fetch(`/api/v1/channel-publish/batch`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ listing_ids: listingIds, retry_on_step: true }),
+  });
+  const json = (await res.json()) as BatchChannelPublishResult;
+  return { ok: res.ok, status: res.status, json };
+}
+
 export { DEMO_SKU, LISTING_BY_CHANNEL };

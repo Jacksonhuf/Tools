@@ -225,6 +225,16 @@
 | **测试** | `npm test` — **59 passed**（CH-004/005 + 既有用例） |
 | **下一步** | P3 批量 Pending 发布、TC-INT-CH-006 部分成功 |
 
+### Loop 15 — 批量写价部分成功与指挥中心 Pending（P3-E2-04 / P3-E3-02）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §9.3、§10；TC-INT-CH-006、TC-E2E-OPS-002 |
+| **实现** | `POST channel-publish/batch`（`partial_success`）；Version `channel_publish_status`（内存）；`repricing-queue` + `promote-pending`；Web「指挥中心」页 |
+| **测试** | `npm test` — **61 passed**（CH-006、OPS-002） |
+| **下一步** | P3 idempotency、对账 TC-INT-RECON-001 |
+
 ---
 
 ## 本地命令
@@ -259,3 +269,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.1 | 2026-07-21 | Loop 12 |
 | v2.2 | 2026-07-21 | Loop 13 |
 | v2.3 | 2026-07-21 | Loop 14 |
+| v2.4 | 2026-07-21 | Loop 15 |

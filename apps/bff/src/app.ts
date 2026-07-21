@@ -65,7 +65,15 @@ import {
 } from "./repositories/dynamic-rule-index.js";
 import type { ListingHealthRepository } from "./repositories/dynamic-rule-types.js";
 import { evaluateListingStale } from "./repricing/stale.js";
-import { publishListingPrice, LISTING_ID_BY_SHOP } from "./channel-publish-service.js";
+import {
+  publishListingPrice,
+  publishListingPriceBatch,
+  LISTING_ID_BY_SHOP,
+} from "./channel-publish-service.js";
+import {
+  listRepricingQueue,
+  promoteVersionsToPending,
+} from "./repricing-queue-service.js";
 import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
@@ -827,6 +835,58 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.post("/api/v1/channel-publish/batch", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      listing_ids: string[];
+      retry_on_step?: boolean;
+    };
+    if (!Array.isArray(body.listing_ids) || body.listing_ids.length === 0) {
+      throw new HTTPException(400, { message: "INVALID_LISTING_IDS" });
+    }
+    try {
+      const result = await publishListingPriceBatch(
+        catalog,
+        shops,
+        dynamicRules,
+        publishAdapter,
+        tenantId,
+        body.listing_ids,
+        { retry_on_step: body.retry_on_step ?? true }
+      );
+      const status = result.publish_status === "all_failed" ? 422 : 200;
+      return c.json(result, status);
+    } catch (e) {
+      if (String(e).includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.get("/api/v1/skus/:skuId/repricing-queue", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    try {
+      const queue = await listRepricingQueue(catalog, tenantId, skuId);
+      return c.json(queue);
+    } catch (e) {
+      if (String(e).includes("SKU_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/repricing-queue/promote-pending", async (c) => {
+    const body = (await c.req.json()) as { version_ids?: string[] };
+    if (!body.version_ids?.length) {
+      throw new HTTPException(400, { message: "INVALID_VERSION_IDS" });
+    }
+    const result = await promoteVersionsToPending(catalog, body.version_ids);
+    return c.json(result);
   });
 
   return app;
