@@ -352,6 +352,16 @@
 | **测试** | `npm test` — **99 passed**；`npm run test:e2e` — **1 passed** |
 | **下一步** | P3 完成验收、生产 SMTP/Playwright 扩展用例、PR 合并准备 |
 
+### Loop 27 — P3 验收、E2E 扩展与合并就绪（P3 / PR prep）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 26 下一步；P3 任务清单 |
+| **实现** | `p3-readiness` + `GET /product/readiness`；`p3-acceptance-checklist` + `merge-readiness`；Playwright Ops/i18n；`ci-vitest-full`；`p3-smoke.test.ts` |
+| **测试** | `npm test` — **102 passed**；`npm run test:e2e` — **2 passed** |
+| **下一步** | 合并 main、扩展 Playwright 调价流、渠道沙箱 |
+
 ---
 
 ## 本地命令
@@ -400,3 +410,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.3 | 2026-07-21 | Loop 24 |
 | v3.4 | 2026-07-21 | Loop 25 |
 | v3.5 | 2026-07-21 | Loop 26 |
+| v3.6 | 2026-07-21 | Loop 27 |

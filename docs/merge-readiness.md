@@ -6,7 +6,7 @@
 
 | 命令 | 说明 |
 |------|------|
-| `npm ci && npm run build && npm test` | 全量 Vitest（当前 **100+** 用例） |
+| `npm ci && npm run build && npm test` | 全量 Vitest（当前 **102** 用例） |
 | `npm run test:smoke` | API E2E 链（定价 + Copilot + digest） |
 | `npm run test:e2e` | Playwright（定价双列 + Copilot + Ops） |
 
