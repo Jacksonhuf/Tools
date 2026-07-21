@@ -96,6 +96,10 @@ import {
 import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import {
+  buildPricingSnapshotRows,
+  pricingSnapshotToCsv,
+} from "./pricing-report-service.js";
+import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
   listChannelSandboxEvents,
@@ -509,6 +513,29 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/ops/metrics", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json(buildOpsMetricsSnapshot(catalog, tenantId));
+  });
+
+  app.get("/api/v1/reports/pricing-snapshot", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.query("sku_id") ?? "demo-sku-001";
+    const format = (c.req.query("format") ?? "json").toLowerCase();
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
+    if (format === "csv") {
+      const csv = pricingSnapshotToCsv(rows, exportedAt);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="pricing-snapshot-${skuId}.csv"`,
+        },
+      });
+    }
+    return c.json({ exported_at: exportedAt, sku_id: skuId, rows });
   });
 
   app.get("/api/v1/channels/sandbox/events", async (c) => {

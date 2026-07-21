@@ -152,6 +152,9 @@ paths:
   /api/v1/skus/{skuId}/cross-channel-guard:
     get:
       summary: Cross-channel active price spread guard (P5-01)
+  /api/v1/reports/pricing-snapshot:
+    get:
+      summary: Pricing snapshot export (JSON or CSV)
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)
