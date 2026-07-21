@@ -245,6 +245,12 @@ paths:
   /api/v1/repricing-queue/promote-pending:
     post:
       summary: Batch promote Suggested to Pending (TC-E2E-OPS-002)
+  /api/v1/skus/{skuId}/repricing-batch/shard-plan:
+    get:
+      summary: Plan repricing batch shards per SKU listing (P5-05)
+  /api/v1/skus/{skuId}/repricing-batch/recompute:
+    post:
+      summary: Process pending repricing events for one shard (P5-05)
   /api/v1/reconciliation-alerts:
     get:
       summary: Open channel vs active price alerts (TC-INT-RECON-001)
