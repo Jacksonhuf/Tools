@@ -155,6 +155,15 @@ paths:
   /api/v1/reports/pricing-snapshot:
     get:
       summary: Pricing snapshot export (JSON or CSV)
+  /api/v1/reports/reconciliation-alerts:
+    get:
+      summary: Reconciliation alerts export (JSON or CSV)
+  /api/v1/auth/status:
+    get:
+      summary: Auth driver status (dev / oidc_stub)
+  /api/v1/feature-flags:
+    get:
+      summary: Environment feature flags (X-02)
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)

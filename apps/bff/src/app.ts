@@ -152,15 +152,17 @@ import {
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
 } from "./repositories/agent-audit-index.js";
+import { getAuthStatus, validateBearerToken } from "./auth.js";
+import { getFeatureFlags } from "./feature-flags.js";
+import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
   Variables: {
     tenantId: string;
     locale: AppLocale;
+    authSubject: string;
   };
 };
-
-const DEV_TOKEN = "dev-token";
 
 export interface CreateAppOptions {
   catalog?: CatalogRepository;
@@ -215,11 +217,13 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(401, { message: "UNAUTHORIZED" });
     }
     const token = auth.slice("Bearer ".length);
-    if (token !== DEV_TOKEN) {
-      throw new HTTPException(401, { message: "INVALID_TOKEN" });
+    const result = validateBearerToken(token);
+    if (!result.ok) {
+      throw new HTTPException(401, { message: result.code });
     }
     const tenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
     c.set("tenantId", tenantId);
+    c.set("authSubject", result.subject);
     c.set("locale", parseAcceptLanguage(c.req.header("Accept-Language")));
     await next();
   });
@@ -231,6 +235,10 @@ export function createApp(options: CreateAppOptions = {}) {
       catalog: catalog.driver,
     })
   );
+
+  app.get("/api/v1/auth/status", (c) => c.json(getAuthStatus()));
+
+  app.get("/api/v1/feature-flags", (c) => c.json(getFeatureFlags()));
 
   app.get("/api/v1/skus/:skuId/pricing-context", async (c) => {
     const tenantId = c.get("tenantId");
@@ -536,6 +544,24 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json({ exported_at: exportedAt, sku_id: skuId, rows });
+  });
+
+  app.get("/api/v1/reports/reconciliation-alerts", async (c) => {
+    const tenantId = c.get("tenantId");
+    const format = (c.req.query("format") ?? "json").toLowerCase();
+    const exportedAt = new Date().toISOString();
+    const items = await reconciliationAlerts.listAlerts(tenantId);
+    if (format === "csv") {
+      const csv = reconciliationAlertsToCsv(items, exportedAt);
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="reconciliation-alerts.csv"`,
+        },
+      });
+    }
+    return c.json({ exported_at: exportedAt, items });
   });
 
   app.get("/api/v1/channels/sandbox/events", async (c) => {

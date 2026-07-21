@@ -1,0 +1,24 @@
+name: ci-nfr-weekly
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  nfr-weekly-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Vitest baseline (TC-NFR-PERF-002 scaffold)
+        run: npm test
+      - name: Record placeholder metrics
+        run: |
+          echo "repricing_lag_seconds=0" >> "$GITHUB_STEP_SUMMARY"
+          echo "pricing_calc_duration_ms=placeholder" >> "$GITHUB_STEP_SUMMARY"
