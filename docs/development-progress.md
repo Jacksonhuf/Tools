@@ -392,6 +392,16 @@
 | **测试** | `npm test` — **105 passed**（PG 4 skipped）；`ci-postgres-int` — **4** PG 用例；`npm run test:e2e` — **4 passed** |
 | **下一步** | 合并 PR #1、真实渠道 HTTP 适配器接线、PG repricing/competitor 仓储 CI |
 
+### Loop 31 — HTTP 渠道桩适配器与 PG 竞品/调价事件（TC-API-CH-HTTP-001 / TC-INT-PG-004/005）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 30 下一步；P1 渠道；P2 竞品/repricing |
+| **实现** | `HttpStubChannel*Adapter` + `channel-adapter-factory`；`GET channels/adapters/status`；`postgres-bff-smoke` 竞品观测 + repricing flush；`docs/channel-http-adapters.md` |
+| **测试** | `npm test` — **109 passed**（PG 6 skipped）；`ci-postgres-int` — **6** PG 用例 |
+| **下一步** | 合并 PR #1、渠道网关联调、Web 展示 adapter 状态 |
+
 ---
 
 ## 本地命令
@@ -443,4 +453,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.6 | 2026-07-21 | Loop 27 |
 | v3.7 | 2026-07-21 | Loop 28 |
 | v3.8 | 2026-07-21 | Loop 29 |
-| v3.9 | 2026-07-21 | Loop 30 |
+| v4.0 | 2026-07-21 | Loop 31 |

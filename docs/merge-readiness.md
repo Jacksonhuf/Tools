@@ -1,4 +1,4 @@
-# PR / 合并就绪检查（Development Loop 30）
+# PR / 合并就绪检查（Development Loop 31）
 
 在合并 `cursor/prd-and-task-docs-1936` → `main` 前建议确认：
 
@@ -6,7 +6,7 @@
 
 | 命令 | 说明 |
 |------|------|
-| `npm ci && npm run build && npm test` | 全量 Vitest（**105** 用例；PG 见 `ci-postgres-int` **4** 用例） |
+| `npm ci && npm run build && npm test` | 全量 Vitest（**109** 用例；PG 见 `ci-postgres-int` **6** 用例） |
 | `npm run test:smoke` | API E2E 链（定价 + Copilot + digest + P3） |
 | `npm run test:e2e` | Playwright（定价 + Copilot + Ops + 调价审批 + 渠道沙箱） |
 
@@ -24,11 +24,12 @@ GitHub Actions：
 
 ## 文档
 
-- [development-progress.md](./development-progress.md) — Loop 1–30 日志
+- [development-progress.md](./development-progress.md) — Loop 1–31 日志
 - [p3-acceptance-checklist.md](./p3-acceptance-checklist.md)
 - [p4-acceptance-checklist.md](./p4-acceptance-checklist.md)
 - [channel-sandbox.md](./channel-sandbox.md)
 - [channel-sandbox-production.md](./channel-sandbox-production.md)
+- [channel-http-adapters.md](./channel-http-adapters.md)
 
 ## Demo 冒烟（本地）
 

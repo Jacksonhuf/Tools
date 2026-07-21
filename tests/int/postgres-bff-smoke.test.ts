@@ -4,6 +4,8 @@ import { createApp } from "../../apps/bff/src/app.js";
 import { PostgresCatalogRepository } from "../../apps/bff/src/repositories/postgres-catalog.js";
 import { PostgresShopRepository } from "../../apps/bff/src/repositories/postgres-shop.js";
 import { PostgresAdjustmentRepository } from "../../apps/bff/src/repositories/postgres-adjustment.js";
+import { PostgresCompetitorRepository } from "../../apps/bff/src/repositories/postgres-competitor.js";
+import { PostgresRepricingRepository } from "../../apps/bff/src/repositories/postgres-repricing.js";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const RUN_PG =
@@ -19,12 +21,15 @@ const JSON_HEADERS = {
 /**
  * TC-INT-PG-001 — BFF reads catalog + persists versions when DATABASE_URL is set.
  * TC-INT-PG-002/003 — shop OAuth + adjustment batches on PostgreSQL.
+ * TC-INT-PG-004/005 — competitor + repricing events on PostgreSQL.
  * CI: `.github/workflows/ci-postgres-int.yml`
  */
 describe.skipIf(!RUN_PG || !DATABASE_URL)("TC-INT-PG BFF postgres path", () => {
   let catalog: PostgresCatalogRepository;
   let shops: PostgresShopRepository;
   let adjustments: PostgresAdjustmentRepository;
+  let competitors: PostgresCompetitorRepository;
+  let repricing: PostgresRepricingRepository;
 
   beforeAll(async () => {
     await runMigrations(DATABASE_URL!);
@@ -32,6 +37,8 @@ describe.skipIf(!RUN_PG || !DATABASE_URL)("TC-INT-PG BFF postgres path", () => {
     catalog = new PostgresCatalogRepository(DATABASE_URL!);
     shops = new PostgresShopRepository(DATABASE_URL!);
     adjustments = new PostgresAdjustmentRepository(DATABASE_URL!);
+    competitors = new PostgresCompetitorRepository(DATABASE_URL!);
+    repricing = new PostgresRepricingRepository(DATABASE_URL!);
   });
 
   it("GET pricing-context loads SKU from PostgreSQL", async () => {
@@ -112,5 +119,63 @@ describe.skipIf(!RUN_PG || !DATABASE_URL)("TC-INT-PG BFF postgres path", () => {
     const stored = await adjustments.getBatch("tenant-demo", batch.id);
     expect(stored?.status).toBe("approved");
     expect(stored?.reason_code).toBe("pg-int-test");
+  });
+
+  it("TC-INT-PG-004 competitor offer and observation persist in PostgreSQL", async () => {
+    const app = createApp({ catalog, competitors });
+    const offerRes = await app.request(
+      "/api/v1/listings/listing-ml-001/competitors",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({
+          external_ref: "MLM-PG-INT",
+          label: "PG rival",
+          is_primary: true,
+        }),
+      }
+    );
+    expect(offerRes.status).toBe(201);
+    const offer = (await offerRes.json()) as { id: string };
+    const obsRes = await app.request(
+      `/api/v1/competitor-offers/${offer.id}/observations`,
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ sale_price: 1499, include_shipping: false }),
+      }
+    );
+    expect(obsRes.status).toBe(201);
+    const offers = await competitors.listOffers("listing-ml-001");
+    expect(offers.some((o) => o.id === offer.id)).toBe(true);
+    const latest = await competitors.latestObservation(offer.id);
+    expect(latest?.effective_price).toBe(1499);
+  });
+
+  it("TC-INT-PG-005 repricing event enqueued after observation flush", async () => {
+    const app = createApp({ catalog, competitors, repricing });
+    const offerRes = await app.request(
+      "/api/v1/listings/listing-ml-001/competitors",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ external_ref: "MLM-PG-REPRICE", label: "Flush test" }),
+      }
+    );
+    const offer = (await offerRes.json()) as { id: string };
+    await app.request(`/api/v1/competitor-offers/${offer.id}/observations`, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ sale_price: 1510 }),
+    });
+    const flush = await app.request(
+      "/api/v1/listings/listing-ml-001/repricing-events/flush",
+      { method: "POST", headers: JSON_HEADERS }
+    );
+    expect(flush.status).toBe(200);
+    const events = await repricing.listEvents("tenant-demo", "listing-ml-001");
+    expect(
+      events.some((e) => e.type === "CompetitorPriceChanged")
+    ).toBe(true);
   });
 });

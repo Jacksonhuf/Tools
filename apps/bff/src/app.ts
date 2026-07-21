@@ -29,6 +29,8 @@ import {
 import {
   MockChannelListingAdapter,
   MockChannelPublishAdapter,
+  type ListingPublishAdapter,
+  type ListingPullAdapter,
 } from "@mx-pricing/channel-adapters";
 import {
   type ShopRepository,
@@ -86,6 +88,11 @@ import {
   MemoryReconciliationAlertRepository,
 } from "./repositories/reconciliation-index.js";
 import { reconcileListingChannelPrice } from "./reconciliation-service.js";
+import {
+  getChannelAdapterStatus,
+  createChannelListingAdapter,
+  createChannelPublishAdapter,
+} from "./channel-adapter-factory.js";
 import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
@@ -158,8 +165,8 @@ export interface CreateAppOptions {
   dynamicRules?: DynamicRuleRepository;
   listingHealth?: ListingHealthRepository;
   repricingActivity?: RepricingActivityRepository;
-  publishAdapter?: MockChannelPublishAdapter;
-  listingAdapter?: MockChannelListingAdapter;
+  publishAdapter?: ListingPublishAdapter;
+  listingAdapter?: ListingPullAdapter;
   reconciliationAlerts?: ReconciliationAlertRepository;
   agentAudit?: AgentToolAuditRepository;
 }
@@ -179,9 +186,9 @@ export function createApp(options: CreateAppOptions = {}) {
     options.reconciliationAlerts ?? getReconciliationAlertRepository();
   const agentAudit = options.agentAudit ?? getAgentToolAuditRepository();
   const listingAdapter =
-    options.listingAdapter ?? new MockChannelListingAdapter();
+    options.listingAdapter ?? createChannelListingAdapter();
   const publishAdapter =
-    options.publishAdapter ?? new MockChannelPublishAdapter();
+    options.publishAdapter ?? createChannelPublishAdapter();
   const app = new Hono<AppEnv>();
 
   app.use(
@@ -481,6 +488,10 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/channels/sandbox/status", async (c) => {
     return c.json(getChannelSandboxStatus());
+  });
+
+  app.get("/api/v1/channels/adapters/status", async (c) => {
+    return c.json(getChannelAdapterStatus());
   });
 
   app.get("/api/v1/channels/sandbox/events", async (c) => {

@@ -146,6 +146,9 @@ paths:
   /api/v1/channels/sandbox/status:
     get:
       summary: Channel sandbox mode (mock write-back)
+  /api/v1/channels/adapters/status:
+    get:
+      summary: Channel publish/pull adapter driver (mock vs http_stub)
   /api/v1/channels/sandbox/events:
     get:
       summary: Recent sandbox channel events for tenant

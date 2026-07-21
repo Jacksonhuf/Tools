@@ -7,6 +7,8 @@
 | 变量 | 生产建议 | 说明 |
 |------|----------|------|
 | `CHANNEL_SANDBOX_MODE` | `false` | 关闭沙箱事件账本；`GET .../sandbox/status` 返回 `mode: production` |
+| `CHANNEL_ADAPTER_DRIVER` | `http_stub`（可选） | 写价/拉 listing 走 HTTP 桩；见 [channel-http-adapters.md](./channel-http-adapters.md) |
+| `CHANNEL_HTTP_PUBLISH_URL` | 渠道网关 URL | 与 `http_stub` 配合 |
 | `DATABASE_URL` | 必填 | BFF 启动时 migrate + seed；店铺凭证与调价单落 PostgreSQL |
 | `ML_CLIENT_ID` / `ML_CLIENT_SECRET` | 真实应用 | OAuth 与 ML API（当前 BFF 仍以 mock 适配器为主，凭证为后续接线预留） |
 | `AMAZON_LWA_APP_ID` / LWA 密钥 | 真实应用 | Amazon MX 授权 |
