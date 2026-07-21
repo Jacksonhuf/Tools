@@ -720,6 +720,23 @@ export async function fetchDailyAgentDigest(locale: string, date?: string) {
   }>;
 }
 
+export async function dispatchDailyAgentDigest(locale: string) {
+  const res = await fetch(`/api/v1/agent/digest/daily/dispatch`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ channels: ["email_stub"] }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`digest dispatch ${res.status}`);
+  return json as {
+    job: {
+      job_id: string;
+      deliveries: Array<{ to: string; subject: string; body: string }>;
+    };
+    digest: { narrative: string };
+  };
+}
+
 export async function sendCopilotMessage(
   locale: string,
   session_id: string,
@@ -737,6 +754,7 @@ export async function sendCopilotMessage(
   const json = await res.json();
   if (!res.ok) throw new Error(`copilot message ${res.status}`);
   return json as {
+    intent?: string;
     needs_clarification: boolean;
     compile_id?: string;
     draft?: DynamicRuleDraftPayload;

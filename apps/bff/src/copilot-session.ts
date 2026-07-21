@@ -2,6 +2,24 @@ import type { AppLocale } from "@mx-pricing/i18n-format";
 import type { DynamicRuleDraft } from "./rule-compiler.js";
 import { compileRuleViaAdapter } from "./rule-compiler-adapter.js";
 import { storeCompiledDraft } from "./rule-compiler.js";
+import { isSimulateIntent, parseCompetitorPriceMxn } from "./copilot-intent.js";
+import {
+  buildSimulateNarrative,
+  simulatePriceClarification,
+  type SimulateNarrativeInput,
+} from "./copilot-narrative.js";
+import { invokeAgentTool } from "./agent-tools.js";
+import type { CatalogRepository } from "./repositories/index.js";
+import type { CompetitorRepository } from "./repositories/competitor-index.js";
+import type { AdjustmentRepository } from "./repositories/adjustment-index.js";
+import type { AgentToolAuditRepository } from "./repositories/agent-audit-types.js";
+
+export type CopilotTurnDeps = {
+  catalog: CatalogRepository;
+  competitors: CompetitorRepository;
+  adjustments: AdjustmentRepository;
+  audit: AgentToolAuditRepository;
+};
 
 export type CopilotMessageRole = "user" | "assistant";
 
@@ -121,8 +139,12 @@ export async function appendCopilotUserTurn(input: {
   content: string;
   locale: AppLocale;
   listing_id: string;
+  sku_id: string;
+  channel: "MERCADO_LIBRE" | "AMAZON_MX";
+  deps: CopilotTurnDeps;
 }): Promise<{
   session: CopilotSession;
+  intent: "simulate" | "rule_compile" | "clarify";
   needs_clarification: boolean;
   compile_id?: string;
   draft?: DynamicRuleDraft;
@@ -140,7 +162,56 @@ export async function appendCopilotUserTurn(input: {
     created_at: now,
   });
   session.listing_id = input.listing_id;
+  session.sku_id = input.sku_id;
   session.updated_at = now;
+
+  if (isSimulateIntent(input.content)) {
+    const competitorPrice = parseCompetitorPriceMxn(input.content);
+    if (competitorPrice == null || !Number.isFinite(competitorPrice)) {
+      const reply = simulatePriceClarification(input.locale);
+      session.messages.push({
+        role: "assistant",
+        content: reply,
+        created_at: new Date().toISOString(),
+      });
+      session.updated_at = new Date().toISOString();
+      return { session, intent: "simulate", needs_clarification: true };
+    }
+    const toolOut = await invokeAgentTool(
+      input.deps,
+      {
+        tenantId: input.tenant_id,
+        locale: input.locale,
+        sessionId: input.session_id,
+      },
+      "tool_simulate",
+      {
+        sku_id: input.sku_id,
+        channel: input.channel,
+        pricing_mode: "competitive_with_floor",
+        competitor_price_mxn: competitorPrice,
+      }
+    );
+    const sim = toolOut.result as SimulateNarrativeInput & {
+      publish_price_mxn?: number;
+      publish_price?: { formatted?: string };
+      floor_binding_applied?: boolean;
+      guards?: string[];
+      channel?: string;
+    };
+    const narrative = buildSimulateNarrative(
+      sim,
+      input.locale,
+      competitorPrice
+    );
+    session.messages.push({
+      role: "assistant",
+      content: narrative,
+      created_at: new Date().toISOString(),
+    });
+    session.updated_at = new Date().toISOString();
+    return { session, intent: "simulate", needs_clarification: false };
+  }
 
   const merged = mergedUserText(session.messages);
   if (needsRuleClarification(merged)) {
@@ -151,7 +222,7 @@ export async function appendCopilotUserTurn(input: {
       created_at: new Date().toISOString(),
     });
     session.updated_at = new Date().toISOString();
-    return { session, needs_clarification: true };
+    return { session, intent: "clarify", needs_clarification: true };
   }
 
   const { draft, explanation, compiler } = await compileRuleViaAdapter(
@@ -176,6 +247,7 @@ export async function appendCopilotUserTurn(input: {
 
   return {
     session,
+    intent: "rule_compile",
     needs_clarification: false,
     compile_id: compiled.compile_id,
     draft,

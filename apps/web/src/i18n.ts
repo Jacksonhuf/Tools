@@ -140,6 +140,8 @@ const resources = {
       copilotChatSend: "Send",
       copilotDigestTitle: "Daily ops digest",
       copilotDigestRefresh: "Refresh digest",
+      copilotDigestDispatch: "Run digest (email stub)",
+      copilotDigestEmailStub: "Last email stub",
     },
   },
   "zh-CN": {
@@ -276,6 +278,8 @@ const resources = {
       copilotChatSend: "发送",
       copilotDigestTitle: "每日运营摘要",
       copilotDigestRefresh: "刷新摘要",
+      copilotDigestDispatch: "运行摘要（邮件占位）",
+      copilotDigestEmailStub: "最近邮件占位",
     },
   },
   "es-MX": {
@@ -417,6 +421,8 @@ const resources = {
       copilotChatSend: "Enviar",
       copilotDigestTitle: "Resumen diario de operaciones",
       copilotDigestRefresh: "Actualizar resumen",
+      copilotDigestDispatch: "Ejecutar resumen (email simulado)",
+      copilotDigestEmailStub: "Último email simulado",
     },
   },
 };

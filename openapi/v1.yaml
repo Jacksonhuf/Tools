@@ -239,6 +239,17 @@ paths:
   /api/v1/agent/digest/daily:
     get:
       summary: Daily Agent digest placeholder (P4-E1-07)
+  /api/v1/agent/digest/schedule:
+    get:
+      summary: Digest cron schedule config (stub)
+    put:
+      summary: Update digest schedule (stub)
+  /api/v1/agent/digest/daily/dispatch:
+    post:
+      summary: Run digest and email_stub delivery (P4-E1-07)
+  /api/v1/agent/digest/dispatches:
+    get:
+      summary: Recent digest dispatch jobs
   /api/v1/agent/copilot/sessions:
     post:
       summary: Start Copilot multi-turn session (SDD §12)

@@ -111,6 +111,13 @@ import {
 } from "./copilot-narrative.js";
 import { buildDailyAgentDigest } from "./agent-digest-service.js";
 import {
+  dispatchDailyDigest,
+  getDigestSchedule,
+  listDigestDispatches,
+  resetDigestDispatchForTests,
+  upsertDigestSchedule,
+} from "./agent-digest-dispatch.js";
+import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
@@ -1169,6 +1176,53 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(digest);
   });
 
+  app.get("/api/v1/agent/digest/schedule", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json(getDigestSchedule(tenantId));
+  });
+
+  app.put("/api/v1/agent/digest/schedule", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      enabled?: boolean;
+      cron?: string;
+      email_to?: string;
+      timezone?: string;
+    };
+    const schedule = upsertDigestSchedule(tenantId, body);
+    return c.json(schedule);
+  });
+
+  app.post("/api/v1/agent/digest/daily/dispatch", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      date?: string;
+      channels?: Array<"email_stub">;
+    };
+    const { record, digest } = await dispatchDailyDigest(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      locale,
+      body
+    );
+    await agentAudit.recordInvocation({
+      tenant_id: tenantId,
+      tool_name: "tool_digest_dispatch",
+      session_id: null,
+      arguments_json: { date: record.date, job_id: record.job_id },
+      result_summary: `digest:${record.job_id}`,
+    });
+    return c.json({ job: record, digest });
+  });
+
+  app.get("/api/v1/agent/digest/dispatches", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
+    return c.json({ items: listDigestDispatches(tenantId, limit) });
+  });
+
   app.get("/api/v1/agent/copilot/sessions/:sessionId", async (c) => {
     const tenantId = c.get("tenantId");
     const sessionId = c.req.param("sessionId");
@@ -1201,12 +1255,17 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
     }
     try {
+      const session = getCopilotSession(tenantId, sessionId);
+      const skuId = session?.sku_id ?? listing.sku_id;
       const turn = await appendCopilotUserTurn({
         tenant_id: tenantId,
         session_id: sessionId,
         content: body.content,
         locale: c.get("locale"),
         listing_id: listingId,
+        sku_id: skuId,
+        channel: listing.channel,
+        deps: { catalog, competitors, adjustments, audit: agentAudit },
       });
       await agentAudit.recordInvocation({
         tenant_id: tenantId,
@@ -1215,14 +1274,19 @@ export function createApp(options: CreateAppOptions = {}) {
         arguments_json: {
           listing_id: listingId,
           content: body.content,
+          intent: turn.intent,
           needs_clarification: turn.needs_clarification,
         },
-        result_summary: turn.compile_id
-          ? `compile:${turn.compile_id}`
-          : "clarify",
+        result_summary:
+          turn.intent === "simulate"
+            ? "simulate"
+            : turn.compile_id
+              ? `compile:${turn.compile_id}`
+              : "clarify",
       });
       return c.json({
         session_id: sessionId,
+        intent: turn.intent,
         needs_clarification: turn.needs_clarification,
         compile_id: turn.compile_id,
         draft: turn.draft,

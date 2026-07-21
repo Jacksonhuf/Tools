@@ -33,7 +33,10 @@ describe("Copilot multi-turn session", () => {
     const created = await app.request("/api/v1/agent/copilot/sessions", {
       method: "POST",
       headers: JSON_HEADERS,
-      body: JSON.stringify({ listing_id: "listing-ml-001" }),
+      body: JSON.stringify({
+        listing_id: "listing-ml-001",
+        sku_id: "demo-sku-001",
+      }),
     });
     expect(created.status).toBe(200);
     const { session_id } = (await created.json()) as { session_id: string };

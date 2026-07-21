@@ -25,7 +25,7 @@
 | P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
 | P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
-| P3 回写 | 未开始 | — |
+| P3 回写 | 进行中 | Loop 13–18 + Loop 24 里程碑收尾 |
 | P4 Agent | 进行中 | Loop 22：LLM HTTP + Copilot 多轮 |
 
 ---
@@ -80,9 +80,12 @@
 | P3-E1-01 | 部分 | Loop 13（cooldown / daily_limit） |
 | P3-E2-01 | 部分 | Loop 13（ML publishPrice mock） |
 | P3-E2-05 | 部分 | Loop 13（publish 失败熔断 rule） |
+| P3-E3-01 | 部分 | Loop 16（对账 RECON-001） |
+| P3-E3-02 | 部分 | Loop 15（指挥中心 Pending 队列） |
 | P4-E1-02 | 部分 | Loop 19（agent tools + audit） |
-| P4-E1-03 | 部分 | Loop 21（Copilot 三语示例 / 工具目录 / 审计） |
+| P4-E1-03 | 部分 | Loop 21–23（Copilot 三语 + digest） |
 | P4-E1-06 | 部分 | Loop 20–22（NL compile + HTTP LLM + 多轮会话） |
+| P4-E1-07 | 部分 | Loop 23（daily digest API 占位） |
 
 ---
 
@@ -308,6 +311,16 @@
 | **测试** | `npm test` — **86 passed**（copilot-session、llm-rule-compiler） |
 | **下一步** | Copilot 自动拉 context 叙事、P4-E1-07 digest 占位、生产 LLM 契约文档 |
 
+### Loop 23 — Context 叙事、每日 Digest 与 LLM 契约（P4-E1-07 / TC-INT-AGENT-004）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §12；任务 P4-E1-07；Loop 22 下一步 |
+| **实现** | Copilot 建会话默认 `bootstrap_context`（`tool_get_pricing_context` + 三语叙事）；`GET agent/digest/daily`；`docs/llm-rule-compiler-contract.md`；Web 每日摘要卡片 |
+| **测试** | `npm test` — **89 passed**（agent-digest、copilot-narrative） |
+| **下一步** | Digest 邮件/调度占位、Copilot 诊断意图（simulate 叙事）、P3 里程碑收尾 |
+
 ---
 
 ## 本地命令
@@ -350,3 +363,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.9 | 2026-07-21 | Loop 20 |
 | v3.0 | 2026-07-21 | Loop 21 |
 | v3.1 | 2026-07-21 | Loop 22 |
+| v3.2 | 2026-07-21 | Loop 23 |

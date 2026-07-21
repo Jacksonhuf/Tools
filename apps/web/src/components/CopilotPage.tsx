@@ -7,6 +7,7 @@ import {
   DEMO_SKU,
   fetchAgentToolAudit,
   fetchAgentTools,
+  dispatchDailyAgentDigest,
   fetchDailyAgentDigest,
   fetchRuleCompilerStatus,
   invokeAgentTool,
@@ -44,6 +45,7 @@ export function CopilotPage() {
   const [chatMessages, setChatMessages] = useState<CopilotChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [digestNarrative, setDigestNarrative] = useState<string | null>(null);
+  const [digestEmailStub, setDigestEmailStub] = useState<string | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -74,6 +76,21 @@ export function CopilotPage() {
     try {
       const d = await fetchDailyAgentDigest(locale);
       setDigestNarrative(d.narrative);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const runDigestDispatch = async () => {
+    setError(null);
+    try {
+      const out = await dispatchDailyAgentDigest(locale);
+      setDigestNarrative(out.digest.narrative);
+      const mail = out.job.deliveries[0];
+      setDigestEmailStub(
+        mail ? `${mail.to} — ${mail.subject}` : null
+      );
+      await refreshAudit();
     } catch (e) {
       setError(String(e));
     }
@@ -234,9 +251,19 @@ export function CopilotPage() {
         <section className="card" data-testid="copilot-digest">
           <h2>{t("copilotDigestTitle")}</h2>
           <p>{digestNarrative}</p>
-          <button type="button" onClick={() => void loadDigest()}>
-            {t("copilotDigestRefresh")}
-          </button>
+          {digestEmailStub && (
+            <p className="hint" data-testid="digest-email-stub">
+              {t("copilotDigestEmailStub")}: {digestEmailStub}
+            </p>
+          )}
+          <div className="shop-actions">
+            <button type="button" onClick={() => void loadDigest()}>
+              {t("copilotDigestRefresh")}
+            </button>
+            <button type="button" onClick={() => void runDigestDispatch()}>
+              {t("copilotDigestDispatch")}
+            </button>
+          </div>
         </section>
       )}
       {error && <p className="error">{error}</p>}

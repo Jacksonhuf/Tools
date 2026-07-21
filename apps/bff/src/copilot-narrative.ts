@@ -65,3 +65,54 @@ export function copilotWelcomeMessage(locale: AppLocale): string {
   }
   return "Hello — I loaded read-only pricing context via the agent tool. Ask about the situation or describe a dynamic rule strategy.";
 }
+
+export interface SimulateNarrativeInput {
+  publish_price_mxn?: number;
+  publish_price?: { formatted?: string };
+  floor_binding_applied?: boolean;
+  guards?: string[];
+  channel?: string;
+}
+
+export function buildSimulateNarrative(
+  input: SimulateNarrativeInput,
+  locale: AppLocale,
+  competitorPriceMxn: number
+): string {
+  const price =
+    input.publish_price?.formatted ??
+    (input.publish_price_mxn != null ? `${input.publish_price_mxn} MXN` : "—");
+  const floorNote = input.floor_binding_applied
+    ? locale === "es-MX"
+      ? " (piso aplicado)"
+      : locale === "zh-CN"
+        ? "（触发底价）"
+        : " (floor binding applied)"
+    : "";
+  const guards =
+    input.guards && input.guards.length > 0
+      ? locale === "es-MX"
+        ? ` Guardas: ${input.guards.join(", ")}.`
+        : locale === "zh-CN"
+          ? ` 守卫：${input.guards.join(", ")}。`
+          : ` Guards: ${input.guards.join(", ")}.`
+      : "";
+
+  if (locale === "es-MX") {
+    return `Simulación (tool_simulate): competidor ${competitorPriceMxn} MXN → precio publicable ${price}${floorNote}.${guards}`;
+  }
+  if (locale === "zh-CN") {
+    return `模拟试算（tool_simulate）：竞品价 ${competitorPriceMxn} MXN → 建议标价 ${price}${floorNote}。${guards}`;
+  }
+  return `Simulation (tool_simulate): competitor ${competitorPriceMxn} MXN → publish price ${price}${floorNote}.${guards}`;
+}
+
+export function simulatePriceClarification(locale: AppLocale): string {
+  if (locale === "es-MX") {
+    return "¿A qué precio de competidor (MXN) desea simular?";
+  }
+  if (locale === "zh-CN") {
+    return "请提供要模拟的竞品价格（MXN）。";
+  }
+  return "What competitor price (MXN) should I simulate?";
+}
