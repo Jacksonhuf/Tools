@@ -25,7 +25,7 @@
 | P0 定价内核 | 进行中 | Loop 5：PostgreSQL 持久化 |
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
 | P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
-| P3 回写 | 进行中 | Loop 13–18 + Loop 24 里程碑收尾 |
+| P3 回写 | 部分完成 | Loop 27：P3 accepted + 验收 API |
 | P4 Agent | 部分完成 | Loop 26：P4 accepted + Playwright |
 
 ---

@@ -186,7 +186,7 @@ export function PricingPage() {
             </label>
           </div>
         )}
-        <button type="button" onClick={() => void runSimulateAll()}>
+        <button type="button" data-testid="simulate-both" onClick={() => void runSimulateAll()}>
           {t("simulateBoth")}
         </button>
       </section>

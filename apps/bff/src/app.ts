@@ -124,7 +124,10 @@ import {
   resetDigestJobQueueForTests,
 } from "./digest-job-queue.js";
 import { evaluateAgentReadiness } from "./agent-readiness.js";
-import { getProductMilestoneStatus } from "./agent-milestones.js";
+import {
+  getProductMilestoneStatus,
+  getProductReadinessSummary,
+} from "./agent-milestones.js";
 import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
@@ -1110,6 +1113,10 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/agent/milestones", async (c) => {
     return c.json(getProductMilestoneStatus());
+  });
+
+  app.get("/api/v1/product/readiness", async (c) => {
+    return c.json(getProductReadinessSummary());
   });
 
   app.get("/api/v1/rule-compiler/status", async (c) => {
