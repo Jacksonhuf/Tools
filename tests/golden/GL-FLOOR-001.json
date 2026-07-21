@@ -1,0 +1,31 @@
+{
+  "golden_id": "GL-FLOOR-001",
+  "tc_ids": ["TC-UNIT-FLOOR-001"],
+  "engine": "floor",
+  "notes": "Same landed; ML 18% commission vs Amazon 15% => ML floor higher",
+  "input": {
+    "landed_cost_mxn": 800,
+    "min_margin_pct": 10,
+    "channels": {
+      "MERCADO_LIBRE": {
+        "commission_pct_of_price": 18,
+        "payment_pct_of_price": 3,
+        "fulfillment_fixed_mxn": 40
+      },
+      "AMAZON_MX": {
+        "commission_pct_of_price": 15,
+        "payment_pct_of_price": 0,
+        "fulfillment_fixed_mxn": 55
+      }
+    },
+    "tax_strategy": "PRICE_EXCLUDES_IVA",
+    "iva_rate": 0,
+    "rounding_rule": { "type": "NONE", "decimals": 2 }
+  },
+  "expected": {
+    "floor_mercado_libre_mxn": 1217.39,
+    "floor_amazon_mx_mxn": 1140,
+    "assert": "floor_mercado_libre_mxn > floor_amazon_mx_mxn",
+    "tolerance": 0.02
+  }
+}

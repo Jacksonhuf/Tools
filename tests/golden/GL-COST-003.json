@@ -1,0 +1,23 @@
+{
+  "golden_id": "GL-COST-003",
+  "tc_ids": ["TC-UNIT-COST-003"],
+  "engine": "cost_forward",
+  "notes": "landed=1000; fees=15% of list; target contribution margin 20% of list => P=1000/0.65≈1538.461538",
+  "input": {
+    "pricing_mode": "cost",
+    "landed_cost_mxn": 1000,
+    "target_margin_pct": 20,
+    "fee_template": {
+      "commission_pct_of_price": 15,
+      "payment_pct_of_price": 0,
+      "fulfillment_fixed_mxn": 0
+    },
+    "tax_strategy": "PRICE_EXCLUDES_IVA",
+    "iva_rate": 0,
+    "rounding_rule": { "type": "NONE", "decimals": 2 }
+  },
+  "expected": {
+    "publish_price_mxn": 1538.46,
+    "tolerance": 0.0001
+  }
+}

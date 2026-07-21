@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: MX Pricing BFF API
+  version: 0.1.0
+  description: Mercado Libre + Amazon MX cross-border pricing (SDD §10)
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/v1/skus:
+    get:
+      summary: List SKUs (P0-E2-01)
+      responses:
+        "200":
+          description: SKU list
+  /api/v1/skus/{skuId}:
+    patch:
+      summary: Update SKU landed cost
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                landed_cost_mxn:
+                  type: number
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /api/v1/skus/{skuId}/pricing-context:
+    get:
+      summary: Pricing context (SDD §10.1)
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: channel
+          in: query
+          schema:
+            type: string
+            enum: [MERCADO_LIBRE, AMAZON_MX]
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Tenant-Id
+          in: header
+          schema:
+            type: string
+        - name: Accept-Language
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pricing context payload
+        "401":
+          description: Unauthorized
+        "404":
+          description: SKU not found
+  /api/v1/listings/{listingId}/price-versions:
+    post:
+      summary: Publish price version (SDD §10.3)
+      parameters:
+        - name: listingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [explicit_price_mxn]
+              properties:
+                explicit_price_mxn:
+                  type: number
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: version_id and state
+        "422":
+          description: Guard rejected
+  /api/v1/price-versions/{versionId}:
+    get:
+      summary: Price version with audit fields (TC-INT-VER-003)
+  /api/v1/skus/{skuId}/pricing/simulate:
+    post:
+      summary: Price simulation without persistence (SDD §10.2)
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, pricing_mode]
+              properties:
+                channel:
+                  type: string
+                  enum: [MERCADO_LIBRE, AMAZON_MX]
+                pricing_mode:
+                  type: string
+                target_margin_pct:
+                  type: number
+                competitor_price_mxn:
+                  type: number
+      responses:
+        "200":
+          description: waterfall, publish_price_mxn, guards
+  /api/v1/adjustment-batches:
+    get:
+      summary: List adjustment batches for tenant
+      responses:
+        "200":
+          description: items array of batches
+    post:
+      summary: Create adjustment batch (SDD §10.4)
+      responses:
+        "201":
+          description: Batch created
+  /api/v1/adjustment-batches/{batchId}/approve:
+    post:
+      summary: Approve batch pending approval
+  /api/v1/adjustment-batches/{batchId}/apply:
+    post:
+      summary: Apply batch and publish versions
+  /api/v1/channels/sandbox/status:
+    get:
+      summary: Channel sandbox mode (mock write-back)
+  /api/v1/channels/adapters/status:
+    get:
+      summary: Channel publish/pull adapter driver (mock vs http_stub)
+  /api/v1/ops/metrics:
+    get:
+      summary: Ops metrics snapshot (sandbox, adapters, digest queue)
+  /api/v1/channels/sandbox/events:
+    get:
+      summary: Recent sandbox channel events for tenant
+  /api/v1/shops:
+    get:
+      summary: List tenant shops (P1-E1)
+      responses:
+        "200":
+          description: Shop summaries without secrets
+    post:
+      summary: Create shop record
+  /api/v1/shops/{shopId}/oauth/start:
+    post:
+      summary: Start OAuth placeholder (ML / Amazon LWA)
+  /api/v1/shops/{shopId}/oauth/mock-complete:
+    post:
+      summary: Complete mock OAuth for local dev
+  /api/v1/shops/{shopId}/listings/pull:
+    post:
+      summary: Mock pullListing (TC-INT-CH-001/002)
+  /api/v1/listings/{listingId}/competitors:
+    get:
+      summary: List competitor offers (SDD §10.6)
+    post:
+      summary: Bind competitor offer to listing
+  /api/v1/competitor-offers/{offerId}/observations:
+    post:
+      summary: Manual price observation (P2-E1-03)
+  /api/v1/listings/{listingId}/price-history:
+    get:
+      summary: Observation history for listing
+      parameters:
+        - name: range
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d]
+  /api/v1/listings/{listingId}/ingest/status:
+    get:
+      summary: Ingest tier schedule (SDD §8.1)
+  /api/v1/listings/{listingId}/ingest/run:
+    post:
+      summary: Run mock competitor ingest (P2-E2)
+  /api/v1/listings/{listingId}/repricing-events/flush:
+    post:
+      summary: Flush 5min debounce window (SDD §8.4)
+  /api/v1/listings/{listingId}/repricing-events:
+    get:
+      summary: List CompetitorPriceChanged events
+  /api/v1/repricing-events/{eventId}/process:
+    post:
+      summary: Process event into suggested version (P2-E3-04)
+  /api/v1/listings/{listingId}/dynamic-repricing-rule:
+    get:
+      summary: Get dynamic repricing rule (SDD §10.5)
+    put:
+      summary: Upsert dynamic repricing rule
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/unfreeze:
+    post:
+      summary: Unfreeze rule after publish failure (TC-API-GUARD-005)
+  /api/v1/listings/{listingId}/competitors/stale-check:
+    post:
+      summary: Evaluate stale competitor observations (TC-INT-ING-004)
+  /api/v1/listings/{listingId}/channel-publish:
+    post:
+      summary: Publish active price to channel (TC-INT-CH-003/005 mock)
+  /api/v1/shops/{shopId}/channel-publish:
+    post:
+      summary: Publish mapped listing active price (shop scope)
+  /api/v1/channel-publish/batch:
+    post:
+      summary: Batch publish active prices (TC-INT-CH-006 partial success)
+  /api/v1/skus/{skuId}/repricing-queue:
+    get:
+      summary: Suggested and Pending versions for ops center
+  /api/v1/repricing-queue/promote-pending:
+    post:
+      summary: Batch promote Suggested to Pending (TC-E2E-OPS-002)
+  /api/v1/reconciliation-alerts:
+    get:
+      summary: Open channel vs active price alerts (TC-INT-RECON-001)
+  /api/v1/listings/{listingId}/reconcile:
+    post:
+      summary: Compare active version to channel pull price
+  /api/v1/agent/tools:
+    get:
+      summary: Agent tool catalog (TC-NFR-SEC-004)
+  /api/v1/agent/tools/invoke:
+    post:
+      summary: Invoke agent tool with audit (TC-INT-AGENT-001/004)
+  /api/v1/agent/tool-audit:
+    get:
+      summary: Recent agent tool invocations per tenant
+  /api/v1/rule-compiler/status:
+    get:
+      summary: Rule compiler driver and LLM adapter readiness (P4)
+  /api/v1/agent/digest/daily:
+    get:
+      summary: Daily Agent digest placeholder (P4-E1-07)
+  /api/v1/agent/digest/schedule:
+    get:
+      summary: Digest cron schedule config (stub)
+    put:
+      summary: Update digest schedule (stub)
+  /api/v1/agent/digest/daily/dispatch:
+    post:
+      summary: Run digest and email_stub delivery (P4-E1-07)
+  /api/v1/agent/digest/dispatches:
+    get:
+      summary: Recent digest dispatch jobs
+  /api/v1/product/readiness:
+    get:
+      summary: P3 + P4 readiness and milestone acceptance summary
+  /api/v1/agent/milestones:
+    get:
+      summary: P3/P4 milestone status (P4 accepted when readiness passes)
+  /api/v1/agent/readiness:
+    get:
+      summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)
+  /api/v1/agent/digest/daily/enqueue:
+    post:
+      summary: Enqueue digest job for async worker
+  /api/v1/agent/digest/jobs:
+    get:
+      summary: List queued digest jobs
+  /api/v1/agent/digest/jobs/process:
+    post:
+      summary: Process queued digest jobs (email_stub / webhook_queue)
+  /api/v1/agent/copilot/sessions:
+    post:
+      summary: Start Copilot multi-turn session (SDD §12)
+  /api/v1/agent/copilot/sessions/{sessionId}:
+    get:
+      summary: Copilot session transcript
+  /api/v1/agent/copilot/sessions/{sessionId}/messages:
+    post:
+      summary: User turn — clarification or NL rule compile draft
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/compile:
+    post:
+      summary: NL to DynamicRuleDraft without persist (TC-E2E-AGENT-003)
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/confirm-compiled:
+    post:
+      summary: Persist compiled rule draft after user confirm

@@ -1,0 +1,16 @@
+{
+  "golden_id": "GL-COMP-001",
+  "tc_ids": ["TC-UNIT-COMP-001"],
+  "engine": "competitive",
+  "input": {
+    "pricing_mode": "competitive_with_floor",
+    "channel": "MERCADO_LIBRE",
+    "match_price_mxn": 500,
+    "floor_price_mxn": 400,
+    "rounding_rule": { "type": "NONE", "decimals": 2 }
+  },
+  "expected": {
+    "publish_price_mxn": 500,
+    "floor_binding_applied": false
+  }
+}
