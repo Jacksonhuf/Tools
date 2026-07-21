@@ -472,6 +472,37 @@
 | **测试** | `pricing-report.test.ts` |
 | **下一步** | Loop 39+ OIDC、特性开关 |
 
+### Loop 39 — OIDC stub 认证（P0-E1-03 / TC-API-AUTH-*）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `auth.ts` + `GET /auth/status`；`AUTH_DRIVER=oidc_stub` |
+| **测试** | `auth-oidc.test.ts` |
+
+### Loop 40 — 特性开关（X-02 / TC-API-FF-001）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `feature-flags.ts` + `GET /feature-flags` |
+| **测试** | `feature-flags.test.ts` |
+
+### Loop 41 — 对账告警 CSV（P5-03 扩展 / TC-API-RPT-003）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reports/reconciliation-alerts?format=csv` |
+| **测试** | `reconciliation-report.test.ts` |
+
+### Loop 42 — NFR 周检与 Phase 2 收官
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `ci-nfr-weekly.yml`；`development-loop-phase2-closure.md` |
+| **测试** | `npm test` — **121 passed** |
+| **下一步** | **Phase 2 完成**；Loop 43+ 见任务清单（真实 OIDC、渠道 API） |
+
+> **Phase 2（Loop 37–42）计划内迭代已结束。**
+
 ---
 
 ## 本地命令
@@ -526,4 +557,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v4.2 | 2026-07-21 | Loop 33 |
 | v4.3 | 2026-07-21 | Loop 34 |
 | v4.4 | 2026-07-21 | Loop 35 |
-| v4.6 | 2026-07-21 | Loop 38 |
+| v4.7 | 2026-07-21 | Loop 39–42 Phase 2 收官 |
