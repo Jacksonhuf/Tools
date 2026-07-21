@@ -224,3 +224,12 @@ paths:
   /api/v1/listings/{listingId}/reconcile:
     post:
       summary: Compare active version to channel pull price
+  /api/v1/agent/tools:
+    get:
+      summary: Agent tool catalog (TC-NFR-SEC-004)
+  /api/v1/agent/tools/invoke:
+    post:
+      summary: Invoke agent tool with audit (TC-INT-AGENT-001/004)
+  /api/v1/agent/tool-audit:
+    get:
+      summary: Recent agent tool invocations per tenant

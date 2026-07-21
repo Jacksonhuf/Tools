@@ -265,6 +265,16 @@
 | **测试** | `npm test` — **70 passed**（VER-003 + business hours） |
 | **下一步** | P4 Agent 工具、TC-INT-AGENT-001 |
 
+### Loop 19 — Agent 工具 API 与调用审计（P4-E1-02 / SEC-004 / AGENT-004）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §10.7；TC-INT-AGENT-001/002/004、TC-NFR-SEC-004 |
+| **实现** | `GET agent/tools`、`POST agent/tools/invoke`、`GET agent/tool-audit`；只读 context/versions/simulate + 草稿调价单；禁止 publish/apply 工具名 |
+| **测试** | `npm test` — **74 passed**（agent-tools.test.ts） |
+| **下一步** | P4 NL→Rule 编译（TC-E2E-AGENT-003）、Copilot Web |
+
 ---
 
 ## 本地命令
@@ -303,3 +313,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.5 | 2026-07-21 | Loop 16 |
 | v2.6 | 2026-07-21 | Loop 17 |
 | v2.7 | 2026-07-21 | Loop 18 |
+| v2.8 | 2026-07-21 | Loop 19 |

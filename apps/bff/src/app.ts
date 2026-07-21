@@ -86,6 +86,15 @@ import {
   MemoryReconciliationAlertRepository,
 } from "./repositories/reconciliation-index.js";
 import { reconcileListingChannelPrice } from "./reconciliation-service.js";
+import {
+  invokeAgentTool,
+  listAgentTools,
+} from "./agent-tools.js";
+import {
+  type AgentToolAuditRepository,
+  getAgentToolAuditRepository,
+  MemoryAgentToolAuditRepository,
+} from "./repositories/agent-audit-index.js";
 
 export type AppEnv = {
   Variables: {
@@ -108,6 +117,7 @@ export interface CreateAppOptions {
   publishAdapter?: MockChannelPublishAdapter;
   listingAdapter?: MockChannelListingAdapter;
   reconciliationAlerts?: ReconciliationAlertRepository;
+  agentAudit?: AgentToolAuditRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -123,6 +133,7 @@ export function createApp(options: CreateAppOptions = {}) {
     options.repricingActivity ?? getRepricingActivityRepository();
   const reconciliationAlerts =
     options.reconciliationAlerts ?? getReconciliationAlertRepository();
+  const agentAudit = options.agentAudit ?? getAgentToolAuditRepository();
   const listingAdapter =
     options.listingAdapter ?? new MockChannelListingAdapter();
   const publishAdapter =
@@ -970,6 +981,59 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
+  app.get("/api/v1/agent/tools", async (c) => {
+    return c.json({ items: listAgentTools() });
+  });
+
+  app.get("/api/v1/agent/tool-audit", async (c) => {
+    const tenantId = c.get("tenantId");
+    const items = await agentAudit.listInvocations(tenantId, 100);
+    return c.json({ items });
+  });
+
+  app.post("/api/v1/agent/tools/invoke", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      tool: string;
+      arguments?: Record<string, unknown>;
+      session_id?: string;
+    };
+    if (!body.tool) {
+      throw new HTTPException(400, { message: "TOOL_REQUIRED" });
+    }
+    try {
+      const out = await invokeAgentTool(
+        { catalog, competitors, adjustments, audit: agentAudit },
+        {
+          tenantId,
+          locale: c.get("locale"),
+          sessionId: body.session_id,
+        },
+        body.tool,
+        body.arguments ?? {}
+      );
+      return c.json(out);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("UNKNOWN_TOOL") || msg.includes("TOOL_NOT_ALLOWED")) {
+        return c.json({ error: msg.includes("TOOL_NOT_ALLOWED") ? "TOOL_NOT_ALLOWED" : "UNKNOWN_TOOL" }, 400);
+      }
+      if (msg.includes("SKU_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      if (msg.includes("GUARD_REJECTED")) {
+        return c.json({ error: "GUARD_REJECTED" }, 422);
+      }
+      if (msg.includes("ITEMS_REQUIRED")) {
+        throw new HTTPException(400, { message: "ITEMS_REQUIRED" });
+      }
+      throw e;
+    }
+  });
+
   return app;
 }
 
@@ -986,6 +1050,7 @@ export function createTestApp(): {
   publishAdapter: MockChannelPublishAdapter;
   listingAdapter: MockChannelListingAdapter;
   reconciliationAlerts: MemoryReconciliationAlertRepository;
+  agentAudit: MemoryAgentToolAuditRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
@@ -998,6 +1063,7 @@ export function createTestApp(): {
   const publishAdapter = new MockChannelPublishAdapter();
   const listingAdapter = new MockChannelListingAdapter();
   const reconciliationAlertsRepo = new MemoryReconciliationAlertRepository();
+  const agentAuditRepo = new MemoryAgentToolAuditRepository();
   return {
     app: createApp({
       catalog,
@@ -1011,6 +1077,7 @@ export function createTestApp(): {
       publishAdapter,
       listingAdapter,
       reconciliationAlerts: reconciliationAlertsRepo,
+      agentAudit: agentAuditRepo,
     }),
     catalog,
     adjustments,
@@ -1023,6 +1090,7 @@ export function createTestApp(): {
     publishAdapter,
     listingAdapter,
     reconciliationAlerts: reconciliationAlertsRepo,
+    agentAudit: agentAuditRepo,
   };
 }
 
