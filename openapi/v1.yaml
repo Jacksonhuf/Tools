@@ -236,6 +236,15 @@ paths:
   /api/v1/rule-compiler/status:
     get:
       summary: Rule compiler driver and LLM adapter readiness (P4)
+  /api/v1/agent/copilot/sessions:
+    post:
+      summary: Start Copilot multi-turn session (SDD §12)
+  /api/v1/agent/copilot/sessions/{sessionId}:
+    get:
+      summary: Copilot session transcript
+  /api/v1/agent/copilot/sessions/{sessionId}/messages:
+    post:
+      summary: User turn — clarification or NL rule compile draft
   /api/v1/listings/{listingId}/dynamic-repricing-rule/compile:
     post:
       summary: NL to DynamicRuleDraft without persist (TC-E2E-AGENT-003)

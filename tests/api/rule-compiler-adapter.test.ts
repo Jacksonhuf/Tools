@@ -13,16 +13,16 @@ describe("rule compiler adapter", () => {
     else process.env.RULE_COMPILER_DRIVER = prev;
   });
 
-  it("defaults to heuristic driver", () => {
+  it("defaults to heuristic driver", async () => {
     delete process.env.RULE_COMPILER_DRIVER;
     expect(resolveRuleCompilerDriver()).toBe("heuristic");
-    const out = compileRuleViaAdapter("median -1%", "en");
+    const out = await compileRuleViaAdapter("median -1%", "en");
     expect(out.compiler.driver).toBe("heuristic");
     expect(out.compiler.stub).toBe(false);
   });
 
-  it("llm_stub adds stub metadata and prefix", () => {
-    const out = compileRuleViaAdapter(
+  it("llm_stub adds stub metadata and prefix", async () => {
+    const out = await compileRuleViaAdapter(
       "mediana -2% pendiente",
       "es-MX",
       "llm_stub"

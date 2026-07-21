@@ -3,13 +3,16 @@ import { useTranslation } from "react-i18next";
 import {
   compileDynamicRule,
   confirmCompiledDynamicRule,
+  createCopilotSession,
   DEMO_SKU,
   fetchAgentToolAudit,
   fetchAgentTools,
   fetchRuleCompilerStatus,
   invokeAgentTool,
   LISTING_BY_CHANNEL,
+  sendCopilotMessage,
   type Channel,
+  type CopilotChatMessage,
 } from "../api/client";
 
 const LISTINGS: Array<{ id: string; channel: Channel }> = [
@@ -36,12 +39,27 @@ export function CopilotPage() {
     Array<{ id: string; tool_name: string; result_summary: string; created_at: string }>
   >([]);
   const [adjPrice, setAdjPrice] = useState("199");
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<CopilotChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
   useEffect(() => {
     setNlText(t("copilotNlExample"));
   }, [locale, t]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const s = await createCopilotSession(locale, listingId, DEMO_SKU);
+        setSessionId(s.session_id);
+        setChatMessages([]);
+      } catch {
+        setSessionId(null);
+      }
+    })();
+  }, [locale, listingId]);
 
   const refreshAudit = async () => {
     const out = await fetchAgentToolAudit(locale, 15);
@@ -123,7 +141,7 @@ export function CopilotPage() {
     setCompileId(null);
     setDraftJson(null);
     try {
-      const res = await compileDynamicRule(locale, listingId, nlText);
+      const res = await compileDynamicRule(locale, listingId, nlText, sessionId ?? undefined);
       setCompileId(res.compile_id);
       setDraftJson(JSON.stringify(res.draft, null, 2));
       setExplanation(res.explanation);
@@ -133,6 +151,36 @@ export function CopilotPage() {
         );
       }
       setMessage(t("copilotCompileOk"));
+      await refreshAudit();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const sendChat = async () => {
+    if (!sessionId || !chatInput.trim()) return;
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await sendCopilotMessage(
+        locale,
+        sessionId,
+        listingId,
+        chatInput.trim()
+      );
+      setChatMessages(res.messages);
+      setChatInput("");
+      if (res.compile_id) {
+        setCompileId(res.compile_id);
+        setDraftJson(JSON.stringify(res.draft, null, 2));
+        setExplanation(res.explanation ?? null);
+        if (res.compiler) {
+          setCompilerLabel(
+            `${res.compiler.driver}${res.compiler.model ? ` / ${res.compiler.model}` : ""}`
+          );
+        }
+        setMessage(t("copilotCompileOk"));
+      }
       await refreshAudit();
     } catch (e) {
       setError(String(e));
@@ -186,6 +234,33 @@ export function CopilotPage() {
           {t("copilotLoadContext")}
         </button>
         {contextSnippet && <p className="highlight">{contextSnippet}</p>}
+      </section>
+
+      <section className="card">
+        <h2>{t("copilotChatTitle")}</h2>
+        <div className="copilot-chat" data-testid="copilot-chat">
+          {chatMessages.map((m, idx) => (
+            <p key={`${m.created_at}-${idx}`} className={`chat-${m.role}`}>
+              <strong>{m.role === "user" ? "You" : "Copilot"}:</strong>{" "}
+              {m.content}
+            </p>
+          ))}
+        </div>
+        <label>
+          <textarea
+            rows={2}
+            value={chatInput}
+            placeholder={t("copilotChatPlaceholder")}
+            onChange={(e) => setChatInput(e.target.value)}
+          />
+        </label>
+        <button
+          type="button"
+          disabled={!sessionId}
+          onClick={() => void sendChat()}
+        >
+          {t("copilotChatSend")}
+        </button>
       </section>
 
       {tools.length > 0 && (

@@ -587,14 +587,15 @@ export interface DynamicRuleDraftPayload {
 export async function compileDynamicRule(
   locale: string,
   listingId: string,
-  natural_language: string
+  natural_language: string,
+  session_id?: string
 ) {
   const res = await fetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule/compile`,
     {
       method: "POST",
       headers: headers(locale),
-      body: JSON.stringify({ natural_language }),
+      body: JSON.stringify({ natural_language, session_id }),
     }
   );
   const json = await res.json();
@@ -662,6 +663,52 @@ export async function confirmCompiledDynamicRule(
   const json = await res.json();
   if (!res.ok) throw new Error(`confirm rule ${res.status}`);
   return json as { rule: { action: string; anchor_type: string }; persisted: boolean };
+}
+
+export async function createCopilotSession(
+  locale: string,
+  listing_id: string,
+  sku_id?: string
+) {
+  const res = await fetch(`/api/v1/agent/copilot/sessions`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ listing_id, sku_id }),
+  });
+  if (!res.ok) throw new Error(`copilot session ${res.status}`);
+  return res.json() as Promise<{ session_id: string }>;
+}
+
+export type CopilotChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export async function sendCopilotMessage(
+  locale: string,
+  session_id: string,
+  listing_id: string,
+  content: string
+) {
+  const res = await fetch(
+    `/api/v1/agent/copilot/sessions/${session_id}/messages`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify({ listing_id, content }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(`copilot message ${res.status}`);
+  return json as {
+    needs_clarification: boolean;
+    compile_id?: string;
+    draft?: DynamicRuleDraftPayload;
+    explanation?: string;
+    messages: CopilotChatMessage[];
+    compiler?: { driver: string; model: string | null; stub: boolean };
+  };
 }
 
 export async function invokeAgentTool(

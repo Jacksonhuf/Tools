@@ -100,6 +100,11 @@ import {
   type DynamicRuleDraft,
 } from "./rule-compiler.js";
 import {
+  appendCopilotUserTurn,
+  createCopilotSession,
+  getCopilotSession,
+} from "./copilot-session.js";
+import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
@@ -791,12 +796,15 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!listing) {
         throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
       }
-      const body = (await c.req.json()) as { natural_language?: string };
+      const body = (await c.req.json()) as {
+        natural_language?: string;
+        session_id?: string;
+      };
       if (!body.natural_language?.trim()) {
         throw new HTTPException(400, { message: "NATURAL_LANGUAGE_REQUIRED" });
       }
       const locale = c.get("locale");
-      const { draft, explanation, compiler } = compileRuleViaAdapter(
+      const { draft, explanation, compiler } = await compileRuleViaAdapter(
         body.natural_language,
         locale
       );
@@ -810,7 +818,7 @@ export function createApp(options: CreateAppOptions = {}) {
       await agentAudit.recordInvocation({
         tenant_id: tenantId,
         tool_name: "tool_compile_dynamic_rule",
-        session_id: null,
+        session_id: body.session_id ?? null,
         arguments_json: {
           listing_id: listingId,
           natural_language: body.natural_language,
@@ -1077,6 +1085,94 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/rule-compiler/status", async (c) => {
     return c.json(getRuleCompilerStatus());
+  });
+
+  app.post("/api/v1/agent/copilot/sessions", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      listing_id?: string;
+      sku_id?: string;
+    };
+    const session = createCopilotSession({
+      tenant_id: tenantId,
+      listing_id: body.listing_id ?? null,
+      sku_id: body.sku_id ?? null,
+    });
+    return c.json({
+      session_id: session.session_id,
+      listing_id: session.listing_id,
+      sku_id: session.sku_id,
+      created_at: session.created_at,
+    });
+  });
+
+  app.get("/api/v1/agent/copilot/sessions/:sessionId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sessionId = c.req.param("sessionId");
+    const session = getCopilotSession(tenantId, sessionId);
+    if (!session) {
+      throw new HTTPException(404, { message: "SESSION_NOT_FOUND" });
+    }
+    return c.json(session);
+  });
+
+  app.post("/api/v1/agent/copilot/sessions/:sessionId/messages", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sessionId = c.req.param("sessionId");
+    const body = (await c.req.json()) as {
+      content?: string;
+      listing_id?: string;
+    };
+    if (!body.content?.trim()) {
+      throw new HTTPException(400, { message: "CONTENT_REQUIRED" });
+    }
+    const listingId =
+      body.listing_id ??
+      getCopilotSession(tenantId, sessionId)?.listing_id ??
+      null;
+    if (!listingId) {
+      throw new HTTPException(400, { message: "LISTING_ID_REQUIRED" });
+    }
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    try {
+      const turn = await appendCopilotUserTurn({
+        tenant_id: tenantId,
+        session_id: sessionId,
+        content: body.content,
+        locale: c.get("locale"),
+        listing_id: listingId,
+      });
+      await agentAudit.recordInvocation({
+        tenant_id: tenantId,
+        tool_name: "tool_copilot_turn",
+        session_id: sessionId,
+        arguments_json: {
+          listing_id: listingId,
+          content: body.content,
+          needs_clarification: turn.needs_clarification,
+        },
+        result_summary: turn.compile_id
+          ? `compile:${turn.compile_id}`
+          : "clarify",
+      });
+      return c.json({
+        session_id: sessionId,
+        needs_clarification: turn.needs_clarification,
+        compile_id: turn.compile_id,
+        draft: turn.draft,
+        explanation: turn.explanation,
+        compiler: turn.compiler,
+        messages: turn.session.messages,
+      });
+    } catch (e) {
+      if (String(e).includes("SESSION_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "SESSION_NOT_FOUND" });
+      }
+      throw e;
+    }
   });
 
   app.get("/api/v1/agent/tool-audit", async (c) => {

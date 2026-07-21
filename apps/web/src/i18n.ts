@@ -135,6 +135,9 @@ const resources = {
       copilotCompilerStatus: "Rule compiler",
       copilotNlExample:
         "Follow median at -2% and auto pending during business hours",
+      copilotChatTitle: "Multi-turn strategy chat",
+      copilotChatPlaceholder: "Describe strategy or answer clarification…",
+      copilotChatSend: "Send",
     },
   },
   "zh-CN": {
@@ -266,6 +269,9 @@ const resources = {
       copilotAdjustmentOk: "调价草案已创建",
       copilotCompilerStatus: "规则编译器",
       copilotNlExample: "跟随中位价 -2%，营业时间内自动待确认",
+      copilotChatTitle: "多轮策略对话",
+      copilotChatPlaceholder: "描述策略或补充澄清信息…",
+      copilotChatSend: "发送",
     },
   },
   "es-MX": {
@@ -402,6 +408,9 @@ const resources = {
       copilotCompilerStatus: "Compilador de reglas",
       copilotNlExample:
         "Seguir mediana con -2% y pasar a pendiente en horario hábil",
+      copilotChatTitle: "Chat de estrategia (multi-turno)",
+      copilotChatPlaceholder: "Describa la estrategia o responda la aclaración…",
+      copilotChatSend: "Enviar",
     },
   },
 };
