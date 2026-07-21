@@ -250,6 +250,9 @@ paths:
   /api/v1/agent/digest/dispatches:
     get:
       summary: Recent digest dispatch jobs
+  /api/v1/agent/milestones:
+    get:
+      summary: P3/P4 milestone status (P4 accepted when readiness passes)
   /api/v1/agent/readiness:
     get:
       summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)

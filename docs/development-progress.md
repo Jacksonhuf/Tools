@@ -26,7 +26,7 @@
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
 | P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
 | P3 回写 | 进行中 | Loop 13–18 + Loop 24 里程碑收尾 |
-| P4 Agent | 进行中 | Loop 22：LLM HTTP + Copilot 多轮 |
+| P4 Agent | 部分完成 | Loop 26：P4 accepted + Playwright |
 
 ---
 
@@ -85,7 +85,8 @@
 | P4-E1-02 | 部分 | Loop 19（agent tools + audit） |
 | P4-E1-03 | 部分 | Loop 21–23（Copilot 三语 + digest） |
 | P4-E1-06 | 部分 | Loop 20–22（NL compile + HTTP LLM + 多轮会话） |
-| P4-E1-07 | 部分 | Loop 23–24（digest + dispatch/schedule 占位） |
+| P4-E1-07 | 部分 | Loop 23–26（digest + queue + SMTP） |
+| P0-E8-04 | 部分 | Loop 26（Playwright ui-smoke + ci-e2e-smoke） |
 
 ---
 
@@ -331,6 +332,26 @@
 | **测试** | `npm test` — **91 passed**（digest-dispatch、copilot simulate） |
 | **下一步** | 真实邮件/队列集成、P4 里程碑验收、E2E Web 冒烟 |
 
+### Loop 25 — Digest 队列、P4 验收与 E2E 冒烟（P4 / P0-E8-04）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 24 下一步；`test-cases` ci-e2e-smoke；`p4-acceptance-checklist` |
+| **实现** | `digest-job-queue`（enqueue/process、`webhook_queue` + `DIGEST_WEBHOOK_URL`）；`GET /agent/readiness`；`tests/e2e/smoke-flow.test.ts` + `npm run test:smoke`；Copilot P4 状态与队列入队 UI |
+| **测试** | `npm test` — **96 passed**（smoke-flow、p4-readiness、digest-queue） |
+| **下一步** | Playwright 真 E2E、SMTP 适配器、P4 里程碑完成标记 |
+
+### Loop 26 — Playwright E2E、SMTP Digest 与 P4 里程碑（P0-E8-04 / P4）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 25 下一步；P0-E8-04；`p4-acceptance-checklist` |
+| **实现** | `@playwright/test` + `ui-smoke.spec.ts` + `ci-e2e-smoke`；`smtp_queue` + `SMTP_SUBMISSION_URL`；`GET /agent/milestones`（P4 `accepted`）；`data-testid=app-shell` |
+| **测试** | `npm test` — **99 passed**；`npm run test:e2e` — **1 passed** |
+| **下一步** | P3 完成验收、生产 SMTP/Playwright 扩展用例、PR 合并准备 |
+
 ---
 
 ## 本地命令
@@ -375,3 +396,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.1 | 2026-07-21 | Loop 22 |
 | v3.2 | 2026-07-21 | Loop 23 |
 | v3.3 | 2026-07-21 | Loop 24 |
+| v3.4 | 2026-07-21 | Loop 25 |

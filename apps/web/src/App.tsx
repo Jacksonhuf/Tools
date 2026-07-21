@@ -14,7 +14,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>("pricing");
 
   return (
-    <>
+    <div data-testid="app-shell">
       <header className="header">
         <h1>{t("appTitle")}</h1>
         <select
@@ -84,6 +84,6 @@ export function App() {
       ) : (
         <CopilotPage />
       )}
-    </>
+    </div>
   );
 }

@@ -5,8 +5,20 @@ import type { CatalogRepository } from "./repositories/index.js";
 import type { ReconciliationAlertRepository } from "./repositories/reconciliation-types.js";
 import type { AgentToolAuditRepository } from "./repositories/agent-audit-types.js";
 import { getDigestSchedule } from "./agent-digest-dispatch.js";
+import { deliverSmtpDigest } from "./smtp-digest-adapter.js";
 
-export type DigestDeliveryChannel = "email_stub" | "webhook_queue";
+export type DigestDeliveryChannel =
+  | "email_stub"
+  | "webhook_queue"
+  | "smtp_queue";
+
+export type DigestDeliveryStatus =
+  | "sent_stub"
+  | "webhook_accepted"
+  | "webhook_skipped"
+  | "smtp_accepted"
+  | "smtp_skipped"
+  | "smtp_stub_queued";
 
 export interface DigestQueuedJob {
   job_id: string;
@@ -23,11 +35,13 @@ export interface DigestQueuedJob {
 
 export interface DigestDeliveryResult {
   channel: DigestDeliveryChannel;
-  status: "sent_stub" | "webhook_accepted" | "webhook_skipped";
+  status: DigestDeliveryStatus;
   to?: string;
   subject?: string;
   body?: string;
   webhook_url?: string | null;
+  smtp_host?: string | null;
+  submission_url?: string | null;
 }
 
 export interface DigestDispatchResult {
@@ -160,6 +174,17 @@ export async function runDigestDeliveries(
           body: digest.narrative,
         })
       );
+      continue;
+    }
+    if (channel === "smtp_queue") {
+      deliveries.push(
+        await deliverSmtpDigest({
+          tenant_id: tenantId,
+          to: schedule.email_to,
+          subject,
+          body: digest.narrative,
+        })
+      );
     }
   }
   return { date: digest.date, digest, deliveries };
@@ -205,3 +230,4 @@ export function resetDigestJobQueueForTests(): void {
   queue.length = 0;
   queueSeq = 0;
 }
+

@@ -8,6 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "test:smoke": "vitest run tests/e2e/smoke-flow.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
     "test:golden": "vitest run tests/golden/golden.test.ts",
     "test:api": "vitest run tests/api/bff.test.ts",
     "build": "npm run build -w @mx-pricing/pricing-engine && npm run build -w @mx-pricing/i18n-format && npm run build -w @mx-pricing/channel-adapters && npm run build -w @mx-pricing/db && npm run build -w @mx-pricing/bff && npm run build -w @mx-pricing/web",
@@ -17,6 +19,7 @@
     "dev:bff": "npm run start -w @mx-pricing/bff"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "pg-mem": "^3.0.3",
     "typescript": "^5.6.3",
     "vitest": "^2.1.9"

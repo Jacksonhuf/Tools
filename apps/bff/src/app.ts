@@ -124,6 +124,7 @@ import {
   resetDigestJobQueueForTests,
 } from "./digest-job-queue.js";
 import { evaluateAgentReadiness } from "./agent-readiness.js";
+import { getProductMilestoneStatus } from "./agent-milestones.js";
 import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
@@ -1107,6 +1108,10 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(evaluateAgentReadiness());
   });
 
+  app.get("/api/v1/agent/milestones", async (c) => {
+    return c.json(getProductMilestoneStatus());
+  });
+
   app.get("/api/v1/rule-compiler/status", async (c) => {
     return c.json(getRuleCompilerStatus());
   });
@@ -1239,7 +1244,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const locale = c.get("locale");
     const body = (await c.req.json().catch(() => ({}))) as {
       date?: string;
-      channels?: Array<"email_stub" | "webhook_queue">;
+      channels?: Array<"email_stub" | "webhook_queue" | "smtp_queue">;
     };
     const job = enqueueDailyDigestJob({
       tenant_id: tenantId,

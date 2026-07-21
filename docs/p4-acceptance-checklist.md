@@ -15,3 +15,9 @@
 **API 汇总**：`GET /api/v1/agent/readiness` 返回 `ready: true` 即通过本清单自动化项。
 
 **Webhook 邮件队列**：设置 `DIGEST_WEBHOOK_URL` 后，`webhook_queue` 渠道向该 URL `POST` JSON `{ tenant_id, to, subject, body }`（见 `digest-job-queue.ts`）。
+
+**SMTP 适配器（Loop 26）**：`smtp_queue` 渠道 — `SMTP_SUBMISSION_URL`（HTTP JSON 中继，推荐）或 `SMTP_HOST` + `SMTP_RECORD_STUB=1`（测试 outbox）。见 `smtp-digest-adapter.ts`。
+
+**里程碑**：`GET /api/v1/agent/milestones` — `P4.status=accepted` 表示 P4 自动化验收通过。
+
+**Playwright**：`npm run test:e2e`（`tests/e2e/web/ui-smoke.spec.ts`），CI：`ci-e2e-smoke`。
