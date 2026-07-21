@@ -78,6 +78,10 @@ import {
   promoteVersionsToPending,
 } from "./repricing-queue-service.js";
 import {
+  planRepricingShards,
+  runRepricingBatchShard,
+} from "./repricing-batch-shard.js";
+import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
   MemoryRepricingActivityRepository,
@@ -1168,6 +1172,61 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(400, { message: "INVALID_VERSION_IDS" });
     }
     const result = await promoteVersionsToPending(catalog, body.version_ids);
+    return c.json(result);
+  });
+
+  app.get("/api/v1/skus/:skuId/repricing-batch/shard-plan", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const shardTotalRaw = c.req.query("shard_total") ?? "2";
+    const shardTotal = Number.parseInt(shardTotalRaw, 10);
+    if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+    }
+    return c.json(planRepricingShards(tenantId, skuId, shardTotal));
+  });
+
+  app.post("/api/v1/skus/:skuId/repricing-batch/recompute", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const body = (await c.req.json()) as {
+      shard_index?: number;
+      shard_total?: number;
+    };
+    const shardTotal = body.shard_total ?? 2;
+    const shardIndex = body.shard_index ?? 0;
+    if (
+      !Number.isFinite(shardTotal) ||
+      shardTotal < 1 ||
+      shardTotal > 64 ||
+      !Number.isFinite(shardIndex) ||
+      shardIndex < 0 ||
+      shardIndex >= shardTotal
+    ) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_PARAMS" });
+    }
+    const result = await runRepricingBatchShard({
+      catalog,
+      competitors,
+      repricing,
+      dynamicRules,
+      listingHealth,
+      repricingActivity,
+      tenantId,
+      skuId,
+      shardIndex,
+      shardTotal,
+    });
+    if ("error" in result) {
+      if (result.error === "SKU_NOT_FOUND") {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      throw new HTTPException(400, { message: result.error });
+    }
     return c.json(result);
   });
 

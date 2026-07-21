@@ -95,3 +95,11 @@ export function getListingIdForChannel(
   const listing = LISTINGS.find((l) => l.channel === channel);
   return listing?.id;
 }
+
+export function listListingsForSku(
+  tenantId: string,
+  skuId: string
+): ListingRecord[] {
+  if (tenantId !== DEMO_SKU.tenant_id) return [];
+  return LISTINGS.filter((l) => l.sku_id === skuId);
+}
