@@ -275,6 +275,16 @@
 | **测试** | `npm test` — **74 passed**（agent-tools.test.ts） |
 | **下一步** | P4 NL→Rule 编译（TC-E2E-AGENT-003）、Copilot Web |
 
+### Loop 20 — NL 规则编译与 Copilot Web（P4-E1-06 / TC-E2E-AGENT-003）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §12 策略编译器；TC-E2E-AGENT-003 |
+| **实现** | `compile` / `confirm-compiled` 动态规则；确定性 NL mock；Web Copilot 页（context 工具 + 草案确认） |
+| **测试** | `npm test` — **76 passed**（rule-compiler.test.ts） |
+| **下一步** | P4 Copilot 三语文案增强、真实 LLM 适配器占位 |
+
 ---
 
 ## 本地命令
@@ -314,3 +324,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.6 | 2026-07-21 | Loop 17 |
 | v2.7 | 2026-07-21 | Loop 18 |
 | v2.8 | 2026-07-21 | Loop 19 |
+| v2.9 | 2026-07-21 | Loop 20 |

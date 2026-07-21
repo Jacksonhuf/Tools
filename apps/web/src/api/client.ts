@@ -573,4 +573,72 @@ export async function reconcileListing(
       };
 }
 
+export interface DynamicRuleDraftPayload {
+  enabled: boolean;
+  action: string;
+  anchor_type: string;
+  offset: { type: "PERCENT" | "FIXED_MXN"; value: number };
+  min_gap_mxn: number;
+  cooldown_min: number;
+  daily_limit: number;
+  business_hours_only: boolean;
+}
+
+export async function compileDynamicRule(
+  locale: string,
+  listingId: string,
+  natural_language: string
+) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/dynamic-repricing-rule/compile`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify({ natural_language }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(`compile ${res.status}`);
+  return json as {
+    compile_id: string;
+    draft: DynamicRuleDraftPayload;
+    explanation: string;
+    persisted: boolean;
+  };
+}
+
+export async function confirmCompiledDynamicRule(
+  locale: string,
+  listingId: string,
+  compile_id: string
+) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/dynamic-repricing-rule/confirm-compiled`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify({ compile_id }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(`confirm rule ${res.status}`);
+  return json as { rule: { action: string; anchor_type: string }; persisted: boolean };
+}
+
+export async function invokeAgentTool(
+  locale: string,
+  tool: string,
+  args: Record<string, unknown>,
+  session_id?: string
+) {
+  const res = await fetch(`/api/v1/agent/tools/invoke`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ tool, arguments: args, session_id }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`agent tool ${res.status}`);
+  return json as { tool: string; audit_id: string; result: unknown };
+}
+
 export { DEMO_SKU, LISTING_BY_CHANNEL };

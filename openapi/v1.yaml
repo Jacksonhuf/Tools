@@ -233,3 +233,9 @@ paths:
   /api/v1/agent/tool-audit:
     get:
       summary: Recent agent tool invocations per tenant
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/compile:
+    post:
+      summary: NL to DynamicRuleDraft without persist (TC-E2E-AGENT-003)
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/confirm-compiled:
+    post:
+      summary: Persist compiled rule draft after user confirm

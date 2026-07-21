@@ -91,6 +91,12 @@ import {
   listAgentTools,
 } from "./agent-tools.js";
 import {
+  compileNaturalLanguageToRuleDraft,
+  storeCompiledDraft,
+  takeCompiledDraft,
+  type DynamicRuleDraft,
+} from "./rule-compiler.js";
+import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
@@ -772,6 +778,86 @@ export function createApp(options: CreateAppOptions = {}) {
     });
     return c.json(rule);
   });
+
+  app.post(
+    "/api/v1/listings/:listingId/dynamic-repricing-rule/compile",
+    async (c) => {
+      const tenantId = c.get("tenantId");
+      const listingId = c.req.param("listingId");
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const body = (await c.req.json()) as { natural_language?: string };
+      if (!body.natural_language?.trim()) {
+        throw new HTTPException(400, { message: "NATURAL_LANGUAGE_REQUIRED" });
+      }
+      const locale = c.get("locale");
+      const { draft, explanation } = compileNaturalLanguageToRuleDraft(
+        body.natural_language,
+        locale
+      );
+      const compiled = storeCompiledDraft({
+        tenant_id: tenantId,
+        listing_id: listingId,
+        source_text: body.natural_language,
+        draft,
+        explanation,
+      });
+      await agentAudit.recordInvocation({
+        tenant_id: tenantId,
+        tool_name: "tool_compile_dynamic_rule",
+        session_id: null,
+        arguments_json: {
+          listing_id: listingId,
+          natural_language: body.natural_language,
+        },
+        result_summary: `compile:${compiled.compile_id}`,
+      });
+      return c.json({
+        compile_id: compiled.compile_id,
+        draft: compiled.draft,
+        explanation: compiled.explanation,
+        persisted: false,
+      });
+    }
+  );
+
+  app.post(
+    "/api/v1/listings/:listingId/dynamic-repricing-rule/confirm-compiled",
+    async (c) => {
+      const tenantId = c.get("tenantId");
+      const listingId = c.req.param("listingId");
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const body = (await c.req.json()) as {
+        compile_id: string;
+        draft?: Partial<DynamicRuleDraft>;
+      };
+      if (!body.compile_id) {
+        throw new HTTPException(400, { message: "COMPILE_ID_REQUIRED" });
+      }
+      const compiled = takeCompiledDraft(tenantId, listingId, body.compile_id);
+      if (!compiled) {
+        throw new HTTPException(404, { message: "COMPILE_NOT_FOUND" });
+      }
+      const merged = { ...compiled.draft, ...body.draft };
+      const rule = await dynamicRules.upsertRule(listingId, merged);
+      await agentAudit.recordInvocation({
+        tenant_id: tenantId,
+        tool_name: "tool_confirm_dynamic_rule",
+        session_id: null,
+        arguments_json: {
+          listing_id: listingId,
+          compile_id: body.compile_id,
+        },
+        result_summary: `rule:${rule.action}:${rule.anchor_type}`,
+      });
+      return c.json({ rule, compile_id: body.compile_id, persisted: true });
+    }
+  );
 
   app.post(
     "/api/v1/listings/:listingId/dynamic-repricing-rule/unfreeze",
