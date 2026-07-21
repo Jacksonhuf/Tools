@@ -156,3 +156,45 @@ describe("TC-API-REPR-BATCH-002 batch recompute shard", () => {
     ).toBe(true);
   });
 });
+
+describe("TC-API-REPR-BATCH-003 orchestrated recompute-all", () => {
+  beforeEach(() => {
+    resetRepricingFixtures();
+  });
+
+  it("runs all shards for demo SKU via recompute-all", async () => {
+    const { app } = createTestApp();
+    const res = await app.request(
+      "/api/v1/skus/demo-sku-001/repricing-batch/recompute-all",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ shard_total: 4 }),
+      }
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      shard_total: number;
+      shards: unknown[];
+      totals: { processed: number; skipped: number };
+    };
+    expect(body.shard_total).toBe(4);
+    expect(body.shards).toHaveLength(4);
+    expect(body.totals.skipped).toBeGreaterThanOrEqual(2);
+  });
+
+  it("tenant recompute-all includes demo SKU", async () => {
+    const { app } = createTestApp();
+    const res = await app.request("/api/v1/repricing-batch/recompute-all", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ shard_total: 2 }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      skus: Array<{ sku_id: string }>;
+      totals: { processed: number; skipped: number };
+    };
+    expect(body.skus.some((s) => s.sku_id === "demo-sku-001")).toBe(true);
+  });
+});

@@ -17,7 +17,8 @@
     "db:migrate": "npm run build -w @mx-pricing/db && DATABASE_URL=${DATABASE_URL:-postgresql://mx:mx@localhost:5432/mx_pricing} node packages/db/dist/migrate-cli.js",
     "dev:web": "npm run dev -w @mx-pricing/web",
     "dev:bff": "npm run start -w @mx-pricing/bff",
-    "dev:channel-gateway": "node tools/channel-gateway-sidecar/server.mjs"
+    "dev:channel-gateway": "node tools/channel-gateway-sidecar/server.mjs",
+    "repricing-batch:worker": "node tools/repricing-batch-worker/run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

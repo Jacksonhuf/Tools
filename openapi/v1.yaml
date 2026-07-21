@@ -251,6 +251,12 @@ paths:
   /api/v1/skus/{skuId}/repricing-batch/recompute:
     post:
       summary: Process pending repricing events for one shard (P5-05)
+  /api/v1/skus/{skuId}/repricing-batch/recompute-all:
+    post:
+      summary: Run all shards for one SKU (P5-05 Loop 45)
+  /api/v1/repricing-batch/recompute-all:
+    post:
+      summary: Run all shards for tenant SKUs (P5-05 Loop 45)
   /api/v1/reconciliation-alerts:
     get:
       summary: Open channel vs active price alerts (TC-INT-RECON-001)
