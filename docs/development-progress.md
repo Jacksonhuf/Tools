@@ -438,7 +438,7 @@
 |----|------|
 | **日期** | 2026-07-21 |
 | **实现** | `channel-gateway-contract.test.ts`；`p5-acceptance-checklist.md` |
-| **测试** | `npm test` — **112 passed**（PG 6 skipped） |
+| **测试** | `npm test` — **111 passed**（PG 6 skipped） |
 | **下一步** | Loop 收官与合并 PR |
 
 ### Loop 36 — Development Loop 收官
