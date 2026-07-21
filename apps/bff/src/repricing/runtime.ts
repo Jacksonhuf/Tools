@@ -6,14 +6,18 @@ import type {
   RepricingEventRecord,
   RepricingRepository,
 } from "../repositories/repricing-types.js";
+import type {
+  DynamicRuleRepository,
+  ListingHealthRepository,
+} from "../repositories/dynamic-rule-types.js";
 import { computeEffectivePrice } from "../competitor-normalize.js";
-import { buildCompetitorAnchorSummary } from "../competitor-summary.js";
 import {
   flushDebounce,
   recordCompetitorPriceChange,
   type CompetitorPriceChangedPayload,
 } from "./debounce.js";
 import { nextRunFromNow, type IngestTier } from "./tier.js";
+import { evaluateListingStale } from "./stale.js";
 
 const mockPull = new MockChannelListingAdapter();
 
@@ -146,6 +150,8 @@ export async function processRepricingEvent(
   catalog: CatalogRepository,
   competitors: CompetitorRepository,
   repricing: RepricingRepository,
+  dynamicRules: DynamicRuleRepository,
+  listingHealth: ListingHealthRepository,
   tenantId: string,
   eventId: string
 ): Promise<
@@ -163,6 +169,24 @@ export async function processRepricingEvent(
   if (!listing) {
     throw new Error("LISTING_NOT_FOUND");
   }
+
+  await evaluateListingStale(competitors, listingHealth, event.listing_id);
+  const staleState = await listingHealth.getStale(event.listing_id);
+  if (staleState.competitor_stale_frozen) {
+    return { skipped: true, reason: "STALE_COMPETITOR_DATA" };
+  }
+
+  let rule = await dynamicRules.getRule(event.listing_id);
+  if (!rule) {
+    rule = await dynamicRules.upsertRule(event.listing_id, {});
+  }
+  if (!rule.enabled) {
+    return { skipped: true, reason: "RULE_DISABLED" };
+  }
+  if (rule.frozen) {
+    return { skipped: true, reason: "RULE_FROZEN" };
+  }
+
   const offers = await competitors.listOffers(event.listing_id);
   const withLatest = await Promise.all(
     offers.map(async (o) => {
@@ -173,12 +197,17 @@ export async function processRepricingEvent(
       };
     })
   );
-  const anchor = buildCompetitorAnchorSummary(withLatest);
-  const match = anchor.median_mxn ?? anchor.min_mxn;
-  if (match == null) {
+  const observations = withLatest
+    .filter((o) => o.latest_effective_mxn != null)
+    .map((o) => ({
+      channel: o.channel,
+      effective_price_mxn: o.latest_effective_mxn as number,
+    }));
+  if (observations.length === 0) {
     await repricing.markProcessed(eventId, `proc:${eventId}`);
     return { skipped: true, reason: "NO_ANCHOR" };
   }
+
   const sku = listing.sku;
   const fee =
     listing.channel === "MERCADO_LIBRE" ? sku.fee_ml : sku.fee_amazon;
@@ -190,15 +219,40 @@ export async function processRepricingEvent(
   const comp = computeCompetitive({
     pricing_mode: "competitive_with_floor",
     channel: listing.channel,
-    match_price_mxn: match,
     floor_price_mxn: floor,
     rounding_rule: { type: "NONE", decimals: 2 },
+    anchor_type: rule.anchor_type,
+    competitor_observations: observations,
+    offset:
+      rule.offset.type === "FIXED_MXN"
+        ? { type: "FIXED_MXN" as const, value: rule.offset.value }
+        : { type: "PERCENT" as const, value: rule.offset.value },
   });
+
+  const versions = await catalog.listVersions(sku.id);
+  const active = versions.find(
+    (v) => v.state === "active" && v.channel === listing.channel
+  );
+  if (
+    active &&
+    rule.min_gap_mxn > 0 &&
+    Math.abs(comp.publish_price_mxn - active.publish_price_mxn) < rule.min_gap_mxn
+  ) {
+    return { skipped: true, reason: "MIN_GAP" };
+  }
+
+  const versionState =
+    rule.action === "pending"
+      ? "pending"
+      : rule.action === "auto_active"
+        ? "active"
+        : "suggested";
+
   const version = await catalog.createVersion({
     tenant_id: tenantId,
     sku_id: sku.id,
     channel: listing.channel,
-    state: "suggested",
+    state: versionState,
     publish_price_mxn: comp.publish_price_mxn,
     reason: `repricing:${eventId}`,
   });

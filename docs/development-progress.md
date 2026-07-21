@@ -75,6 +75,8 @@
 | P2-E2-01 | 部分 | Loop 11（Tier 调度 + mock ingest） |
 | P2-E3-01 | 部分 | Loop 11（CompetitorPriceChanged 入队） |
 | P2-E3-04 | 部分 | Loop 11（process → suggested version） |
+| P2-E3-03 | 部分 | Loop 12（dynamic rule CRUD） |
+| P2-E2-05 | 部分 | Loop 12（stale 检测与冻结） |
 
 ---
 
@@ -190,6 +192,16 @@
 | **测试** | `npm test` — **48 passed**（`tests/api/repricing-events.test.ts`） |
 | **下一步** | P2-E3 动态规则 CRUD、Stale 冻结 |
 
+### Loop 12 — 动态规则与 Stale 冻结（P2-E3-03 / P2-E2-05）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §5.6、§8.5、§10.5；TC-INT-ING-004、TC-API-GUARD-005 |
+| **实现** | 迁移 `006_dynamic_rules`；`DynamicRuleRepository` + `ListingHealth`；`PUT/GET/unfreeze` 动态规则；`stale-check`；`process` 尊重 stale / frozen / min_gap |
+| **测试** | `npm test` — **51 passed**（`tests/api/dynamic-rules.test.ts`） |
+| **下一步** | P3 Guard 冷却与日上限、渠道回写 |
+
 ---
 
 ## 本地命令
@@ -221,3 +233,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.8 | 2026-07-21 | Loop 9 |
 | v1.9 | 2026-07-21 | Loop 10 |
 | v2.0 | 2026-07-21 | Loop 11 |
+| v2.1 | 2026-07-21 | Loop 12 |

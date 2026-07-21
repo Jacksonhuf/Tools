@@ -343,6 +343,58 @@ export async function runIngest(locale: string, listingId: string) {
   }>;
 }
 
+export async function fetchDynamicRule(locale: string, listingId: string) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/dynamic-repricing-rule`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`dynamic rule ${res.status}`);
+  return res.json() as Promise<{
+    rule: {
+      enabled: boolean;
+      frozen: boolean;
+      anchor_type: string;
+      min_gap_mxn: number;
+    };
+    stale: { competitor_stale_frozen: boolean };
+  }>;
+}
+
+export async function updateDynamicRule(
+  locale: string,
+  listingId: string,
+  body: Record<string, unknown>
+) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/dynamic-repricing-rule`,
+    {
+      method: "PUT",
+      headers: headers(locale),
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) throw new Error(`update rule ${res.status}`);
+  return res.json();
+}
+
+export async function unfreezeDynamicRule(locale: string, listingId: string) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/dynamic-repricing-rule/unfreeze`,
+    { method: "POST", headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`unfreeze ${res.status}`);
+  return res.json();
+}
+
+export async function checkCompetitorStale(locale: string, listingId: string) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/competitors/stale-check`,
+    { method: "POST", headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`stale-check ${res.status}`);
+  return res.json() as Promise<{ stale: boolean }>;
+}
+
 export async function flushRepricingEvents(locale: string, listingId: string) {
   const res = await fetch(
     `/api/v1/listings/${listingId}/repricing-events/flush`,

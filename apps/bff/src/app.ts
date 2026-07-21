@@ -53,6 +53,15 @@ import {
   runMockIngest,
 } from "./repricing/runtime.js";
 import { tierIntervalMs } from "./repricing/tier.js";
+import {
+  type DynamicRuleRepository,
+  getDynamicRuleRepository,
+  getListingHealthRepository,
+  MemoryDynamicRuleRepository,
+  MemoryListingHealthRepository,
+} from "./repositories/dynamic-rule-index.js";
+import type { ListingHealthRepository } from "./repositories/dynamic-rule-types.js";
+import { evaluateListingStale } from "./repricing/stale.js";
 
 export type AppEnv = {
   Variables: {
@@ -69,6 +78,8 @@ export interface CreateAppOptions {
   shops?: ShopRepository;
   competitors?: CompetitorRepository;
   repricing?: RepricingRepository;
+  dynamicRules?: DynamicRuleRepository;
+  listingHealth?: ListingHealthRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -77,6 +88,9 @@ export function createApp(options: CreateAppOptions = {}) {
   const shops = options.shops ?? getShopRepository();
   const competitors = options.competitors ?? getCompetitorRepository();
   const repricing = options.repricing ?? getRepricingRepository();
+  const dynamicRules = options.dynamicRules ?? getDynamicRuleRepository();
+  const listingHealth =
+    options.listingHealth ?? getListingHealthRepository();
   const listingAdapter = new MockChannelListingAdapter();
   const app = new Hono<AppEnv>();
 
@@ -640,6 +654,8 @@ export function createApp(options: CreateAppOptions = {}) {
         catalog,
         competitors,
         repricing,
+        dynamicRules,
+        listingHealth,
         tenantId,
         eventId
       );
@@ -652,6 +668,76 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
+  app.get("/api/v1/listings/:listingId/dynamic-repricing-rule", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    let rule = await dynamicRules.getRule(listingId);
+    if (!rule) {
+      rule = await dynamicRules.upsertRule(listingId, {});
+    }
+    const stale = await listingHealth.getStale(listingId);
+    return c.json({ rule, stale });
+  });
+
+  app.put("/api/v1/listings/:listingId/dynamic-repricing-rule", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as Record<string, unknown>;
+    const rule = await dynamicRules.upsertRule(listingId, {
+      enabled: body.enabled as boolean | undefined,
+      action: body.action as
+        | "suggest"
+        | "pending"
+        | "auto_active"
+        | undefined,
+      anchor_type: body.anchor_type as string | undefined,
+      offset: body.offset as { type: "PERCENT" | "FIXED_MXN"; value: number },
+      cooldown_min: body.cooldown_min as number | undefined,
+      daily_limit: body.daily_limit as number | undefined,
+      min_gap_mxn: body.min_gap_mxn as number | undefined,
+      frozen: body.frozen as boolean | undefined,
+    });
+    return c.json(rule);
+  });
+
+  app.post(
+    "/api/v1/listings/:listingId/dynamic-repricing-rule/unfreeze",
+    async (c) => {
+      const tenantId = c.get("tenantId");
+      const listingId = c.req.param("listingId");
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const rule = await dynamicRules.unfreeze(listingId);
+      return c.json(rule ?? { listing_id: listingId, frozen: false });
+    }
+  );
+
+  app.post("/api/v1/listings/:listingId/competitors/stale-check", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const result = await evaluateListingStale(
+      competitors,
+      listingHealth,
+      listingId
+    );
+    const stale = await listingHealth.getStale(listingId);
+    return c.json({ ...result, ...stale });
+  });
+
   return app;
 }
 
@@ -662,12 +748,16 @@ export function createTestApp(): {
   shops: MemoryShopRepository;
   competitors: MemoryCompetitorRepository;
   repricing: MemoryRepricingRepository;
+  dynamicRules: MemoryDynamicRuleRepository;
+  listingHealth: MemoryListingHealthRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
   const shopsRepo = new MemoryShopRepository();
   const competitorsRepo = new MemoryCompetitorRepository();
   const repricingRepo = new MemoryRepricingRepository();
+  const dynamicRulesRepo = new MemoryDynamicRuleRepository();
+  const listingHealthRepo = new MemoryListingHealthRepository();
   return {
     app: createApp({
       catalog,
@@ -675,12 +765,16 @@ export function createTestApp(): {
       shops: shopsRepo,
       competitors: competitorsRepo,
       repricing: repricingRepo,
+      dynamicRules: dynamicRulesRepo,
+      listingHealth: listingHealthRepo,
     }),
     catalog,
     adjustments,
     shops: shopsRepo,
     competitors: competitorsRepo,
     repricing: repricingRepo,
+    dynamicRules: dynamicRulesRepo,
+    listingHealth: listingHealthRepo,
   };
 }
 

@@ -6,6 +6,9 @@ import {
   fetchCompetitorOffers,
   fetchPriceHistory,
   fetchIngestStatus,
+  fetchDynamicRule,
+  unfreezeDynamicRule,
+  checkCompetitorStale,
   flushRepricingEvents,
   processRepricingEvent,
   runIngest,
@@ -33,6 +36,8 @@ export function CompetitorsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ingestTier, setIngestTier] = useState("T1");
+  const [ruleFrozen, setRuleFrozen] = useState(false);
+  const [staleFrozen, setStaleFrozen] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -49,6 +54,9 @@ export function CompetitorsPage() {
       setHistoryCount(hist.observations.length);
       const ingest = await fetchIngestStatus(locale, listingId);
       setIngestTier(ingest.tier);
+      const dr = await fetchDynamicRule(locale, listingId);
+      setRuleFrozen(dr.rule.frozen);
+      setStaleFrozen(dr.stale.competitor_stale_frozen);
     } catch (e) {
       setError(String(e));
     }
@@ -96,6 +104,7 @@ export function CompetitorsPage() {
     setError(null);
     setMessage(null);
     try {
+      await checkCompetitorStale(locale, listingId);
       const ing = await runIngest(locale, listingId);
       const flushed = await flushRepricingEvents(locale, listingId);
       if (flushed.event?.id) {
@@ -106,6 +115,16 @@ export function CompetitorsPage() {
       } else {
         setMessage(t("pipelineNoEvent"));
       }
+      await load();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const unfreeze = async () => {
+    try {
+      await unfreezeDynamicRule(locale, listingId);
+      setMessage(t("ruleUnfrozen"));
       await load();
     } catch (e) {
       setError(String(e));
@@ -143,7 +162,21 @@ export function CompetitorsPage() {
           {anchorMedian != null ? `${anchorMedian} MXN` : "—"} ·{" "}
           {t("historyPoints", { count: historyCount })} ({listingLabel}) ·{" "}
           {t("ingestTier")}: {ingestTier}
+          {staleFrozen && (
+            <span className="status status-expired"> {t("staleFrozen")}</span>
+          )}
+          {ruleFrozen && (
+            <span className="status status-pending_approval">
+              {" "}
+              {t("ruleFrozen")}
+            </span>
+          )}
         </p>
+        {ruleFrozen && (
+          <button type="button" onClick={() => void unfreeze()}>
+            {t("unfreezeRule")}
+          </button>
+        )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
         </button>

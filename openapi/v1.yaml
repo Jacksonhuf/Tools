@@ -189,3 +189,14 @@ paths:
   /api/v1/repricing-events/{eventId}/process:
     post:
       summary: Process event into suggested version (P2-E3-04)
+  /api/v1/listings/{listingId}/dynamic-repricing-rule:
+    get:
+      summary: Get dynamic repricing rule (SDD §10.5)
+    put:
+      summary: Upsert dynamic repricing rule
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/unfreeze:
+    post:
+      summary: Unfreeze rule after publish failure (TC-API-GUARD-005)
+  /api/v1/listings/{listingId}/competitors/stale-check:
+    post:
+      summary: Evaluate stale competitor observations (TC-INT-ING-004)

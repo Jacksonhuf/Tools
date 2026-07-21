@@ -82,6 +82,10 @@ const resources = {
       pipelineDone: "Pipeline complete",
       pipelineNoEvent: "Ingest done; no price change to flush",
       suggestedVersion: "Suggested version",
+      staleFrozen: "Stale competitor data",
+      ruleFrozen: "Rule frozen",
+      unfreezeRule: "Unfreeze rule",
+      ruleUnfrozen: "Dynamic rule unfrozen",
     },
   },
   "zh-CN": {
@@ -162,6 +166,10 @@ const resources = {
       pipelineDone: "管道完成",
       pipelineNoEvent: "采集完成，无价格变化可冲刷",
       suggestedVersion: "Suggested 版本",
+      staleFrozen: "竞品数据过期",
+      ruleFrozen: "规则已熔断",
+      unfreezeRule: "解除熔断",
+      ruleUnfrozen: "动态规则已解除熔断",
     },
   },
   "es-MX": {
@@ -244,6 +252,10 @@ const resources = {
       pipelineDone: "Pipeline completado",
       pipelineNoEvent: "Ingest listo; sin cambio para flush",
       suggestedVersion: "Versión suggested",
+      staleFrozen: "Datos competidor obsoletos",
+      ruleFrozen: "Regla congelada",
+      unfreezeRule: "Descongelar regla",
+      ruleUnfrozen: "Regla dinámica descongelada",
     },
   },
 };

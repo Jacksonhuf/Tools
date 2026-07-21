@@ -37,6 +37,8 @@ describe("TC-INT-EVT-001 CompetitorPriceChanged enqueue", () => {
     const t = createTestApp();
     t.competitors.resetForTests?.();
     t.repricing.resetForTests?.();
+    t.dynamicRules.resetForTests?.();
+    t.listingHealth.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -63,6 +65,8 @@ describe("TC-INT-EVT-002 debounce merges ticks", () => {
     const t = createTestApp();
     t.competitors.resetForTests?.();
     t.repricing.resetForTests?.();
+    t.dynamicRules.resetForTests?.();
+    t.listingHealth.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -101,6 +105,8 @@ describe("TC-INT-EVT-003 suggested version on process", () => {
     const t = createTestApp();
     t.competitors.resetForTests?.();
     t.repricing.resetForTests?.();
+    t.dynamicRules.resetForTests?.();
+    t.listingHealth.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -140,6 +146,8 @@ describe("TC-INT-EVT-004 process idempotency", () => {
     const t = createTestApp();
     t.competitors.resetForTests?.();
     t.repricing.resetForTests?.();
+    t.dynamicRules.resetForTests?.();
+    t.listingHealth.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
