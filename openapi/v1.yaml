@@ -12,11 +12,15 @@ paths:
       responses:
         "200":
           description: SKU list
-    patch:
-      summary: Not used at collection level
   /api/v1/skus/{skuId}:
     patch:
       summary: Update SKU landed cost
+      parameters:
+        - name: skuId
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -119,3 +123,15 @@ paths:
       responses:
         "200":
           description: waterfall, publish_price_mxn, guards
+  /api/v1/adjustment-batches:
+    post:
+      summary: Create adjustment batch (SDD §10.4)
+      responses:
+        "201":
+          description: Batch created
+  /api/v1/adjustment-batches/{batchId}/approve:
+    post:
+      summary: Approve batch pending approval
+  /api/v1/adjustment-batches/{batchId}/apply:
+    post:
+      summary: Apply batch and publish versions

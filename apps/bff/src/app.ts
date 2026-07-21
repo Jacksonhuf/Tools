@@ -12,6 +12,15 @@ import {
   getCatalogRepository,
   MemoryCatalogRepository,
 } from "./repositories/index.js";
+import {
+  type AdjustmentRepository,
+  getAdjustmentRepository,
+  MemoryAdjustmentRepository,
+} from "./repositories/adjustment-index.js";
+import {
+  applyAdjustmentBatch,
+  buildAdjustmentBatchInput,
+} from "./adjustment-service.js";
 
 export type AppEnv = {
   Variables: {
@@ -24,10 +33,12 @@ const DEV_TOKEN = "dev-token";
 
 export interface CreateAppOptions {
   catalog?: CatalogRepository;
+  adjustments?: AdjustmentRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
   const catalog = options.catalog ?? getCatalogRepository();
+  const adjustments = options.adjustments ?? getAdjustmentRepository();
   const app = new Hono<AppEnv>();
 
   app.use(
@@ -199,15 +210,103 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(result);
   });
 
+  app.post("/api/v1/adjustment-batches", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      reason_code?: string;
+      items: Array<{ listing_id: string; explicit_price_mxn: number }>;
+    };
+    if (!body.items?.length) {
+      throw new HTTPException(400, { message: "ITEMS_REQUIRED" });
+    }
+    try {
+      const built = await buildAdjustmentBatchInput(catalog, tenantId, body);
+      const batch = await adjustments.createBatch({
+        tenant_id: tenantId,
+        reason_code: built.reason_code,
+        status: built.status,
+        items: built.prepared.map((p) => ({
+          listing_id: p.listing_id,
+          explicit_price_mxn: p.explicit_price_mxn,
+          from_price_mxn: p.from_price_mxn,
+          guard_result: p.guard_result,
+        })),
+      });
+      return c.json(batch, 201);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("GUARD_REJECTED")) {
+        return c.json({ error: "GUARD_REJECTED", code: msg.split(":")[1] }, 422);
+      }
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.get("/api/v1/adjustment-batches/:batchId", async (c) => {
+    const batch = await adjustments.getBatch(
+      c.get("tenantId"),
+      c.req.param("batchId")
+    );
+    if (!batch) {
+      throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+    }
+    return c.json(batch);
+  });
+
+  app.post("/api/v1/adjustment-batches/:batchId/approve", async (c) => {
+    const tenantId = c.get("tenantId");
+    const batchId = c.req.param("batchId");
+    const batch = await adjustments.getBatch(tenantId, batchId);
+    if (!batch) {
+      throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+    }
+    if (batch.status !== "pending_approval") {
+      return c.json({ error: "INVALID_STATUS", status: batch.status }, 400);
+    }
+    const updated = await adjustments.updateBatchStatus(
+      tenantId,
+      batchId,
+      "approved",
+      { approved_at: new Date().toISOString() }
+    );
+    return c.json(updated);
+  });
+
+  app.post("/api/v1/adjustment-batches/:batchId/apply", async (c) => {
+    const tenantId = c.get("tenantId");
+    const batchId = c.req.param("batchId");
+    const result = await applyAdjustmentBatch(
+      catalog,
+      adjustments,
+      tenantId,
+      batchId
+    );
+    if (result.error === "NOT_FOUND") {
+      throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+    }
+    if (result.error === "APPROVAL_REQUIRED") {
+      return c.json({ error: "APPROVAL_REQUIRED" }, 422);
+    }
+    if (result.error) {
+      return c.json({ error: result.error }, 400);
+    }
+    return c.json(result);
+  });
+
   return app;
 }
 
 export function createTestApp(): {
   app: ReturnType<typeof createApp>;
   catalog: MemoryCatalogRepository;
+  adjustments: MemoryAdjustmentRepository;
 } {
   const catalog = new MemoryCatalogRepository();
-  return { app: createApp({ catalog }), catalog };
+  const adjustments = new MemoryAdjustmentRepository();
+  return { app: createApp({ catalog, adjustments }), catalog, adjustments };
 }
 
 export function createPublicApp() {

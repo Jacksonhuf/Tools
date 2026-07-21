@@ -6,8 +6,9 @@ const TENANT = { "X-Tenant-Id": "tenant-demo" };
 
 describe("P0-E2-01 SKU API", () => {
   beforeEach(() => {
-    const { catalog } = createTestApp();
-    catalog.resetForTests?.();
+    const t = createTestApp();
+    t.catalog.resetForTests?.();
+    t.adjustments.resetForTests?.();
   });
 
   it("GET /api/v1/skus lists tenant skus", async () => {

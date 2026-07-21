@@ -5,9 +5,10 @@ const AUTH = { Authorization: "Bearer dev-token" };
 const TENANT = { "X-Tenant-Id": "tenant-demo" };
 
 function testApp() {
-  const { app, catalog } = createTestApp();
+  const { app, catalog, adjustments } = createTestApp();
   catalog.resetForTests?.();
-  return { app, catalog };
+  adjustments.resetForTests?.();
+  return { app, catalog, adjustments };
 }
 
 describe("TC-API-AUTH-001", () => {

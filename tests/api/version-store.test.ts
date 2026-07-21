@@ -5,8 +5,10 @@ describe("TC-INT-VER-002 active unique", () => {
   let catalog: ReturnType<typeof createTestApp>["catalog"];
 
   beforeEach(() => {
-    catalog = createTestApp().catalog;
-    catalog.resetForTests?.();
+    const t = createTestApp();
+    catalog = t.catalog;
+    t.catalog.resetForTests?.();
+    t.adjustments.resetForTests?.();
   });
 
   it("supersedes previous active on same sku+channel", async () => {

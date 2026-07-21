@@ -37,7 +37,9 @@
 | DOC-02 | 部分 | Loop 2（`openapi/v1.yaml` 核心路径） |
 | DOC-03 | 完成 | Loop 1 |
 | P0-E1-04 | 部分 | Loop 5（`packages/db` + docker-compose） |
-| P0-E2-01 | 部分 | Loop 5（SKU 表 + seed） |
+| P0-E2-01 | 部分 | Loop 6（list + PATCH landed） |
+| P0-E6-06 | 完成 | Loop 6 |
+| P1-E3-05 | 部分 | Loop 6（Web 双列） |
 | P0-E4-05 | 部分 | Loop 5（PG `price_versions`） |
 | P0-E8-02 | 部分 | Loop 5（`tests/int/postgres-catalog`） |
 | P0-E1-02 | 部分 | Loop 2（BFF 路由、401、health） |
@@ -53,7 +55,8 @@
 | P0-E4-05 | 部分 | Loop 3（内存 Version + supersede） |
 | P0-E4-06 | 部分 | Loop 1 |
 | P0-E4-07 | 完成 | Loop 2 |
-| P0-E5-05 | 部分 | Loop 3（`POST .../price-versions`） |
+| P0-E5-01 | 完成 | Loop 7 |
+| P0-E5-02 | 部分 | Loop 7（降幅 5% 审批） |
 | P0-E6-01 | 部分 | Loop 4（Vite + React） |
 | P0-E6-02 | 部分 | Loop 4（zh/en/es-MX） |
 | P0-E6-05 | 完成 | Loop 4 |
@@ -125,7 +128,17 @@
 | **阅读** | SDD §5.1、§9.3；任务 P0-E2-01、P1-E3-05、P0-E6-06 |
 | **实现** | `GET/PATCH /api/v1/skus`；Amazon listing seed；Web 双列 ML/Amazon、`ChannelPricingColumn`、分渠道竞品价与发布 |
 | **测试** | `npm test` — **31 passed** |
-| **下一步** | Loop 7：P1 ML/Amazon 授权只读 或 调价单 API（P0-E5-01） |
+| **下一步** | Loop 7：调价单 |
+
+### Loop 7 — 调价单 API（P0-E5-01 / P0-E5-02）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §5.6、§10.4；test-cases §6 TC-API-ADJ |
+| **实现** | 迁移 `002_adjustment_batches`；`AdjustmentRepository`；`POST/GET adjustment-batches`、`approve`、`apply`；降幅 &gt;5% → `pending_approval` |
+| **测试** | `npm test` — **34 passed** |
+| **下一步** | Loop 8：Web 调价单列表 或 P1 渠道 OAuth 占位 |
 
 ---
 
@@ -152,3 +165,5 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.2 | 2026-07-20 | Loop 3 |
 | v1.3 | 2026-07-20 | Loop 4 |
 | v1.4 | 2026-07-20 | Loop 5 |
+| v1.5 | 2026-07-20 | Loop 6 |
+| v1.6 | 2026-07-21 | Loop 7 |
