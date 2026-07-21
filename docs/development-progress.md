@@ -382,6 +382,16 @@
 | **测试** | `npm test` — **104 passed**；`ci-postgres-int` 另跑 **2** PG 用例；`npm run test:e2e` — **4 passed** |
 | **下一步** | 合并 PR #1、PG CI 扩展 shop/adjustment 仓储、生产 `CHANNEL_SANDBOX_MODE=false` 运维说明 |
 
+### Loop 30 — PG shop/adjustment 与生产沙箱清单（TC-INT-PG-002/003 / TC-API-SBX-002）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 29 下一步；`channel-sandbox`；P3 调价 + P1 店铺 |
+| **实现** | `postgres-bff-smoke` 扩展 OAuth 落库 + 调价单审批；`channel-sandbox.test` 生产模式回归；`docs/channel-sandbox-production.md` |
+| **测试** | `npm test` — **105 passed**（PG 4 skipped）；`ci-postgres-int` — **4** PG 用例；`npm run test:e2e` — **4 passed** |
+| **下一步** | 合并 PR #1、真实渠道 HTTP 适配器接线、PG repricing/competitor 仓储 CI |
+
 ---
 
 ## 本地命令
@@ -431,4 +441,6 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.4 | 2026-07-21 | Loop 25 |
 | v3.5 | 2026-07-21 | Loop 26 |
 | v3.6 | 2026-07-21 | Loop 27 |
+| v3.7 | 2026-07-21 | Loop 28 |
 | v3.8 | 2026-07-21 | Loop 29 |
+| v3.9 | 2026-07-21 | Loop 30 |
