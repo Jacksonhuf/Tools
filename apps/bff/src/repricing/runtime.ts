@@ -21,6 +21,7 @@ import { nextRunFromNow, type IngestTier } from "./tier.js";
 import { evaluateListingStale } from "./stale.js";
 import { checkDynamicRepricingGuards } from "./guards.js";
 import { versionStateForAction } from "./action.js";
+import { isWithinMexicoBusinessHours } from "./business-hours.js";
 
 export class IngestFailedError extends Error {
   constructor() {
@@ -213,6 +214,10 @@ export async function processRepricingEvent(
     return { skipped: true, reason: guardCode };
   }
 
+  if (rule.business_hours_only && !isWithinMexicoBusinessHours()) {
+    return { skipped: true, reason: "OUTSIDE_BUSINESS_HOURS" };
+  }
+
   const offers = await competitors.listOffers(event.listing_id);
   const withLatest = await Promise.all(
     offers.map(async (o) => {
@@ -220,6 +225,7 @@ export async function processRepricingEvent(
       return {
         ...o,
         latest_effective_mxn: latest?.effective_price ?? null,
+        latest_observation_id: latest?.id ?? null,
       };
     })
   );
@@ -229,6 +235,9 @@ export async function processRepricingEvent(
       channel: o.channel,
       effective_price_mxn: o.latest_effective_mxn as number,
     }));
+  const competitorSnapshotIds = withLatest
+    .map((o) => o.latest_observation_id)
+    .filter((id): id is string => Boolean(id));
   if (observations.length === 0) {
     await repricing.markProcessed(eventId, `proc:${eventId}`);
     return { skipped: true, reason: "NO_ANCHOR" };
@@ -285,6 +294,11 @@ export async function processRepricingEvent(
     state: versionState,
     publish_price_mxn: comp.publish_price_mxn,
     reason: `repricing:${eventId}`,
+    trigger_event_id: eventId,
+    dynamic_rule_id: rule.id,
+    competitor_snapshot_ids: competitorSnapshotIds,
+    floor_snapshot_id: `floor:${event.listing_id}:${floor}`,
+    cost_snapshot_id: `cost:${sku.id}:${sku.landed_cost_mxn}`,
   });
   await repricing.markProcessed(eventId, `proc:${eventId}`);
   await repricingActivity.recordApply(event.listing_id);

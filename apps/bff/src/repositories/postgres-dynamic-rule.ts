@@ -19,6 +19,7 @@ function mapRule(row: Record<string, unknown>): DynamicRuleRecord {
     min_gap_mxn: Number(row.min_gap_mxn),
     tier: (row.tier as string) ?? null,
     frozen: Boolean(row.frozen),
+    business_hours_only: Boolean(row.business_hours_only ?? false),
     updated_at: new Date(row.updated_at as string).toISOString(),
   };
 }
@@ -34,7 +35,7 @@ export class PostgresDynamicRuleRepository implements DynamicRuleRepository {
   async getRule(listingId: string): Promise<DynamicRuleRecord | undefined> {
     const res = await this.pool.query(
       `SELECT id, listing_id, enabled, action, anchor_type, offset_json, triggers_json,
-              cooldown_min, daily_limit, min_gap_mxn, tier, frozen, updated_at
+              cooldown_min, daily_limit, min_gap_mxn, tier, frozen, business_hours_only, updated_at
        FROM dynamic_repricing_rules WHERE listing_id = $1`,
       [listingId]
     );
@@ -60,13 +61,15 @@ export class PostgresDynamicRuleRepository implements DynamicRuleRepository {
       min_gap_mxn: patch.min_gap_mxn ?? existing?.min_gap_mxn ?? 5,
       tier: patch.tier ?? existing?.tier ?? null,
       frozen: patch.frozen ?? existing?.frozen ?? false,
+      business_hours_only:
+        patch.business_hours_only ?? existing?.business_hours_only ?? false,
     };
     const id = existing?.id ?? `drule-${listingId}`;
     const res = await this.pool.query(
       `INSERT INTO dynamic_repricing_rules
        (id, listing_id, enabled, action, anchor_type, offset_json, triggers_json,
-        cooldown_min, daily_limit, min_gap_mxn, tier, frozen)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        cooldown_min, daily_limit, min_gap_mxn, tier, frozen, business_hours_only)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        ON CONFLICT (listing_id) DO UPDATE SET
          enabled = EXCLUDED.enabled,
          action = EXCLUDED.action,
@@ -78,9 +81,10 @@ export class PostgresDynamicRuleRepository implements DynamicRuleRepository {
          min_gap_mxn = EXCLUDED.min_gap_mxn,
          tier = EXCLUDED.tier,
          frozen = EXCLUDED.frozen,
+         business_hours_only = EXCLUDED.business_hours_only,
          updated_at = NOW()
        RETURNING id, listing_id, enabled, action, anchor_type, offset_json, triggers_json,
-                 cooldown_min, daily_limit, min_gap_mxn, tier, frozen, updated_at`,
+                 cooldown_min, daily_limit, min_gap_mxn, tier, frozen, business_hours_only, updated_at`,
       [
         id,
         listingId,
@@ -94,6 +98,7 @@ export class PostgresDynamicRuleRepository implements DynamicRuleRepository {
         merged.min_gap_mxn,
         merged.tier,
         merged.frozen,
+        merged.business_hours_only,
       ]
     );
     return mapRule(res.rows[0]);

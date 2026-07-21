@@ -10,6 +10,7 @@ import {
 import {
   countVersions,
   createVersion,
+  getVersionById,
   listVersions,
   resetVersionsForTests,
   setVersionChannelPublishStatus,
@@ -37,19 +38,28 @@ export class MemoryCatalogRepository implements CatalogRepository {
     return listVersions(skuId);
   }
 
-  async createVersion(input: {
-    tenant_id: string;
-    sku_id: string;
-    channel: string;
-    state: VersionState;
-    publish_price_mxn: number;
-    reason?: string;
-  }): Promise<PriceVersionRecord> {
+  async getVersion(
+    tenantId: string,
+    versionId: string
+  ): Promise<PriceVersionRecord | undefined> {
+    const v = getVersionById(versionId);
+    if (!v) return undefined;
+    const sku = await this.getSku(tenantId, v.sku_id);
+    if (!sku) return undefined;
+    return v;
+  }
+
+  async createVersion(input: import("./types.js").CreateVersionParams): Promise<PriceVersionRecord> {
     return createVersion({
       sku_id: input.sku_id,
       channel: input.channel,
       state: input.state,
       publish_price_mxn: input.publish_price_mxn,
+      trigger_event_id: input.trigger_event_id,
+      dynamic_rule_id: input.dynamic_rule_id,
+      competitor_snapshot_ids: input.competitor_snapshot_ids,
+      floor_snapshot_id: input.floor_snapshot_id,
+      cost_snapshot_id: input.cost_snapshot_id,
     });
   }
 

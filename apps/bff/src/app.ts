@@ -260,6 +260,16 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/price-versions/:versionId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const versionId = c.req.param("versionId");
+    const version = await catalog.getVersion(tenantId, versionId);
+    if (!version) {
+      throw new HTTPException(404, { message: "VERSION_NOT_FOUND" });
+    }
+    return c.json({ version });
+  });
+
   app.get("/api/v1/skus", async (c) => {
     const tenantId = c.get("tenantId");
     const skus = await catalog.listSkus(tenantId);
@@ -747,6 +757,7 @@ export function createApp(options: CreateAppOptions = {}) {
       daily_limit: body.daily_limit as number | undefined,
       min_gap_mxn: body.min_gap_mxn as number | undefined,
       frozen: body.frozen as boolean | undefined,
+      business_hours_only: body.business_hours_only as boolean | undefined,
     });
     return c.json(rule);
   });

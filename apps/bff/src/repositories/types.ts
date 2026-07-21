@@ -1,6 +1,16 @@
 import type { FeeTemplate } from "@mx-pricing/pricing-engine";
 import type { SkuRecord, ListingRecord } from "../fixtures.js";
 import type { PriceVersionRecord, VersionState } from "../version-store.js";
+import type { VersionAuditFields } from "../version-audit-types.js";
+
+export type CreateVersionParams = {
+  tenant_id: string;
+  sku_id: string;
+  channel: string;
+  state: VersionState;
+  publish_price_mxn: number;
+  reason?: string;
+} & VersionAuditFields;
 
 export interface CatalogRepository {
   readonly driver: "memory" | "postgres";
@@ -10,14 +20,11 @@ export interface CatalogRepository {
     listingId: string
   ): Promise<(ListingRecord & { sku: SkuRecord }) | undefined>;
   listVersions(skuId: string): Promise<PriceVersionRecord[]>;
-  createVersion(input: {
-    tenant_id: string;
-    sku_id: string;
-    channel: string;
-    state: VersionState;
-    publish_price_mxn: number;
-    reason?: string;
-  }): Promise<PriceVersionRecord>;
+  getVersion(
+    tenantId: string,
+    versionId: string
+  ): Promise<PriceVersionRecord | undefined>;
+  createVersion(input: CreateVersionParams): Promise<PriceVersionRecord>;
   updateVersionState(
     versionId: string,
     expectedState: VersionState,

@@ -94,6 +94,9 @@ paths:
           description: version_id and state
         "422":
           description: Guard rejected
+  /api/v1/price-versions/{versionId}:
+    get:
+      summary: Price version with audit fields (TC-INT-VER-003)
   /api/v1/skus/{skuId}/pricing/simulate:
     post:
       summary: Price simulation without persistence (SDD §10.2)

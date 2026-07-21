@@ -255,6 +255,16 @@
 | **测试** | `npm test` — **67 passed**（NFR-REL-003 + auto_pending） |
 | **下一步** | P3 营业时间窗、Version 审计 TC-INT-VER-003 |
 
+### Loop 18 — 墨西哥营业时间窗与 Version 审计（P3-E1-02 / P3-E1-04）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §5.5；TC-INT-VER-003 |
+| **实现** | `business_hours_only` + `OUTSIDE_BUSINESS_HOURS`；事件 Version 写入 `trigger_event_id`、snapshot ids；`GET price-versions/:id`；迁移 `009` |
+| **测试** | `npm test` — **70 passed**（VER-003 + business hours） |
+| **下一步** | P4 Agent 工具、TC-INT-AGENT-001 |
+
 ---
 
 ## 本地命令
@@ -292,3 +302,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.4 | 2026-07-21 | Loop 15 |
 | v2.5 | 2026-07-21 | Loop 16 |
 | v2.6 | 2026-07-21 | Loop 17 |
+| v2.7 | 2026-07-21 | Loop 18 |

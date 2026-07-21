@@ -20,6 +20,7 @@ function defaultRule(listingId: string): DynamicRuleRecord {
     min_gap_mxn: 5,
     tier: null,
     frozen: false,
+    business_hours_only: false,
     updated_at: new Date().toISOString(),
   };
 }

@@ -18,6 +18,7 @@ export interface DynamicRuleRecord {
   min_gap_mxn: number;
   tier: string | null;
   frozen: boolean;
+  business_hours_only: boolean;
   updated_at: string;
 }
 
