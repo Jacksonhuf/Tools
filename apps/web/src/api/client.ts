@@ -224,6 +224,18 @@ export interface ShopSummary {
   created_at: string;
 }
 
+export async function fetchChannelSandboxStatus(locale: string) {
+  const res = await fetch(`/api/v1/channels/sandbox/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`sandbox status ${res.status}`);
+  return res.json() as Promise<{
+    enabled: boolean;
+    mode: string;
+    note: string;
+  }>;
+}
+
 export async function fetchShops(locale: string) {
   const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);

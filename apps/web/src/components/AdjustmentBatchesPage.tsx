@@ -106,7 +106,7 @@ export function AdjustmentBatchesPage() {
   };
 
   return (
-    <div className="page page-wide">
+    <div className="page page-wide" data-testid="adjustment-batches-page">
       <h1>{t("adjustmentsTitle")}</h1>
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
@@ -130,6 +130,7 @@ export function AdjustmentBatchesPage() {
             {t("mercadoLibre")}
             <input
               type="number"
+              data-testid="adjustment-price-ml"
               value={prices.ml}
               onChange={(e) =>
                 setPrices((p) => ({ ...p, ml: Number(e.target.value) }))
@@ -152,7 +153,11 @@ export function AdjustmentBatchesPage() {
             />
           </label>
         </div>
-        <button type="button" onClick={() => void createBatch()}>
+        <button
+          type="button"
+          data-testid="adjustment-create-batch"
+          onClick={() => void createBatch()}
+        >
           {t("submitBatch")}
         </button>
       </section>
@@ -186,13 +191,23 @@ export function AdjustmentBatchesPage() {
           </ul>
           <div className="batch-actions">
             {selected.status === "pending_approval" && (
-              <button type="button" className="primary" onClick={() => void approve()}>
+              <button
+                type="button"
+                className="primary"
+                data-testid="adjustment-approve"
+                onClick={() => void approve()}
+              >
                 {t("approveBatch")}
               </button>
             )}
             {(selected.status === "draft" ||
               selected.status === "approved") && (
-              <button type="button" className="primary" onClick={() => void apply()}>
+              <button
+                type="button"
+                className="primary"
+                data-testid="adjustment-apply"
+                onClick={() => void apply()}
+              >
                 {t("applyBatch")}
               </button>
             )}

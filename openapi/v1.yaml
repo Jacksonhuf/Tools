@@ -143,6 +143,12 @@ paths:
   /api/v1/adjustment-batches/{batchId}/apply:
     post:
       summary: Apply batch and publish versions
+  /api/v1/channels/sandbox/status:
+    get:
+      summary: Channel sandbox mode (mock write-back)
+  /api/v1/channels/sandbox/events:
+    get:
+      summary: Recent sandbox channel events for tenant
   /api/v1/shops:
     get:
       summary: List tenant shops (P1-E1)

@@ -9,6 +9,10 @@ import {
   getStoredPublishOutcome,
   storePublishOutcome,
 } from "./publish-idempotency-store.js";
+import {
+  isChannelSandboxEnabled,
+  recordChannelSandboxEvent,
+} from "./channel-sandbox-ledger.js";
 
 export const LISTING_ID_BY_SHOP: Record<string, string> = {
   "shop-ml-demo": "listing-ml-001",
@@ -168,6 +172,21 @@ export async function publishListingPrice(
 
   if (versionId) {
     await catalog.setVersionChannelPublishStatus(versionId, "published");
+  }
+
+  if (isChannelSandboxEnabled()) {
+    recordChannelSandboxEvent({
+      tenant_id: tenantId,
+      listing_id: listingId,
+      channel,
+      event_type: "channel_publish",
+      payload: {
+        channel_price_mxn: result.channel_price_mxn ?? priceMxn,
+        version_id: versionId,
+        retried,
+        sandbox: true,
+      },
+    });
   }
 
   return rememberIdempotent(tenantId, listingId, options.idempotency_key, {

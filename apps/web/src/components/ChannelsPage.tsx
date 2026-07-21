@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
   publishShopChannelPrice,
@@ -20,12 +21,17 @@ export function ChannelsPage() {
   const [shops, setShops] = useState<ShopSummary[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sandboxNote, setSandboxNote] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await fetchShops(locale);
+      const [data, sandbox] = await Promise.all([
+        fetchShops(locale),
+        fetchChannelSandboxStatus(locale),
+      ]);
       setShops(data.items);
+      setSandboxNote(sandbox.enabled ? sandbox.note : null);
     } catch (e) {
       setError(String(e));
     }
@@ -90,6 +96,11 @@ export function ChannelsPage() {
     <div className="page page-wide">
       <h1>{t("channelsTitle")}</h1>
       <p className="hint">{t("channelsHint")}</p>
+      {sandboxNote && (
+        <p className="hint" data-testid="channel-sandbox-badge">
+          {t("channelSandboxBadge")}: {sandboxNote}
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
 

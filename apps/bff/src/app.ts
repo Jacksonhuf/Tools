@@ -87,6 +87,12 @@ import {
 } from "./repositories/reconciliation-index.js";
 import { reconcileListingChannelPrice } from "./reconciliation-service.js";
 import {
+  getChannelSandboxStatus,
+  isChannelSandboxEnabled,
+  listChannelSandboxEvents,
+  recordChannelSandboxEvent,
+} from "./channel-sandbox-ledger.js";
+import {
   invokeAgentTool,
   listAgentTools,
 } from "./agent-tools.js";
@@ -473,6 +479,17 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: items.map(shopPublicView) });
   });
 
+  app.get("/api/v1/channels/sandbox/status", async (c) => {
+    return c.json(getChannelSandboxStatus());
+  });
+
+  app.get("/api/v1/channels/sandbox/events", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(100, Math.max(1, Number(limitRaw))) : 30;
+    return c.json({ items: listChannelSandboxEvents(tenantId, limit) });
+  });
+
   app.post("/api/v1/shops", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
@@ -555,6 +572,18 @@ export function createApp(options: CreateAppOptions = {}) {
       },
       body.external_ref
     );
+    if (isChannelSandboxEnabled()) {
+      const listingId = LISTING_ID_BY_SHOP[shopId];
+      if (listingId) {
+        recordChannelSandboxEvent({
+          tenant_id: tenantId,
+          listing_id: listingId,
+          channel: shop.channel,
+          event_type: "listing_pull",
+          payload: { external_ref: body.external_ref, snapshot },
+        });
+      }
+    }
     return c.json({ shop_id: shopId, snapshot });
   });
 

@@ -56,6 +56,7 @@ const resources = {
       channelsTitle: "Shop connections",
       channelsHint:
         "OAuth URLs are placeholders; Connect runs mock authorization for local dev.",
+      channelSandboxBadge: "Channel sandbox",
       shopList: "Shops",
       shopName: "Shop",
       shopSellerId: "Seller ID",
@@ -201,6 +202,7 @@ const resources = {
       navChannels: "渠道",
       channelsTitle: "店铺授权",
       channelsHint: "OAuth 为占位链接；「连接」在本地使用模拟授权完成绑定。",
+      channelSandboxBadge: "渠道沙箱",
       shopList: "店铺列表",
       shopName: "店铺",
       shopSellerId: "卖家 ID",
@@ -344,6 +346,7 @@ const resources = {
       channelsTitle: "Conexión de tiendas",
       channelsHint:
         "Las URL OAuth son placeholders; Conectar usa autorización simulada en local.",
+      channelSandboxBadge: "Sandbox de canal",
       shopList: "Tiendas",
       shopName: "Tienda",
       shopSellerId: "ID vendedor",
