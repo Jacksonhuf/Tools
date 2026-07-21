@@ -507,15 +507,68 @@ export type BatchChannelPublishResult = {
 
 export async function batchChannelPublish(
   locale: string,
-  listingIds: string[]
+  listingIds: string[],
+  options?: { idempotency_key?: string }
 ) {
   const res = await fetch(`/api/v1/channel-publish/batch`, {
     method: "POST",
     headers: headers(locale),
-    body: JSON.stringify({ listing_ids: listingIds, retry_on_step: true }),
+    body: JSON.stringify({
+      listing_ids: listingIds,
+      retry_on_step: true,
+      idempotency_key: options?.idempotency_key,
+    }),
   });
   const json = (await res.json()) as BatchChannelPublishResult;
   return { ok: res.ok, status: res.status, json };
+}
+
+export interface ReconciliationAlert {
+  id: string;
+  listing_id: string;
+  channel: Channel;
+  active_price_mxn: number;
+  channel_price_mxn: number;
+  delta_mxn: number;
+  severity: string;
+  created_at: string;
+}
+
+export async function fetchReconciliationAlerts(locale: string) {
+  const res = await fetch(`/api/v1/reconciliation-alerts`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`reconciliation-alerts ${res.status}`);
+  return res.json() as Promise<{ items: ReconciliationAlert[] }>;
+}
+
+export async function reconcileListing(
+  locale: string,
+  listingId: string,
+  external_ref: string
+) {
+  const res = await fetch(`/api/v1/listings/${listingId}/reconcile`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ external_ref }),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "error" in json
+        ? String((json as { error: string }).error)
+        : `reconcile ${res.status}`
+    );
+  }
+  return json as
+    | { status: "ok"; active_price_mxn: number; channel_price_mxn: number }
+    | {
+        status: "mismatch";
+        active_price_mxn: number;
+        channel_price_mxn: number;
+        delta_mxn: number;
+        alert_id: string;
+      };
 }
 
 export { DEMO_SKU, LISTING_BY_CHANNEL };

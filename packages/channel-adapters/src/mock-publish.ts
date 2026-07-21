@@ -12,7 +12,10 @@ export class MockChannelPublishAdapter implements ListingPublishAdapter {
   /** Channels that always reject until cleared (TC-INT-CH-006) */
   blockedChannels = new Set<SalesChannel>();
 
+  publishInvocationCount = 0;
+
   async publishPrice(input: PublishPriceInput): Promise<PublishPriceResult> {
+    this.publishInvocationCount += 1;
     if (this.failNext) {
       this.failNext = false;
       return {

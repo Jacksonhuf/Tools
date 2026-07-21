@@ -235,6 +235,16 @@
 | **测试** | `npm test` — **61 passed**（CH-006、OPS-002） |
 | **下一步** | P3 idempotency、对账 TC-INT-RECON-001 |
 
+### Loop 16 — 发布幂等与渠道对账（P3-E2-06 / P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §9、§13；TC-INT-RECON-001 |
+| **实现** | `idempotency_key` 写价回放；`POST listings/:id/reconcile` + `GET reconciliation-alerts`；Mock `priceByRef`；指挥中心对账区 |
+| **测试** | `npm test` — **64 passed**（idempotency + RECON-001） |
+| **下一步** | P3-E1 auto_pending、TC-NFR-REL-003 |
+
 ---
 
 ## 本地命令
@@ -270,3 +280,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.2 | 2026-07-21 | Loop 13 |
 | v2.3 | 2026-07-21 | Loop 14 |
 | v2.4 | 2026-07-21 | Loop 15 |
+| v2.5 | 2026-07-21 | Loop 16 |

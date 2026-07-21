@@ -11,24 +11,29 @@ const MOCK_PRICES: Record<SalesChannel, number> = {
 };
 
 export class MockChannelListingAdapter implements ListingPullAdapter {
+  /** Override pull price by external ref (TC-INT-RECON-001) */
+  priceByRef = new Map<string, number>();
+
   async pullListing(
     shop: ChannelShopRef,
     externalRef: string
   ): Promise<ListingSnapshot> {
     const now = new Date().toISOString();
+    const price =
+      this.priceByRef.get(externalRef) ?? MOCK_PRICES[shop.channel];
     if (shop.channel === "AMAZON_MX") {
       return {
         external_item_id: externalRef,
         external_asin: externalRef.startsWith("B0") ? externalRef : "B0MOCK001",
         seller_sku: "MX-DEMO-001",
-        price_mxn: MOCK_PRICES.AMAZON_MX,
+        price_mxn: price,
         currency: "MXN",
         synced_at: now,
       };
     }
     return {
       external_item_id: externalRef,
-      price_mxn: MOCK_PRICES.MERCADO_LIBRE,
+      price_mxn: price,
       currency: "MXN",
       synced_at: now,
     };

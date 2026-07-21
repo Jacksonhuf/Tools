@@ -79,6 +79,12 @@ import {
   getRepricingActivityRepository,
   MemoryRepricingActivityRepository,
 } from "./repositories/repricing-activity-index.js";
+import {
+  type ReconciliationAlertRepository,
+  getReconciliationAlertRepository,
+  MemoryReconciliationAlertRepository,
+} from "./repositories/reconciliation-index.js";
+import { reconcileListingChannelPrice } from "./reconciliation-service.js";
 
 export type AppEnv = {
   Variables: {
@@ -99,6 +105,8 @@ export interface CreateAppOptions {
   listingHealth?: ListingHealthRepository;
   repricingActivity?: RepricingActivityRepository;
   publishAdapter?: MockChannelPublishAdapter;
+  listingAdapter?: MockChannelListingAdapter;
+  reconciliationAlerts?: ReconciliationAlertRepository;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -112,7 +120,10 @@ export function createApp(options: CreateAppOptions = {}) {
     options.listingHealth ?? getListingHealthRepository();
   const repricingActivity =
     options.repricingActivity ?? getRepricingActivityRepository();
-  const listingAdapter = new MockChannelListingAdapter();
+  const reconciliationAlerts =
+    options.reconciliationAlerts ?? getReconciliationAlertRepository();
+  const listingAdapter =
+    options.listingAdapter ?? new MockChannelListingAdapter();
   const publishAdapter =
     options.publishAdapter ?? new MockChannelPublishAdapter();
   const app = new Hono<AppEnv>();
@@ -769,6 +780,7 @@ export function createApp(options: CreateAppOptions = {}) {
       version_id?: string;
       explicit_price_mxn?: number;
       retry_on_step?: boolean;
+      idempotency_key?: string;
     };
     try {
       const result = await publishListingPrice(
@@ -809,6 +821,7 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const body = (await c.req.json().catch(() => ({}))) as {
       retry_on_step?: boolean;
+      idempotency_key?: string;
     };
     try {
       const result = await publishListingPrice(
@@ -818,7 +831,10 @@ export function createApp(options: CreateAppOptions = {}) {
         publishAdapter,
         tenantId,
         listingId,
-        { retry_on_step: body.retry_on_step ?? true }
+        {
+          retry_on_step: body.retry_on_step ?? true,
+          idempotency_key: body.idempotency_key,
+        }
       );
       if (result.publish_status === "failed") {
         const status =
@@ -842,6 +858,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const body = (await c.req.json()) as {
       listing_ids: string[];
       retry_on_step?: boolean;
+      idempotency_key?: string;
     };
     if (!Array.isArray(body.listing_ids) || body.listing_ids.length === 0) {
       throw new HTTPException(400, { message: "INVALID_LISTING_IDS" });
@@ -854,7 +871,10 @@ export function createApp(options: CreateAppOptions = {}) {
         publishAdapter,
         tenantId,
         body.listing_ids,
-        { retry_on_step: body.retry_on_step ?? true }
+        {
+          retry_on_step: body.retry_on_step ?? true,
+          idempotency_key: body.idempotency_key,
+        }
       );
       const status = result.publish_status === "all_failed" ? 422 : 200;
       return c.json(result, status);
@@ -889,6 +909,48 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(result);
   });
 
+  app.get("/api/v1/reconciliation-alerts", async (c) => {
+    const tenantId = c.get("tenantId");
+    const items = await reconciliationAlerts.listAlerts(tenantId);
+    return c.json({ items });
+  });
+
+  app.post("/api/v1/listings/:listingId/reconcile", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const body = (await c.req.json()) as {
+      external_ref: string;
+      tolerance_mxn?: number;
+    };
+    if (!body.external_ref?.trim()) {
+      throw new HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+    }
+    try {
+      const result = await reconcileListingChannelPrice(
+        catalog,
+        shops,
+        listingAdapter,
+        reconciliationAlerts,
+        tenantId,
+        listingId,
+        body
+      );
+      return c.json(result);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      if (msg.includes("AUTH_REQUIRED") || msg.includes("AUTH_EXPIRED")) {
+        return c.json({ error: msg.includes("AUTH_EXPIRED") ? "AUTH_EXPIRED" : "AUTH_REQUIRED" }, 401);
+      }
+      if (msg.includes("NO_ACTIVE_VERSION")) {
+        return c.json({ error: "NO_ACTIVE_VERSION" }, 422);
+      }
+      throw e;
+    }
+  });
+
   return app;
 }
 
@@ -903,6 +965,8 @@ export function createTestApp(): {
   listingHealth: MemoryListingHealthRepository;
   repricingActivity: MemoryRepricingActivityRepository;
   publishAdapter: MockChannelPublishAdapter;
+  listingAdapter: MockChannelListingAdapter;
+  reconciliationAlerts: MemoryReconciliationAlertRepository;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
@@ -913,6 +977,8 @@ export function createTestApp(): {
   const listingHealthRepo = new MemoryListingHealthRepository();
   const repricingActivityRepo = new MemoryRepricingActivityRepository();
   const publishAdapter = new MockChannelPublishAdapter();
+  const listingAdapter = new MockChannelListingAdapter();
+  const reconciliationAlertsRepo = new MemoryReconciliationAlertRepository();
   return {
     app: createApp({
       catalog,
@@ -924,6 +990,8 @@ export function createTestApp(): {
       listingHealth: listingHealthRepo,
       repricingActivity: repricingActivityRepo,
       publishAdapter,
+      listingAdapter,
+      reconciliationAlerts: reconciliationAlertsRepo,
     }),
     catalog,
     adjustments,
@@ -934,6 +1002,8 @@ export function createTestApp(): {
     listingHealth: listingHealthRepo,
     repricingActivity: repricingActivityRepo,
     publishAdapter,
+    listingAdapter,
+    reconciliationAlerts: reconciliationAlertsRepo,
   };
 }
 

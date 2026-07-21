@@ -4,6 +4,11 @@ import type { CatalogRepository } from "./repositories/index.js";
 import type { DynamicRuleRepository } from "./repositories/dynamic-rule-types.js";
 import type { ListingPublishAdapter } from "@mx-pricing/channel-adapters";
 import { normalizePriceForChannel } from "./channel-price-step.js";
+import {
+  buildPublishIdempotencyKey,
+  getStoredPublishOutcome,
+  storePublishOutcome,
+} from "./publish-idempotency-store.js";
 
 export const LISTING_ID_BY_SHOP: Record<string, string> = {
   "shop-ml-demo": "listing-ml-001",
@@ -14,6 +19,39 @@ const SHOP_BY_CHANNEL: Record<SalesChannel, string> = {
   MERCADO_LIBRE: "shop-ml-demo",
   AMAZON_MX: "shop-amz-demo",
 };
+
+export type PublishListingSuccess = {
+  publish_status: "published";
+  channel_price_mxn: number;
+  version_id: string;
+  retried?: boolean;
+  channel: SalesChannel;
+  idempotent_replay?: boolean;
+};
+
+export type PublishListingFailure = {
+  publish_status: "failed";
+  error_code: string;
+  rule_frozen?: boolean;
+  idempotent_replay?: boolean;
+};
+
+function rememberIdempotent(
+  tenantId: string,
+  listingId: string,
+  idempotencyKey: string | undefined,
+  outcome: PublishListingSuccess | PublishListingFailure
+): PublishListingSuccess | PublishListingFailure {
+  if (!idempotencyKey) {
+    return outcome;
+  }
+  const { idempotent_replay: _drop, ...stored } = outcome;
+  storePublishOutcome(
+    buildPublishIdempotencyKey(tenantId, listingId, idempotencyKey),
+    stored
+  );
+  return outcome;
+}
 
 export async function publishListingPrice(
   catalog: CatalogRepository,
@@ -26,17 +64,22 @@ export async function publishListingPrice(
     version_id?: string;
     explicit_price_mxn?: number;
     retry_on_step?: boolean;
+    idempotency_key?: string;
   }
-): Promise<
-  | {
-      publish_status: "published";
-      channel_price_mxn: number;
-      version_id: string;
-      retried?: boolean;
-      channel: SalesChannel;
+): Promise<PublishListingSuccess | PublishListingFailure> {
+  if (options.idempotency_key) {
+    const cached = getStoredPublishOutcome(
+      buildPublishIdempotencyKey(
+        tenantId,
+        listingId,
+        options.idempotency_key
+      )
+    );
+    if (cached) {
+      return { ...cached, idempotent_replay: true };
     }
-  | { publish_status: "failed"; error_code: string; rule_frozen?: boolean }
-> {
+  }
+
   const listing = await catalog.getListing(tenantId, listingId);
   if (!listing) {
     throw new Error("LISTING_NOT_FOUND");
@@ -45,11 +88,17 @@ export async function publishListingPrice(
   const shopId = SHOP_BY_CHANNEL[channel];
   const shop = await shops.getShop(tenantId, shopId);
   if (!shop || shop.auth_status !== "connected") {
-    return { publish_status: "failed", error_code: "AUTH_REQUIRED" };
+    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+      publish_status: "failed",
+      error_code: "AUTH_REQUIRED",
+    });
   }
   const token = await shops.getAccessToken(shopId);
   if (!token) {
-    return { publish_status: "failed", error_code: "AUTH_EXPIRED" };
+    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+      publish_status: "failed",
+      error_code: "AUTH_EXPIRED",
+    });
   }
 
   let price = options.explicit_price_mxn;
@@ -64,7 +113,10 @@ export async function publishListingPrice(
       if (versionId) {
         await catalog.setVersionChannelPublishStatus(versionId, "skipped");
       }
-      return { publish_status: "failed", error_code: "NO_ACTIVE_VERSION" };
+      return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+        publish_status: "failed",
+        error_code: "NO_ACTIVE_VERSION",
+      });
     }
     price = active.publish_price_mxn;
     versionId = active.id;
@@ -107,24 +159,24 @@ export async function publishListingPrice(
     if (versionId) {
       await catalog.setVersionChannelPublishStatus(versionId, "failed");
     }
-    return {
+    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
       publish_status: "failed",
       error_code: result.error_code ?? "PUBLISH_FAILED",
       rule_frozen: result.error_code === "CHANNEL_REJECTED",
-    };
+    });
   }
 
   if (versionId) {
     await catalog.setVersionChannelPublishStatus(versionId, "published");
   }
 
-  return {
+  return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
     publish_status: "published",
     channel_price_mxn: result.channel_price_mxn ?? priceMxn,
     version_id: versionId,
     retried,
     channel,
-  };
+  });
 }
 
 export type BatchListingPublishStatus = "published" | "failed" | "skipped";
@@ -139,6 +191,7 @@ export interface BatchPublishItem {
   retried?: boolean;
   version_id?: string;
   version_channel_publish_status?: BatchListingPublishStatus;
+  idempotent_replay?: boolean;
 }
 
 export type BatchPublishAggregateStatus =
@@ -153,7 +206,7 @@ export async function publishListingPriceBatch(
   publisher: ListingPublishAdapter,
   tenantId: string,
   listingIds: string[],
-  options: { retry_on_step?: boolean }
+  options: { retry_on_step?: boolean; idempotency_key?: string }
 ): Promise<{
   publish_status: BatchPublishAggregateStatus;
   items: BatchPublishItem[];
@@ -161,6 +214,9 @@ export async function publishListingPriceBatch(
   const items: BatchPublishItem[] = [];
   for (const listingId of listingIds) {
     try {
+      const perListingKey = options.idempotency_key
+        ? `${options.idempotency_key}:${listingId}`
+        : undefined;
       const result = await publishListingPrice(
         catalog,
         shops,
@@ -168,7 +224,10 @@ export async function publishListingPriceBatch(
         publisher,
         tenantId,
         listingId,
-        { retry_on_step: options.retry_on_step ?? true }
+        {
+          retry_on_step: options.retry_on_step ?? true,
+          idempotency_key: perListingKey,
+        }
       );
       if (result.publish_status === "published") {
         items.push({
@@ -179,6 +238,7 @@ export async function publishListingPriceBatch(
           retried: result.retried,
           version_id: result.version_id,
           version_channel_publish_status: "published",
+          idempotent_replay: result.idempotent_replay,
         });
       } else {
         const listing = await catalog.getListing(tenantId, listingId);
@@ -191,6 +251,7 @@ export async function publishListingPriceBatch(
           error_code: result.error_code,
           rule_frozen: result.rule_frozen,
           version_channel_publish_status: skipped ? "skipped" : "failed",
+          idempotent_replay: result.idempotent_replay,
         });
       }
     } catch (e) {
