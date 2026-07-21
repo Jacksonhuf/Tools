@@ -138,6 +138,8 @@ const resources = {
       copilotChatTitle: "Multi-turn strategy chat",
       copilotChatPlaceholder: "Describe strategy or answer clarification…",
       copilotChatSend: "Send",
+      copilotDigestTitle: "Daily ops digest",
+      copilotDigestRefresh: "Refresh digest",
     },
   },
   "zh-CN": {
@@ -272,6 +274,8 @@ const resources = {
       copilotChatTitle: "多轮策略对话",
       copilotChatPlaceholder: "描述策略或补充澄清信息…",
       copilotChatSend: "发送",
+      copilotDigestTitle: "每日运营摘要",
+      copilotDigestRefresh: "刷新摘要",
     },
   },
   "es-MX": {
@@ -411,6 +415,8 @@ const resources = {
       copilotChatTitle: "Chat de estrategia (multi-turno)",
       copilotChatPlaceholder: "Describa la estrategia o responda la aclaración…",
       copilotChatSend: "Enviar",
+      copilotDigestTitle: "Resumen diario de operaciones",
+      copilotDigestRefresh: "Actualizar resumen",
     },
   },
 };

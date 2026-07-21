@@ -91,6 +91,22 @@ export function getCopilotSession(
   return s;
 }
 
+export function appendCopilotAssistantMessage(
+  tenantId: string,
+  sessionId: string,
+  content: string
+): CopilotSession | undefined {
+  const session = getCopilotSession(tenantId, sessionId);
+  if (!session) return undefined;
+  session.messages.push({
+    role: "assistant",
+    content,
+    created_at: new Date().toISOString(),
+  });
+  session.updated_at = new Date().toISOString();
+  return session;
+}
+
 function mergedUserText(messages: CopilotMessage[]): string {
   return messages
     .filter((m) => m.role === "user")

@@ -7,6 +7,7 @@ import {
   DEMO_SKU,
   fetchAgentToolAudit,
   fetchAgentTools,
+  fetchDailyAgentDigest,
   fetchRuleCompilerStatus,
   invokeAgentTool,
   LISTING_BY_CHANNEL,
@@ -42,6 +43,7 @@ export function CopilotPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<CopilotChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [digestNarrative, setDigestNarrative] = useState<string | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -52,14 +54,30 @@ export function CopilotPage() {
   useEffect(() => {
     void (async () => {
       try {
-        const s = await createCopilotSession(locale, listingId, DEMO_SKU);
+        const s = await createCopilotSession(
+          locale,
+          listingId,
+          DEMO_SKU,
+          selected.channel,
+          true
+        );
         setSessionId(s.session_id);
-        setChatMessages([]);
+        setChatMessages(s.messages ?? []);
       } catch {
         setSessionId(null);
       }
     })();
-  }, [locale, listingId]);
+  }, [locale, listingId, selected.channel]);
+
+  const loadDigest = async () => {
+    setError(null);
+    try {
+      const d = await fetchDailyAgentDigest(locale);
+      setDigestNarrative(d.narrative);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
 
   const refreshAudit = async () => {
     const out = await fetchAgentToolAudit(locale, 15);
@@ -76,6 +94,7 @@ export function CopilotPage() {
         setTools(toolRes.items);
         setCompilerLabel(`${status.driver} — ${status.note}`);
         await refreshAudit();
+        await loadDigest();
       } catch {
         /* non-fatal on demo load */
       }
@@ -210,6 +229,15 @@ export function CopilotPage() {
         <p className="hint" data-testid="compiler-status">
           {t("copilotCompilerStatus")}: {compilerLabel}
         </p>
+      )}
+      {digestNarrative && (
+        <section className="card" data-testid="copilot-digest">
+          <h2>{t("copilotDigestTitle")}</h2>
+          <p>{digestNarrative}</p>
+          <button type="button" onClick={() => void loadDigest()}>
+            {t("copilotDigestRefresh")}
+          </button>
+        </section>
       )}
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}

@@ -668,15 +668,26 @@ export async function confirmCompiledDynamicRule(
 export async function createCopilotSession(
   locale: string,
   listing_id: string,
-  sku_id?: string
+  sku_id?: string,
+  channel?: Channel,
+  bootstrap_context = true
 ) {
   const res = await fetch(`/api/v1/agent/copilot/sessions`, {
     method: "POST",
     headers: headers(locale),
-    body: JSON.stringify({ listing_id, sku_id }),
+    body: JSON.stringify({
+      listing_id,
+      sku_id,
+      channel,
+      bootstrap_context,
+    }),
   });
   if (!res.ok) throw new Error(`copilot session ${res.status}`);
-  return res.json() as Promise<{ session_id: string }>;
+  return res.json() as Promise<{
+    session_id: string;
+    messages: CopilotChatMessage[];
+    context_bootstrapped: boolean;
+  }>;
 }
 
 export type CopilotChatMessage = {
@@ -684,6 +695,30 @@ export type CopilotChatMessage = {
   content: string;
   created_at: string;
 };
+
+export async function fetchDailyAgentDigest(locale: string, date?: string) {
+  const q = date ? `?date=${encodeURIComponent(date)}` : "";
+  const res = await fetch(`/api/v1/agent/digest/daily${q}`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest ${res.status}`);
+  return res.json() as Promise<{
+    date: string;
+    narrative: string;
+    metrics: {
+      suggested_versions: number;
+      pending_versions: number;
+      open_reconciliation_alerts: number;
+      agent_tool_invocations_today: number;
+    };
+    queue_highlights: Array<{
+      sku_code: string;
+      channel: string;
+      state: string;
+      publish_price: string;
+    }>;
+  }>;
+}
 
 export async function sendCopilotMessage(
   locale: string,

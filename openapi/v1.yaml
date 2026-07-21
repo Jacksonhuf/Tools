@@ -236,6 +236,9 @@ paths:
   /api/v1/rule-compiler/status:
     get:
       summary: Rule compiler driver and LLM adapter readiness (P4)
+  /api/v1/agent/digest/daily:
+    get:
+      summary: Daily Agent digest placeholder (P4-E1-07)
   /api/v1/agent/copilot/sessions:
     post:
       summary: Start Copilot multi-turn session (SDD §12)

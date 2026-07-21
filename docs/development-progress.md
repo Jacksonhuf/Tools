@@ -26,7 +26,7 @@
 | P1 双通道 | 进行中 | Loop 9：OAuth 占位 |
 | P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
 | P3 回写 | 未开始 | — |
-| P4 Agent | 进行中 | Loop 21：编译器适配器 + Copilot 增强 |
+| P4 Agent | 进行中 | Loop 22：LLM HTTP + Copilot 多轮 |
 
 ---
 
@@ -82,7 +82,7 @@
 | P3-E2-05 | 部分 | Loop 13（publish 失败熔断 rule） |
 | P4-E1-02 | 部分 | Loop 19（agent tools + audit） |
 | P4-E1-03 | 部分 | Loop 21（Copilot 三语示例 / 工具目录 / 审计） |
-| P4-E1-06 | 部分 | Loop 20–21（NL compile + adapter） |
+| P4-E1-06 | 部分 | Loop 20–22（NL compile + HTTP LLM + 多轮会话） |
 
 ---
 
@@ -298,6 +298,16 @@
 | **测试** | `npm test` — **80 passed**（rule-compiler-adapter.test.ts） |
 | **下一步** | 真实 LLM provider 接入、Copilot 会话与多轮澄清 |
 
+### Loop 22 — LLM HTTP 编译器与 Copilot 多轮会话（P4-E1-06 / SDD §12）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §12 Agent 会话；Loop 21 下一步 |
+| **实现** | `RULE_COMPILER_DRIVER=llm_http` + `RULE_COMPILER_LLM_ENDPOINT` HTTP 编译；失败回退 heuristic；`POST/GET copilot/sessions` 与 `messages` 多轮澄清；Web Copilot 聊天区；compile 审计带 `session_id` |
+| **测试** | `npm test` — **86 passed**（copilot-session、llm-rule-compiler） |
+| **下一步** | Copilot 自动拉 context 叙事、P4-E1-07 digest 占位、生产 LLM 契约文档 |
+
 ---
 
 ## 本地命令
@@ -339,3 +349,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.8 | 2026-07-21 | Loop 19 |
 | v2.9 | 2026-07-21 | Loop 20 |
 | v3.0 | 2026-07-21 | Loop 21 |
+| v3.1 | 2026-07-21 | Loop 22 |

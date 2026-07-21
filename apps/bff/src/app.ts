@@ -101,9 +101,15 @@ import {
 } from "./rule-compiler.js";
 import {
   appendCopilotUserTurn,
+  appendCopilotAssistantMessage,
   createCopilotSession,
   getCopilotSession,
 } from "./copilot-session.js";
+import {
+  buildPricingContextNarrative,
+  copilotWelcomeMessage,
+} from "./copilot-narrative.js";
+import { buildDailyAgentDigest } from "./agent-digest-service.js";
 import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
@@ -1089,21 +1095,78 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.post("/api/v1/agent/copilot/sessions", async (c) => {
     const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
     const body = (await c.req.json().catch(() => ({}))) as {
       listing_id?: string;
       sku_id?: string;
+      channel?: "MERCADO_LIBRE" | "AMAZON_MX";
+      bootstrap_context?: boolean;
     };
     const session = createCopilotSession({
       tenant_id: tenantId,
       listing_id: body.listing_id ?? null,
       sku_id: body.sku_id ?? null,
     });
+    const bootstrap = body.bootstrap_context !== false && Boolean(body.sku_id);
+    if (bootstrap && body.sku_id) {
+      appendCopilotAssistantMessage(
+        tenantId,
+        session.session_id,
+        copilotWelcomeMessage(locale)
+      );
+      try {
+        const toolOut = await invokeAgentTool(
+          { catalog, competitors, adjustments, audit: agentAudit },
+          { tenantId, locale, sessionId: session.session_id },
+          "tool_get_pricing_context",
+          {
+            sku_id: body.sku_id,
+            channel: body.channel,
+          }
+        );
+        const narrative = buildPricingContextNarrative(
+          toolOut.result as Parameters<typeof buildPricingContextNarrative>[0],
+          locale
+        );
+        appendCopilotAssistantMessage(
+          tenantId,
+          session.session_id,
+          narrative
+        );
+      } catch {
+        appendCopilotAssistantMessage(
+          tenantId,
+          session.session_id,
+          locale === "es-MX"
+            ? "No se pudo cargar el contexto de precios."
+            : locale === "zh-CN"
+              ? "无法加载定价上下文。"
+              : "Could not load pricing context."
+        );
+      }
+    }
+    const updated = getCopilotSession(tenantId, session.session_id)!;
     return c.json({
-      session_id: session.session_id,
-      listing_id: session.listing_id,
-      sku_id: session.sku_id,
-      created_at: session.created_at,
+      session_id: updated.session_id,
+      listing_id: updated.listing_id,
+      sku_id: updated.sku_id,
+      created_at: updated.created_at,
+      messages: updated.messages,
+      context_bootstrapped: bootstrap,
     });
+  });
+
+  app.get("/api/v1/agent/digest/daily", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const date = c.req.query("date");
+    const digest = await buildDailyAgentDigest(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      locale,
+      date
+    );
+    return c.json(digest);
   });
 
   app.get("/api/v1/agent/copilot/sessions/:sessionId", async (c) => {
