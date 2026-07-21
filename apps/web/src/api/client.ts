@@ -604,6 +604,45 @@ export async function compileDynamicRule(
     draft: DynamicRuleDraftPayload;
     explanation: string;
     persisted: boolean;
+    compiler?: { driver: string; model: string | null; stub: boolean };
+  };
+}
+
+export async function fetchRuleCompilerStatus(locale: string) {
+  const res = await fetch(`/api/v1/rule-compiler/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`compiler status ${res.status}`);
+  return res.json() as Promise<{
+    driver: string;
+    ready: boolean;
+    note: string;
+    llm_endpoint_configured: boolean;
+  }>;
+}
+
+export async function fetchAgentTools(locale: string) {
+  const res = await fetch(`/api/v1/agent/tools`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`agent tools ${res.status}`);
+  const json = await res.json();
+  return json as {
+    items: Array<{ name: string; mode: string; description: string }>;
+  };
+}
+
+export async function fetchAgentToolAudit(locale: string, limit = 20) {
+  const res = await fetch(`/api/v1/agent/tool-audit?limit=${limit}`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`tool audit ${res.status}`);
+  const json = await res.json();
+  return json as {
+    items: Array<{
+      id: string;
+      tool_name: string;
+      result_summary: string;
+      created_at: string;
+    }>;
   };
 }
 

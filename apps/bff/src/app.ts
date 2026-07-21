@@ -91,7 +91,10 @@ import {
   listAgentTools,
 } from "./agent-tools.js";
 import {
-  compileNaturalLanguageToRuleDraft,
+  compileRuleViaAdapter,
+  getRuleCompilerStatus,
+} from "./rule-compiler-adapter.js";
+import {
   storeCompiledDraft,
   takeCompiledDraft,
   type DynamicRuleDraft,
@@ -793,7 +796,7 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(400, { message: "NATURAL_LANGUAGE_REQUIRED" });
       }
       const locale = c.get("locale");
-      const { draft, explanation } = compileNaturalLanguageToRuleDraft(
+      const { draft, explanation, compiler } = compileRuleViaAdapter(
         body.natural_language,
         locale
       );
@@ -819,6 +822,7 @@ export function createApp(options: CreateAppOptions = {}) {
         draft: compiled.draft,
         explanation: compiled.explanation,
         persisted: false,
+        compiler,
       });
     }
   );
@@ -1071,9 +1075,15 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listAgentTools() });
   });
 
+  app.get("/api/v1/rule-compiler/status", async (c) => {
+    return c.json(getRuleCompilerStatus());
+  });
+
   app.get("/api/v1/agent/tool-audit", async (c) => {
     const tenantId = c.get("tenantId");
-    const items = await agentAudit.listInvocations(tenantId, 100);
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(100, Math.max(1, Number(limitRaw))) : 100;
+    const items = await agentAudit.listInvocations(tenantId, limit);
     return c.json({ items });
   });
 
