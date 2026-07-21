@@ -521,6 +521,23 @@
 | **测试** | `repricing-batch-shard.test.ts` TC-API-REPR-BATCH-003 |
 | **下一步** | JWKS RS256（Loop 43 PR）、持久化 job 队列 |
 
+### Loop 43 — HS256 JWT（`oidc_jwt` / TC-API-AUTH-003）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `oidc-jwt.ts`、`auth-jwt-integration.ts`、`AUTH_DRIVER=oidc_jwt` |
+| **文档** | `docs/auth-jwt-hs256.md` |
+| **测试** | `auth-jwt.test.ts` TC-API-AUTH-003 |
+
+### Loop 46 — JWKS RS256（TC-API-AUTH-004）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `oidc-jwks.ts`；`OIDC_JWKS_JSON` / `OIDC_JWKS_URL`；`validateBearerTokenAsync` |
+| **文档** | `docs/auth-jwks-rs256.md` |
+| **测试** | `auth-jwt.test.ts` TC-API-AUTH-004 |
+| **下一步** | 合并 supersede PR #5；`iss`/`aud` 校验；持久化 repricing job 队列 |
+
 ---
 
 ## 本地命令
@@ -578,3 +595,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v4.7 | 2026-07-21 | Loop 39–42 Phase 2 收官 |
 | v4.8 | 2026-07-21 | Loop 44 P5-05 repricing batch shards |
 | v4.9 | 2026-07-21 | Loop 45 repricing batch worker + recompute-all |
+| v5.0 | 2026-07-21 | Loop 43+46 JWT HS256 and JWKS RS256 |
