@@ -38,10 +38,13 @@ export class MemoryDynamicRuleRepository implements DynamicRuleRepository {
     >
   ): Promise<DynamicRuleRecord> {
     const base = rules.get(listingId) ?? defaultRule(listingId);
+    const clean = Object.fromEntries(
+      Object.entries(patch).filter(([, v]) => v !== undefined)
+    ) as Partial<DynamicRuleRecord>;
     const next: DynamicRuleRecord = {
       ...base,
-      ...patch,
-      offset: (patch.offset as OffsetJson | undefined) ?? base.offset,
+      ...clean,
+      offset: (clean.offset as OffsetJson | undefined) ?? base.offset,
       updated_at: new Date().toISOString(),
     };
     rules.set(listingId, next);

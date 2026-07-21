@@ -200,3 +200,6 @@ paths:
   /api/v1/listings/{listingId}/competitors/stale-check:
     post:
       summary: Evaluate stale competitor observations (TC-INT-ING-004)
+  /api/v1/listings/{listingId}/channel-publish:
+    post:
+      summary: Publish active price to channel (TC-INT-CH-003 mock)

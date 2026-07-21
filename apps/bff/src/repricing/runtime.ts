@@ -10,6 +10,7 @@ import type {
   DynamicRuleRepository,
   ListingHealthRepository,
 } from "../repositories/dynamic-rule-types.js";
+import type { RepricingActivityRepository } from "../repositories/repricing-activity-types.js";
 import { computeEffectivePrice } from "../competitor-normalize.js";
 import {
   flushDebounce,
@@ -18,6 +19,7 @@ import {
 } from "./debounce.js";
 import { nextRunFromNow, type IngestTier } from "./tier.js";
 import { evaluateListingStale } from "./stale.js";
+import { checkDynamicRepricingGuards } from "./guards.js";
 
 const mockPull = new MockChannelListingAdapter();
 
@@ -152,6 +154,7 @@ export async function processRepricingEvent(
   repricing: RepricingRepository,
   dynamicRules: DynamicRuleRepository,
   listingHealth: ListingHealthRepository,
+  repricingActivity: RepricingActivityRepository,
   tenantId: string,
   eventId: string
 ): Promise<
@@ -185,6 +188,15 @@ export async function processRepricingEvent(
   }
   if (rule.frozen) {
     return { skipped: true, reason: "RULE_FROZEN" };
+  }
+
+  const guardCode = await checkDynamicRepricingGuards(
+    repricingActivity,
+    event.listing_id,
+    rule
+  );
+  if (guardCode) {
+    return { skipped: true, reason: guardCode };
   }
 
   const offers = await competitors.listOffers(event.listing_id);
@@ -257,5 +269,6 @@ export async function processRepricingEvent(
     reason: `repricing:${eventId}`,
   });
   await repricing.markProcessed(eventId, `proc:${eventId}`);
+  await repricingActivity.recordApply(event.listing_id);
   return { version_id: version.id, state: version.state };
 }

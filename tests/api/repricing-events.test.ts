@@ -39,6 +39,7 @@ describe("TC-INT-EVT-001 CompetitorPriceChanged enqueue", () => {
     t.repricing.resetForTests?.();
     t.dynamicRules.resetForTests?.();
     t.listingHealth.resetForTests?.();
+    t.repricingActivity.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -67,6 +68,7 @@ describe("TC-INT-EVT-002 debounce merges ticks", () => {
     t.repricing.resetForTests?.();
     t.dynamicRules.resetForTests?.();
     t.listingHealth.resetForTests?.();
+    t.repricingActivity.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -107,6 +109,7 @@ describe("TC-INT-EVT-003 suggested version on process", () => {
     t.repricing.resetForTests?.();
     t.dynamicRules.resetForTests?.();
     t.listingHealth.resetForTests?.();
+    t.repricingActivity.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 
@@ -148,6 +151,7 @@ describe("TC-INT-EVT-004 process idempotency", () => {
     t.repricing.resetForTests?.();
     t.dynamicRules.resetForTests?.();
     t.listingHealth.resetForTests?.();
+    t.repricingActivity.resetForTests?.();
     t.catalog.resetForTests?.();
   });
 

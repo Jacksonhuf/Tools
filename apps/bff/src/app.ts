@@ -26,7 +26,10 @@ import {
   shopPublicView,
   startOAuth,
 } from "./channel-oauth.js";
-import { MockChannelListingAdapter } from "@mx-pricing/channel-adapters";
+import {
+  MockChannelListingAdapter,
+  MockChannelPublishAdapter,
+} from "@mx-pricing/channel-adapters";
 import {
   type ShopRepository,
   getShopRepository,
@@ -62,6 +65,12 @@ import {
 } from "./repositories/dynamic-rule-index.js";
 import type { ListingHealthRepository } from "./repositories/dynamic-rule-types.js";
 import { evaluateListingStale } from "./repricing/stale.js";
+import { publishListingPrice } from "./channel-publish-service.js";
+import {
+  type RepricingActivityRepository,
+  getRepricingActivityRepository,
+  MemoryRepricingActivityRepository,
+} from "./repositories/repricing-activity-index.js";
 
 export type AppEnv = {
   Variables: {
@@ -80,6 +89,8 @@ export interface CreateAppOptions {
   repricing?: RepricingRepository;
   dynamicRules?: DynamicRuleRepository;
   listingHealth?: ListingHealthRepository;
+  repricingActivity?: RepricingActivityRepository;
+  publishAdapter?: MockChannelPublishAdapter;
 }
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -91,7 +102,11 @@ export function createApp(options: CreateAppOptions = {}) {
   const dynamicRules = options.dynamicRules ?? getDynamicRuleRepository();
   const listingHealth =
     options.listingHealth ?? getListingHealthRepository();
+  const repricingActivity =
+    options.repricingActivity ?? getRepricingActivityRepository();
   const listingAdapter = new MockChannelListingAdapter();
+  const publishAdapter =
+    options.publishAdapter ?? new MockChannelPublishAdapter();
   const app = new Hono<AppEnv>();
 
   app.use(
@@ -656,6 +671,7 @@ export function createApp(options: CreateAppOptions = {}) {
         repricing,
         dynamicRules,
         listingHealth,
+        repricingActivity,
         tenantId,
         eventId
       );
@@ -738,6 +754,40 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ ...result, ...stale });
   });
 
+  app.post("/api/v1/listings/:listingId/channel-publish", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      version_id?: string;
+      explicit_price_mxn?: number;
+    };
+    try {
+      const result = await publishListingPrice(
+        catalog,
+        shops,
+        dynamicRules,
+        publishAdapter,
+        tenantId,
+        listingId,
+        body
+      );
+      if (result.publish_status === "failed") {
+        const status =
+          result.error_code === "AUTH_REQUIRED" ||
+          result.error_code === "AUTH_EXPIRED"
+            ? 401
+            : 422;
+        return c.json(result, status);
+      }
+      return c.json(result);
+    } catch (e) {
+      if (String(e).includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
   return app;
 }
 
@@ -750,6 +800,8 @@ export function createTestApp(): {
   repricing: MemoryRepricingRepository;
   dynamicRules: MemoryDynamicRuleRepository;
   listingHealth: MemoryListingHealthRepository;
+  repricingActivity: MemoryRepricingActivityRepository;
+  publishAdapter: MockChannelPublishAdapter;
 } {
   const catalog = new MemoryCatalogRepository();
   const adjustments = new MemoryAdjustmentRepository();
@@ -758,6 +810,8 @@ export function createTestApp(): {
   const repricingRepo = new MemoryRepricingRepository();
   const dynamicRulesRepo = new MemoryDynamicRuleRepository();
   const listingHealthRepo = new MemoryListingHealthRepository();
+  const repricingActivityRepo = new MemoryRepricingActivityRepository();
+  const publishAdapter = new MockChannelPublishAdapter();
   return {
     app: createApp({
       catalog,
@@ -767,6 +821,8 @@ export function createTestApp(): {
       repricing: repricingRepo,
       dynamicRules: dynamicRulesRepo,
       listingHealth: listingHealthRepo,
+      repricingActivity: repricingActivityRepo,
+      publishAdapter,
     }),
     catalog,
     adjustments,
@@ -775,6 +831,8 @@ export function createTestApp(): {
     repricing: repricingRepo,
     dynamicRules: dynamicRulesRepo,
     listingHealth: listingHealthRepo,
+    repricingActivity: repricingActivityRepo,
+    publishAdapter,
   };
 }
 

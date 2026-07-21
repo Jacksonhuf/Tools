@@ -77,6 +77,9 @@
 | P2-E3-04 | 部分 | Loop 11（process → suggested version） |
 | P2-E3-03 | 部分 | Loop 12（dynamic rule CRUD） |
 | P2-E2-05 | 部分 | Loop 12（stale 检测与冻结） |
+| P3-E1-01 | 部分 | Loop 13（cooldown / daily_limit） |
+| P3-E2-01 | 部分 | Loop 13（ML publishPrice mock） |
+| P3-E2-05 | 部分 | Loop 13（publish 失败熔断 rule） |
 
 ---
 
@@ -202,6 +205,16 @@
 | **测试** | `npm test` — **51 passed**（`tests/api/dynamic-rules.test.ts`） |
 | **下一步** | P3 Guard 冷却与日上限、渠道回写 |
 
+### Loop 13 — Guard 冷却/日上限与渠道写价 mock（P3-E1 / P3-E2）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §6.7、§9 写价；TC-INT-GUARD-001/002/004、TC-INT-CH-003 |
+| **实现** | `repricing_activity` 审计；`checkDynamicRepricingGuards`；`POST channel-publish` + `MockChannelPublishAdapter`；失败熔断 `rule.frozen` |
+| **测试** | `npm test` — **55 passed**（GUARD + CH-003） |
+| **下一步** | P3 完整回写重试、指挥中心批量 Pending |
+
 ---
 
 ## 本地命令
@@ -234,3 +247,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.9 | 2026-07-21 | Loop 10 |
 | v2.0 | 2026-07-21 | Loop 11 |
 | v2.1 | 2026-07-21 | Loop 12 |
+| v2.2 | 2026-07-21 | Loop 13 |
