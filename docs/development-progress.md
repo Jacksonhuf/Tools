@@ -498,6 +498,7 @@
 | 项 | 内容 |
 |----|------|
 | **实现** | `ci-nfr-weekly.yml`；`development-loop-phase2-closure.md` |
+| **测试** | `npm test` — **121 passed** |
 | **下一步** | **Phase 2 完成**；Loop 43+ 见任务清单（真实 OIDC、渠道 API） |
 
 > **Phase 2（Loop 37–42）计划内迭代已结束。**
