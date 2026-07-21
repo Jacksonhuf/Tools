@@ -83,6 +83,52 @@ export async function publishPrice(
   return { ok: res.ok, status: res.status, json };
 }
 
+export type ChannelPublishResult =
+  | {
+      publish_status: "published";
+      channel_price_mxn: number;
+      version_id: string;
+      retried?: boolean;
+      channel: Channel;
+    }
+  | {
+      publish_status: "failed";
+      error_code: string;
+      rule_frozen?: boolean;
+    };
+
+export async function publishChannelPrice(
+  locale: string,
+  channel: Channel,
+  body: {
+    explicit_price_mxn?: number;
+    retry_on_step?: boolean;
+  } = {}
+) {
+  const listingId = LISTING_BY_CHANNEL[channel];
+  const res = await fetch(`/api/v1/listings/${listingId}/channel-publish`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json()) as ChannelPublishResult;
+  return { ok: res.ok, status: res.status, json };
+}
+
+export async function publishShopChannelPrice(
+  locale: string,
+  shopId: string,
+  body: { retry_on_step?: boolean } = {}
+) {
+  const res = await fetch(`/api/v1/shops/${shopId}/channel-publish`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json()) as ChannelPublishResult;
+  return { ok: res.ok, status: res.status, json };
+}
+
 export type AdjustmentStatus =
   | "draft"
   | "pending_approval"
@@ -415,4 +461,4 @@ export async function processRepricingEvent(locale: string, eventId: string) {
   return res.json() as Promise<{ version_id?: string; state?: string }>;
 }
 
-export { DEMO_SKU };
+export { DEMO_SKU, LISTING_BY_CHANNEL };

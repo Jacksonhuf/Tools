@@ -3,6 +3,12 @@ import type { ShopRepository } from "./repositories/shop-index.js";
 import type { CatalogRepository } from "./repositories/index.js";
 import type { DynamicRuleRepository } from "./repositories/dynamic-rule-types.js";
 import type { ListingPublishAdapter } from "@mx-pricing/channel-adapters";
+import { normalizePriceForChannel } from "./channel-price-step.js";
+
+export const LISTING_ID_BY_SHOP: Record<string, string> = {
+  "shop-ml-demo": "listing-ml-001",
+  "shop-amz-demo": "listing-amz-001",
+};
 
 const SHOP_BY_CHANNEL: Record<SalesChannel, string> = {
   MERCADO_LIBRE: "shop-ml-demo",
@@ -16,12 +22,18 @@ export async function publishListingPrice(
   publisher: ListingPublishAdapter,
   tenantId: string,
   listingId: string,
-  options: { version_id?: string; explicit_price_mxn?: number }
+  options: {
+    version_id?: string;
+    explicit_price_mxn?: number;
+    retry_on_step?: boolean;
+  }
 ): Promise<
   | {
       publish_status: "published";
       channel_price_mxn: number;
       version_id: string;
+      retried?: boolean;
+      channel: SalesChannel;
     }
   | { publish_status: "failed"; error_code: string; rule_frozen?: boolean }
 > {
@@ -29,7 +41,8 @@ export async function publishListingPrice(
   if (!listing) {
     throw new Error("LISTING_NOT_FOUND");
   }
-  const shopId = SHOP_BY_CHANNEL[listing.channel as SalesChannel];
+  const channel = listing.channel as SalesChannel;
+  const shopId = SHOP_BY_CHANNEL[channel];
   const shop = await shops.getShop(tenantId, shopId);
   if (!shop || shop.auth_status !== "connected") {
     return { publish_status: "failed", error_code: "AUTH_REQUIRED" };
@@ -55,22 +68,43 @@ export async function publishListingPrice(
   }
 
   const priceMxn = price as number;
-  const result = await publisher.publishPrice({
-    shop: {
-      shop_id: shopId,
-      channel: listing.channel as SalesChannel,
-      external_seller_id: shop.external_seller_id!,
-    },
+  const shopRef = {
+    shop_id: shopId,
+    channel,
+    external_seller_id: shop.external_seller_id!,
+  };
+
+  let result = await publisher.publishPrice({
+    shop: shopRef,
     external_ref: listingId,
     price_mxn: priceMxn,
   });
 
+  let retried = false;
+  if (
+    result.publish_status === "failed" &&
+    result.error_code === "INVALID_PRICE_STEP" &&
+    options.retry_on_step
+  ) {
+    const adjusted = normalizePriceForChannel(channel, priceMxn);
+    if (adjusted !== priceMxn) {
+      result = await publisher.publishPrice({
+        shop: shopRef,
+        external_ref: listingId,
+        price_mxn: adjusted,
+      });
+      retried = true;
+    }
+  }
+
   if (result.publish_status === "failed") {
-    await dynamicRules.upsertRule(listingId, { frozen: true });
+    if (result.error_code === "CHANNEL_REJECTED") {
+      await dynamicRules.upsertRule(listingId, { frozen: true });
+    }
     return {
       publish_status: "failed",
       error_code: result.error_code ?? "PUBLISH_FAILED",
-      rule_frozen: true,
+      rule_frozen: result.error_code === "CHANNEL_REJECTED",
     };
   }
 
@@ -78,5 +112,7 @@ export async function publishListingPrice(
     publish_status: "published",
     channel_price_mxn: result.channel_price_mxn ?? priceMxn,
     version_id: versionId,
+    retried,
+    channel,
   };
 }

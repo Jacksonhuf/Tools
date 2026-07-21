@@ -4,6 +4,7 @@ import {
   fetchPricingContext,
   fetchSkus,
   patchSkuLandedCost,
+  publishChannelPrice,
   publishPrice,
   simulatePricing,
   type Channel,
@@ -76,6 +77,27 @@ export function PricingPage() {
         MERCADO_LIBRE: results[0],
         AMAZON_MX: results[1],
       });
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const syncToChannel = async (channel: Channel) => {
+    setError(null);
+    setMessage(null);
+    try {
+      const { ok, json } = await publishChannelPrice(locale, channel, {
+        retry_on_step: true,
+      });
+      if (ok && json.publish_status === "published") {
+        const retried =
+          "retried" in json && json.retried ? ` (${t("channelPublishRetried")})` : "";
+        setMessage(
+          `${t("channelPublishOk")}: ${json.channel_price_mxn} MXN${retried}`
+        );
+      } else if (!ok && json.publish_status === "failed") {
+        setError(`${t("channelPublishFail")}: ${json.error_code}`);
+      }
     } catch (e) {
       setError(String(e));
     }
@@ -183,6 +205,8 @@ export function PricingPage() {
               guardsLabel={t("guards")}
               noGuardsLabel={t("noGuards")}
               publishLabel={t("publish")}
+              syncToChannelLabel={t("syncToChannel")}
+              onSyncToChannel={() => void syncToChannel("MERCADO_LIBRE")}
               onPublish={() => {
                 const sim = simByChannel.MERCADO_LIBRE;
                 if (!sim) return;
@@ -213,6 +237,8 @@ export function PricingPage() {
               guardsLabel={t("guards")}
               noGuardsLabel={t("noGuards")}
               publishLabel={t("publish")}
+              syncToChannelLabel={t("syncToChannel")}
+              onSyncToChannel={() => void syncToChannel("AMAZON_MX")}
               onPublish={() => {
                 const sim = simByChannel.AMAZON_MX;
                 if (!sim) return;

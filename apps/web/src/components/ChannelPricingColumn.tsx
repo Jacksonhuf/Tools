@@ -28,6 +28,8 @@ interface Props {
   formatAmount: (n: number) => string;
   onPublish: () => void;
   publishLabel: string;
+  syncToChannelLabel: string;
+  onSyncToChannel?: () => void;
   activeLabel: string;
   floorLabel: string;
   guardsLabel: string;
@@ -42,6 +44,8 @@ export function ChannelPricingColumn({
   formatAmount,
   onPublish,
   publishLabel,
+  syncToChannelLabel,
+  onSyncToChannel,
   activeLabel,
   floorLabel,
   guardsLabel,
@@ -59,6 +63,11 @@ export function ChannelPricingColumn({
         {activeLabel}:{" "}
         {context.versions.active?.publish_price?.formatted ?? "—"}
       </p>
+      {context.versions.active && onSyncToChannel && (
+        <button type="button" onClick={onSyncToChannel}>
+          {syncToChannelLabel}
+        </button>
+      )}
       <p>
         {floorLabel}: {floor.formatted}
       </p>

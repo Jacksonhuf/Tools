@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchShops,
   mockCompleteShopOAuth,
+  publishShopChannelPrice,
   pullShopListing,
   startShopOAuth,
   type ShopSummary,
@@ -42,6 +43,27 @@ export function ChannelsPage() {
       await mockCompleteShopOAuth(locale, shop.id, start.state);
       setMessage(t("shopConnected", { name: shop.name }));
       await load();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const publishActive = async (shop: ShopSummary) => {
+    setError(null);
+    setMessage(null);
+    try {
+      const { ok, json } = await publishShopChannelPrice(locale, shop.id, {
+        retry_on_step: true,
+      });
+      if (ok && json.publish_status === "published") {
+        const retried =
+          "retried" in json && json.retried ? ` (${t("channelPublishRetried")})` : "";
+        setMessage(
+          `${t("channelPublishOk")}: ${json.channel_price_mxn} MXN${retried}`
+        );
+      } else if (!ok && json.publish_status === "failed") {
+        setError(`${t("channelPublishFail")}: ${json.error_code}`);
+      }
     } catch (e) {
       setError(String(e));
     }
@@ -100,9 +122,17 @@ export function ChannelsPage() {
                       {t("connectShop")}
                     </button>
                   ) : (
-                    <button type="button" onClick={() => void pull(shop)}>
-                      {t("pullListing")}
-                    </button>
+                    <>
+                      <button type="button" onClick={() => void pull(shop)}>
+                        {t("pullListing")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void publishActive(shop)}
+                      >
+                        {t("publishToChannel")}
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>

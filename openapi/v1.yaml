@@ -202,4 +202,7 @@ paths:
       summary: Evaluate stale competitor observations (TC-INT-ING-004)
   /api/v1/listings/{listingId}/channel-publish:
     post:
-      summary: Publish active price to channel (TC-INT-CH-003 mock)
+      summary: Publish active price to channel (TC-INT-CH-003/005 mock)
+  /api/v1/shops/{shopId}/channel-publish:
+    post:
+      summary: Publish mapped listing active price (shop scope)

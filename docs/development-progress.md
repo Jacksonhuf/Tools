@@ -215,6 +215,16 @@
 | **测试** | `npm test` — **55 passed**（GUARD + CH-003） |
 | **下一步** | P3 完整回写重试、指挥中心批量 Pending |
 
+### Loop 14 — 渠道写价 Web、Amazon 与步长重试（P3-E2-02/03）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §9 写价；TC-INT-CH-004/005 |
+| **实现** | `normalizePriceForChannel` + `retry_on_step`；`POST shops/:shopId/channel-publish`；Mock 按渠道步长；定价页/渠道页「同步到渠道」；熔断仅 `CHANNEL_REJECTED` |
+| **测试** | `npm test` — **59 passed**（CH-004/005 + 既有用例） |
+| **下一步** | P3 批量 Pending 发布、TC-INT-CH-006 部分成功 |
+
 ---
 
 ## 本地命令
@@ -248,3 +258,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v2.0 | 2026-07-21 | Loop 11 |
 | v2.1 | 2026-07-21 | Loop 12 |
 | v2.2 | 2026-07-21 | Loop 13 |
+| v2.3 | 2026-07-21 | Loop 14 |

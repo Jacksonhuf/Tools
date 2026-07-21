@@ -8,6 +8,7 @@ export interface PublishPriceResult {
   publish_status: "published" | "failed";
   channel_price_mxn?: number;
   error_code?: string;
+  channel?: import("./types.js").SalesChannel;
 }
 
 export interface ListingPublishAdapter {

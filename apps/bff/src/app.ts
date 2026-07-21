@@ -65,7 +65,7 @@ import {
 } from "./repositories/dynamic-rule-index.js";
 import type { ListingHealthRepository } from "./repositories/dynamic-rule-types.js";
 import { evaluateListingStale } from "./repricing/stale.js";
-import { publishListingPrice } from "./channel-publish-service.js";
+import { publishListingPrice, LISTING_ID_BY_SHOP } from "./channel-publish-service.js";
 import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
@@ -760,6 +760,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const body = (await c.req.json().catch(() => ({}))) as {
       version_id?: string;
       explicit_price_mxn?: number;
+      retry_on_step?: boolean;
     };
     try {
       const result = await publishListingPrice(
@@ -769,7 +770,10 @@ export function createApp(options: CreateAppOptions = {}) {
         publishAdapter,
         tenantId,
         listingId,
-        body
+        {
+          ...body,
+          retry_on_step: body.retry_on_step ?? true,
+        }
       );
       if (result.publish_status === "failed") {
         const status =
@@ -780,6 +784,43 @@ export function createApp(options: CreateAppOptions = {}) {
         return c.json(result, status);
       }
       return c.json(result);
+    } catch (e) {
+      if (String(e).includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/shops/:shopId/channel-publish", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const listingId = LISTING_ID_BY_SHOP[shopId];
+    if (!listingId) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    const body = (await c.req.json().catch(() => ({}))) as {
+      retry_on_step?: boolean;
+    };
+    try {
+      const result = await publishListingPrice(
+        catalog,
+        shops,
+        dynamicRules,
+        publishAdapter,
+        tenantId,
+        listingId,
+        { retry_on_step: body.retry_on_step ?? true }
+      );
+      if (result.publish_status === "failed") {
+        const status =
+          result.error_code === "AUTH_REQUIRED" ||
+          result.error_code === "AUTH_EXPIRED"
+            ? 401
+            : 422;
+        return c.json(result, status);
+      }
+      return c.json({ shop_id: shopId, listing_id: listingId, ...result });
     } catch (e) {
       if (String(e).includes("LISTING_NOT_FOUND")) {
         throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
