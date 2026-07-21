@@ -103,19 +103,6 @@ export function PricingPage() {
 
   return (
     <div className="page page-wide">
-      <header className="header">
-        <h1>{t("appTitle")}</h1>
-        <select
-          aria-label="language"
-          value={i18n.language}
-          onChange={(e) => void i18n.changeLanguage(e.target.value)}
-        >
-          <option value="zh-CN">中文</option>
-          <option value="en">English</option>
-          <option value="es-MX">Español (MX)</option>
-        </select>
-      </header>
-
       {error && <p className="error">{error}</p>}
 
       {mlCtx && (

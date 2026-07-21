@@ -210,6 +210,11 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(result);
   });
 
+  app.get("/api/v1/adjustment-batches", async (c) => {
+    const items = await adjustments.listBatches(c.get("tenantId"));
+    return c.json({ items });
+  });
+
   app.post("/api/v1/adjustment-batches", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {

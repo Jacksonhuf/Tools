@@ -124,6 +124,11 @@ paths:
         "200":
           description: waterfall, publish_price_mxn, guards
   /api/v1/adjustment-batches:
+    get:
+      summary: List adjustment batches for tenant
+      responses:
+        "200":
+          description: items array of batches
     post:
       summary: Create adjustment batch (SDD §10.4)
       responses:

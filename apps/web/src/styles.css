@@ -139,3 +139,96 @@ button.primary {
   width: 120px;
   padding: 0.35rem;
 }
+
+.subnav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+.subnav button {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+}
+
+.subnav button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.batch-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.batch-table th,
+.batch-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.batch-table tbody tr {
+  cursor: pointer;
+}
+
+.batch-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.batch-table tbody tr.selected {
+  background: #eff6ff;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.status-draft {
+  background: #e2e8f0;
+}
+
+.status-pending_approval {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-approved {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-applied {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.listing-checks label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.listing-checks input[type="number"] {
+  width: 120px;
+  padding: 0.35rem;
+}
+
+.batch-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

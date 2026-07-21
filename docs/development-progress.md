@@ -140,6 +140,16 @@
 | **测试** | `npm test` — **34 passed** |
 | **下一步** | Loop 8：Web 调价单列表 或 P1 渠道 OAuth 占位 |
 
+### Loop 8 — 调价单 Web 页（P0-E6-07）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | SDD §10.4、§11；任务 P0-E6-07 |
+| **实现** | `GET /api/v1/adjustment-batches` 列表；Web `App` 顶栏 + 子导航；`AdjustmentBatchesPage` 创建/列表/详情、审批与应用；`client` 调价 API；三语文案与样式 |
+| **测试** | `npm test` — **35 passed**（含 TC-API-ADJ-000 列表） |
+| **下一步** | P1 渠道 OAuth 占位、竞品采集管道 |
+
 ---
 
 ## 本地命令
@@ -167,3 +177,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v1.4 | 2026-07-20 | Loop 5 |
 | v1.5 | 2026-07-20 | Loop 6 |
 | v1.6 | 2026-07-21 | Loop 7 |
+| v1.7 | 2026-07-21 | Loop 8 |

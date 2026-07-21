@@ -16,6 +16,34 @@ async function seedActivePrice(
   });
 }
 
+describe("TC-API-ADJ-000 list batches", () => {
+  it("returns empty list then created batches", async () => {
+    const { app, catalog, adjustments } = createTestApp();
+    catalog.resetForTests?.();
+    adjustments.resetForTests?.();
+    const empty = await app.request("/api/v1/adjustment-batches", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    expect(empty.status).toBe(200);
+    const emptyJson = (await empty.json()) as { items: unknown[] };
+    expect(emptyJson.items).toEqual([]);
+    await seedActivePrice(app, 1600);
+    await app.request("/api/v1/adjustment-batches", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        items: [{ listing_id: "listing-ml-001", explicit_price_mxn: 1550 }],
+      }),
+    });
+    const list = await app.request("/api/v1/adjustment-batches", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    const listJson = (await list.json()) as { items: Array<{ id: string }> };
+    expect(listJson.items.length).toBe(1);
+    expect(listJson.items[0].id).toMatch(/^adj-/);
+  });
+});
+
 describe("TC-API-ADJ-001 adjustment batch draft", () => {
   beforeEach(() => {
     const t = createTestApp();

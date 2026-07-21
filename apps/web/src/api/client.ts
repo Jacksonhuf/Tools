@@ -83,4 +83,87 @@ export async function publishPrice(
   return { ok: res.ok, status: res.status, json };
 }
 
+export type AdjustmentStatus =
+  | "draft"
+  | "pending_approval"
+  | "approved"
+  | "applied";
+
+export interface AdjustmentBatchItem {
+  id: string;
+  batch_id: string;
+  listing_id: string;
+  explicit_price_mxn: number;
+  from_price_mxn: number | null;
+  guard_result: string | null;
+  to_version_id: string | null;
+}
+
+export interface AdjustmentBatch {
+  id: string;
+  tenant_id: string;
+  status: AdjustmentStatus;
+  reason_code: string | null;
+  created_at: string;
+  approved_at: string | null;
+  applied_at: string | null;
+  items: AdjustmentBatchItem[];
+}
+
+export async function fetchAdjustmentBatches(locale: string) {
+  const res = await fetch(`/api/v1/adjustment-batches`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`adjustment-batches ${res.status}`);
+  return res.json() as Promise<{ items: AdjustmentBatch[] }>;
+}
+
+export async function createAdjustmentBatch(
+  locale: string,
+  body: {
+    reason_code?: string;
+    items: Array<{ listing_id: string; explicit_price_mxn: number }>;
+  }
+) {
+  const res = await fetch(`/api/v1/adjustment-batches`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "error" in json
+        ? String((json as { error: string }).error)
+        : `create batch ${res.status}`
+    );
+  }
+  return json as AdjustmentBatch;
+}
+
+export async function approveAdjustmentBatch(locale: string, batchId: string) {
+  const res = await fetch(
+    `/api/v1/adjustment-batches/${batchId}/approve`,
+    { method: "POST", headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`approve batch ${res.status}`);
+  return res.json() as Promise<AdjustmentBatch>;
+}
+
+export async function applyAdjustmentBatch(locale: string, batchId: string) {
+  const res = await fetch(`/api/v1/adjustment-batches/${batchId}/apply`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "error" in json
+        ? String((json as { error: string }).error)
+        : `apply batch ${res.status}`
+    );
+  }
+  return json as { batch: AdjustmentBatch; version_ids: string[] };
+}
+
 export { DEMO_SKU };

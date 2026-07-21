@@ -114,6 +114,35 @@ export class PostgresAdjustmentRepository implements AdjustmentRepository {
     return mapBatch(br.rows[0], items);
   }
 
+  async listBatches(tenantId: string, limit = 50) {
+    const br = await this.pool.query(
+      `SELECT * FROM adjustment_batches
+       WHERE tenant_id = $1 ORDER BY id DESC LIMIT $2`,
+      [tenantId, limit]
+    );
+    const result: AdjustmentBatchRecord[] = [];
+    for (const row of br.rows) {
+      const ir = await this.pool.query(
+        `SELECT * FROM adjustment_items WHERE batch_id = $1`,
+        [row.id]
+      );
+      const items = ir.rows.map((itemRow) => ({
+        id: `adji-${itemRow.id}`,
+        batch_id: `adj-${itemRow.batch_id}`,
+        listing_id: itemRow.listing_id,
+        explicit_price_mxn: Number(itemRow.explicit_price_mxn),
+        from_price_mxn:
+          itemRow.from_price_mxn != null
+            ? Number(itemRow.from_price_mxn)
+            : null,
+        guard_result: itemRow.guard_result,
+        to_version_id: itemRow.to_version_id,
+      }));
+      result.push(mapBatch(row, items));
+    }
+    return result;
+  }
+
   async updateBatchStatus(
     tenantId: string,
     batchId: string,

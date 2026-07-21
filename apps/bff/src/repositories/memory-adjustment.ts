@@ -59,6 +59,17 @@ export class MemoryAdjustmentRepository implements AdjustmentRepository {
     return structuredClone(b);
   }
 
+  async listBatches(
+    tenantId: string,
+    limit = 50
+  ): Promise<AdjustmentBatchRecord[]> {
+    return [...batches.values()]
+      .filter((b) => b.tenant_id === tenantId)
+      .sort((a, b) => b.id.localeCompare(a.id))
+      .slice(0, limit)
+      .map((b) => structuredClone(b));
+  }
+
   async updateBatchStatus(
     tenantId: string,
     batchId: string,

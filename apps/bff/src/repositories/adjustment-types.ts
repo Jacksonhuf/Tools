@@ -42,6 +42,7 @@ export interface AdjustmentRepository {
     tenantId: string,
     batchId: string
   ): Promise<AdjustmentBatchRecord | undefined>;
+  listBatches(tenantId: string, limit?: number): Promise<AdjustmentBatchRecord[]>;
   updateBatchStatus(
     tenantId: string,
     batchId: string,
