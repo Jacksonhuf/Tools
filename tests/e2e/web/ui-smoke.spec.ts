@@ -43,5 +43,7 @@ test.describe("Web smoke", () => {
     await expect(page.getByTestId("repricing-queue-table")).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByTestId("ops-metrics")).toBeVisible();
+    await expect(page.getByTestId("ops-metrics-adapter-driver")).toHaveText("mock");
   });
 });

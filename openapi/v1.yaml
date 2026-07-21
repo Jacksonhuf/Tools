@@ -149,6 +149,9 @@ paths:
   /api/v1/channels/adapters/status:
     get:
       summary: Channel publish/pull adapter driver (mock vs http_stub)
+  /api/v1/ops/metrics:
+    get:
+      summary: Ops metrics snapshot (sandbox, adapters, digest queue)
   /api/v1/channels/sandbox/events:
     get:
       summary: Recent sandbox channel events for tenant

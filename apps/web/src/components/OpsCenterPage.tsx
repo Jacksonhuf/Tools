@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import {
   batchChannelPublish,
   DEMO_SKU,
+  fetchOpsMetrics,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
   promoteRepricingToPending,
   reconcileListing,
+  type OpsMetricsSnapshot,
   type ReconciliationAlert,
   type RepricingQueueItem,
 } from "../api/client";
@@ -25,14 +27,19 @@ export function OpsCenterPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<OpsMetricsSnapshot | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const data = await fetchRepricingQueue(locale, DEMO_SKU);
+      const [data, alertData, ops] = await Promise.all([
+        fetchRepricingQueue(locale, DEMO_SKU),
+        fetchReconciliationAlerts(locale),
+        fetchOpsMetrics(locale),
+      ]);
       setItems(data.items);
-      const alertData = await fetchReconciliationAlerts(locale);
       setAlerts(alertData.items);
+      setMetrics(ops);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -121,6 +128,40 @@ export function OpsCenterPage() {
       <p className="hint">{t("opsHint")}</p>
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
+
+      {metrics && (
+        <section className="card" data-testid="ops-metrics">
+          <h2>{t("opsMetricsTitle")}</h2>
+          <dl className="adapter-status-dl">
+            <div>
+              <dt>{t("opsMetricsCatalog")}</dt>
+              <dd>
+                <code>{metrics.catalog_driver}</code>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("channelAdapterDriver")}</dt>
+              <dd>
+                <code data-testid="ops-metrics-adapter-driver">
+                  {metrics.channel_adapters.driver}
+                </code>
+              </dd>
+            </div>
+            <div>
+              <dt>{t("channelSandboxBadge")}</dt>
+              <dd>
+                {metrics.channel_sandbox.mode} ({metrics.channel_sandbox.event_count})
+              </dd>
+            </div>
+            <div>
+              <dt>{t("opsMetricsDigestQueue")}</dt>
+              <dd>
+                {metrics.digest_queue.queued} / {metrics.digest_queue.total}
+              </dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       <section className="card controls">
         <button type="button" onClick={() => void promote()}>

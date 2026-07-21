@@ -73,6 +73,11 @@ export function listChannelSandboxEvents(
     .reverse();
 }
 
+export function countChannelSandboxEvents(tenantId?: string): number {
+  if (!tenantId) return events.length;
+  return events.filter((e) => e.tenant_id === tenantId).length;
+}
+
 export function resetChannelSandboxForTests(): void {
   events.length = 0;
   seq = 0;

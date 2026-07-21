@@ -591,6 +591,30 @@ export async function fetchReconciliationAlerts(locale: string) {
   return res.json() as Promise<{ items: ReconciliationAlert[] }>;
 }
 
+export interface OpsMetricsSnapshot {
+  tenant_id: string;
+  catalog_driver: string;
+  channel_sandbox: {
+    enabled: boolean;
+    mode: string;
+    event_count: number;
+  };
+  channel_adapters: {
+    driver: string;
+    ready: boolean;
+    publish_http_url_configured: boolean;
+    listing_pull_http_url_configured: boolean;
+  };
+  digest_queue: { total: number; queued: number; failed: number };
+  generated_at: string;
+}
+
+export async function fetchOpsMetrics(locale: string) {
+  const res = await fetch(`/api/v1/ops/metrics`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`ops-metrics ${res.status}`);
+  return res.json() as Promise<OpsMetricsSnapshot>;
+}
+
 export async function reconcileListing(
   locale: string,
   listingId: string,

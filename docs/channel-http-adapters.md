@@ -45,7 +45,13 @@ Channels 页展示 **Channel adapters** 卡片（`data-testid=channel-adapter-st
 
 ## 网关联调示例
 
-本地 sidecar 可监听 `8787` 并返回上述 JSON。BFF：
+本地 sidecar（与 `tools/channel-gateway-sidecar/server.mjs` 一致）可监听 `8787`：
+
+```bash
+npm run dev:channel-gateway   # CHANNEL_GATEWAY_PORT=8787
+```
+
+BFF：
 
 ```bash
 export CHANNEL_ADAPTER_DRIVER=http_stub

@@ -27,6 +27,7 @@
 | P2 竞品 | 进行中 | Loop 11：事件与 mock 采集 |
 | P3 回写 | 部分完成 | Loop 27：P3 accepted + 验收 API |
 | P4 Agent | 部分完成 | Loop 26：P4 accepted + Playwright |
+| P5 增强 | 脚手架 | Loop 33–36：sidecar、ops metrics、收官文档 |
 
 ---
 
@@ -412,6 +413,45 @@
 | **测试** | `npm test` — **109 passed**；`npm run test:e2e` — **4 passed** |
 | **下一步** | 合并 PR #1、sidecar 样例服务、P5 监控与告警占位 |
 
+### Loop 33 — Channel gateway sidecar（TC-INT-CH-GW 脚手架）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **阅读** | Loop 32 下一步；`channel-http-adapters` |
+| **实现** | `tools/channel-gateway-sidecar/server.mjs`；`npm run dev:channel-gateway` |
+| **测试** | 见 Loop 35 契约测 |
+| **下一步** | P5 ops metrics |
+
+### Loop 34 — Ops metrics API 与指挥中心 UI（TC-API-OPS-001）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **实现** | `ops-metrics.ts` + `GET /ops/metrics`；Ops 页 `ops-metrics` 卡片 |
+| **测试** | `ops-metrics.test.ts` |
+| **下一步** | 网关契约集成测、P5 清单 |
+
+### Loop 35 — 网关契约测与 P5 清单
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **实现** | `channel-gateway-contract.test.ts`；`p5-acceptance-checklist.md` |
+| **测试** | `npm test` — **112 passed**（PG 6 skipped） |
+| **下一步** | Loop 收官与合并 PR |
+
+### Loop 36 — Development Loop 收官
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **实现** | `development-loop-closure.md`；`merge-readiness` 更新；Playwright ops metrics |
+| **测试** | `npm run test:e2e` — **4 passed** |
+| **下一步** | **合并 PR #1**；后续 Epic 新开 Loop 37+ |
+
+> **本线程 Development Loop 计划内迭代已结束。** 未实现的 P0–P5  backlog 见 [development-task-list.md](./development-task-list.md)。
+
 ---
 
 ## 本地命令
@@ -463,4 +503,7 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v3.6 | 2026-07-21 | Loop 27 |
 | v3.7 | 2026-07-21 | Loop 28 |
 | v3.8 | 2026-07-21 | Loop 29 |
-| v4.1 | 2026-07-21 | Loop 32 |
+| v4.2 | 2026-07-21 | Loop 33 |
+| v4.3 | 2026-07-21 | Loop 34 |
+| v4.4 | 2026-07-21 | Loop 35 |
+| v4.5 | 2026-07-21 | Loop 36 收官 |

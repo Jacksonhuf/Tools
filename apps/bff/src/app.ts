@@ -93,6 +93,7 @@ import {
   createChannelListingAdapter,
   createChannelPublishAdapter,
 } from "./channel-adapter-factory.js";
+import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
 import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
@@ -492,6 +493,11 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/channels/adapters/status", async (c) => {
     return c.json(getChannelAdapterStatus());
+  });
+
+  app.get("/api/v1/ops/metrics", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json(buildOpsMetricsSnapshot(catalog, tenantId));
   });
 
   app.get("/api/v1/channels/sandbox/events", async (c) => {
