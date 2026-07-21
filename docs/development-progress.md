@@ -450,7 +450,17 @@
 | **测试** | `npm run test:e2e` — **4 passed** |
 | **下一步** | **合并 PR #1**；后续 Epic 新开 Loop 37+ |
 
-> **本线程 Development Loop 计划内迭代已结束。** 未实现的 P0–P5  backlog 见 [development-task-list.md](./development-task-list.md)。
+> **本线程 Development Loop 计划内迭代已结束**（Loop 1–36，PR #1 已合并）。**Loop 37+** 从 `main` 开分支 `cursor/<描述>-1936`，每轮更新本文 + [development-task-list.md](./development-task-list.md)。
+
+### Loop 37 — Cross-channel Guard（P5-01 / TC-API-XCH-001）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-21 |
+| **分支** | `cursor/cross-channel-guard-1936` |
+| **实现** | `evaluateCrossChannelSpread`；`GET /skus/:id/cross-channel-guard`；定价页横幅 |
+| **测试** | `cross-channel-guard.test.ts` + unit TC-UNIT-XCH-* |
+| **下一步** | 合并 PR、P5-03 报表导出或 OIDC 占位 |
 
 ---
 

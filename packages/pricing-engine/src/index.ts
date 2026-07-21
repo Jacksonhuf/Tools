@@ -12,4 +12,8 @@ export {
   applyOffset,
 } from "./competitive.js";
 export { checkMinMargin } from "./guard.js";
+export {
+  evaluateCrossChannelSpread,
+  type CrossChannelSpreadWarning,
+} from "./cross-channel.js";
 export type * from "./types.js";

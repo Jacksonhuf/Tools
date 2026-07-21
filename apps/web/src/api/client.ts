@@ -55,6 +55,26 @@ export async function fetchPricingContext(locale: string, channel: Channel) {
   return res.json();
 }
 
+export interface CrossChannelGuardResponse {
+  mercado_libre_active_mxn: number | null;
+  amazon_mx_active_mxn: number | null;
+  warning: {
+    code: string;
+    spread_pct: number;
+    max_spread_pct: number;
+    mercado_libre_price_mxn: number;
+    amazon_mx_price_mxn: number;
+  } | null;
+}
+
+export async function fetchCrossChannelGuard(locale: string) {
+  const res = await fetch(`/api/v1/skus/${DEMO_SKU}/cross-channel-guard`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`cross-channel-guard ${res.status}`);
+  return res.json() as Promise<CrossChannelGuardResponse>;
+}
+
 export async function simulatePricing(
   locale: string,
   body: Record<string, unknown>

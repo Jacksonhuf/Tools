@@ -4,7 +4,7 @@
 
 | ID | 项 | 本 PR 状态 |
 |----|-----|------------|
-| P5-01 | Cross-channel Guard | 未做 |
+| P5-01 | Cross-channel Guard | 部分（Loop 37：价差 API + UI 横幅） |
 | P5-02 | 品类规则模板继承 | 未做 |
 | P5-03 | 报表导出 | 未做 |
 | P5-04 | 多租户模板共享 | 部分（`X-Tenant-Id` 隔离） |
