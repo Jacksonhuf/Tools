@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchChannelAdapterStatus,
   fetchChannelSandboxEvents,
+  downloadChannelSandboxEventsCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -291,6 +292,19 @@ export function ChannelsPage() {
       {sandboxNote && (
         <section className="card">
           <h2>{t("channelSandboxEventsTitle")}</h2>
+          <div className="shop-actions">
+            <button
+              type="button"
+              data-testid="channel-sandbox-export"
+              onClick={() =>
+                void downloadChannelSandboxEventsCsv(locale).then(() =>
+                  setMessage(t("channelSandboxExportDone"))
+                )
+              }
+            >
+              {t("channelSandboxExportCsv")}
+            </button>
+          </div>
           {sandboxEvents.length === 0 ? (
             <p className="hint" data-testid="channel-sandbox-events-empty">
               {t("channelSandboxNoEvents")}

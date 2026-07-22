@@ -437,6 +437,22 @@ export async function fetchChannelSandboxEvents(locale: string, limit = 20) {
   return res.json() as Promise<{ items: ChannelSandboxEvent[] }>;
 }
 
+export async function downloadChannelSandboxEventsCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/channels/sandbox/events/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`sandbox-events-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "channel-sandbox-events.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export interface ChannelAdapterStatus {
   driver: string;
   publish_http_url_configured: boolean;
@@ -1259,6 +1275,22 @@ export async function downloadPricingSnapshotCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadTenantPricingSnapshotsCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/reports/pricing-snapshots/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`pricing-snapshots-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pricing-snapshots-tenant.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function reconcileListing(
   locale: string,
   listingId: string,
@@ -1430,6 +1462,43 @@ export async function downloadFxRatesCsv(locale: string): Promise<void> {
   const a = document.createElement("a");
   a.href = url;
   a.download = "fx-rates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchDigestDeadLetterSummary(locale: string, limit = 20) {
+  const res = await fetch(
+    `/api/v1/agent/digest/jobs/dead-letter/summary?limit=${encodeURIComponent(String(limit))}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-dlq-summary ${res.status}`);
+  return res.json() as Promise<{
+    tenant_id: string;
+    queue: {
+      queued: number;
+      dead_letter: number;
+      total: number;
+    };
+    dead_letter_sampled: number;
+    items: Array<{
+      job_id: string;
+      attempts: number;
+      error: string | null;
+      updated_at: string;
+    }>;
+  }>;
+}
+
+export async function downloadDigestDeadLetterCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/digest/jobs/dead-letter/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-dlq-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-dead-letter.csv";
   a.click();
   URL.revokeObjectURL(url);
 }

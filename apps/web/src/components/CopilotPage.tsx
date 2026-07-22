@@ -14,6 +14,8 @@ import {
   downloadAgentDigestCsv,
   downloadAgentToolAuditCsv,
   fetchDigestSchedule,
+  fetchDigestDeadLetterSummary,
+  downloadDigestDeadLetterCsv,
   updateDigestSchedule,
   runDigestRunDue,
   fetchRuleCompilerStatus,
@@ -57,6 +59,10 @@ export function CopilotPage() {
   const [digestEnabled, setDigestEnabled] = useState(false);
   const [digestCron, setDigestCron] = useState("0 8 * * *");
   const [digestLastRun, setDigestLastRun] = useState<string | null>(null);
+  const [digestDlq, setDigestDlq] = useState<{
+    queue: { dead_letter: number; queued: number };
+    items: Array<{ job_id: string; error: string | null }>;
+  } | null>(null);
   const [p4Ready, setP4Ready] = useState<boolean | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
@@ -146,6 +152,11 @@ export function CopilotPage() {
         setDigestEnabled(sched.enabled);
         setDigestCron(sched.cron);
         setDigestLastRun(sched.last_dispatch_at);
+        const dlq = await fetchDigestDeadLetterSummary(locale);
+        setDigestDlq({
+          queue: dlq.queue,
+          items: dlq.items,
+        });
       } catch {
         /* non-fatal on demo load */
       }
@@ -342,6 +353,36 @@ export function CopilotPage() {
             onClick={() => void downloadAgentToolAuditCsv(locale)}
           >
             {t("copilotAuditExportCsv")}
+          </button>
+        </div>
+      </section>
+      <section className="card" data-testid="copilot-digest-dlq">
+        <h2>{t("copilotDigestDlqTitle")}</h2>
+        <p className="hint" data-testid="copilot-digest-dlq-summary">
+          {digestDlq
+            ? t("copilotDigestDlqSummary", {
+                dead: digestDlq.queue.dead_letter,
+                queued: digestDlq.queue.queued,
+              })
+            : t("copilotDigestDlqLoading")}
+        </p>
+        <div className="shop-actions">
+          <button
+            type="button"
+            onClick={() =>
+              void fetchDigestDeadLetterSummary(locale).then((dlq) =>
+                setDigestDlq({ queue: dlq.queue, items: dlq.items })
+              )
+            }
+          >
+            {t("copilotDigestDlqRefresh")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-dlq-export"
+            onClick={() => void downloadDigestDeadLetterCsv(locale)}
+          >
+            {t("copilotDigestDlqExportCsv")}
           </button>
         </div>
       </section>
