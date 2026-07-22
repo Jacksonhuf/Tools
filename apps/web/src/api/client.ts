@@ -32,6 +32,18 @@ export async function fetchSkus(locale: string) {
   }>;
 }
 
+export async function downloadSkusCatalogCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/skus/export`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`skus-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "skus-catalog.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function patchSkuLandedCost(
   locale: string,
   skuId: string,
@@ -100,6 +112,32 @@ export async function fetchSharedFeeTemplates(locale: string) {
   return res.json() as Promise<{
     items: Array<{ id: string; name: string; channel: string }>;
   }>;
+}
+
+export async function fetchCategoryRuleTemplates(locale: string) {
+  const res = await fetch(`/api/v1/category-rule-templates`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`category-rule-templates ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{ category_id: string; name: string }>;
+  }>;
+}
+
+export async function downloadCategoryRuleTemplatesCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/category-rule-templates/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`category-rule-templates-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "category-rule-templates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function applySharedFeeTemplate(
@@ -473,6 +511,18 @@ export async function fetchShops(locale: string) {
   const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);
   return res.json() as Promise<{ items: ShopSummary[] }>;
+}
+
+export async function downloadShopsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/shops/export`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`shops-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "shops.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function startShopOAuth(locale: string, shopId: string) {

@@ -177,6 +177,9 @@ import { adjustmentBatchToCsv } from "./adjustment-batch-csv.js";
 import { adjustmentBatchesIndexToCsv } from "./adjustment-batches-index-csv.js";
 import { priceHistoryToCsv } from "./price-history-csv.js";
 import { repricingEventsToCsv } from "./repricing-events-csv.js";
+import { categoryRuleTemplatesToCsv } from "./category-rule-templates-csv.js";
+import { shopsToCsv } from "./shops-csv.js";
+import { skusCatalogToCsv } from "./skus-catalog-csv.js";
 import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
@@ -549,6 +552,27 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/skus/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const skus = await catalog.listSkus(tenantId);
+    const csv = skusCatalogToCsv(
+      skus.map((s) => ({
+        id: s.id,
+        sku_code: s.sku_code,
+        name: s.name,
+        landed_cost_mxn: s.landed_cost_mxn,
+      })),
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="skus-catalog.csv"`,
+      },
+    });
+  });
+
   app.patch("/api/v1/skus/:skuId", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as { landed_cost_mxn?: number };
@@ -890,6 +914,19 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/shops", async (c) => {
     const items = await shops.listShops(c.get("tenantId"));
     return c.json({ items: items.map(shopPublicView) });
+  });
+
+  app.get("/api/v1/shops/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const items = await shops.listShops(tenantId);
+    const csv = shopsToCsv(items.map(shopPublicView), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="shops.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/channels/sandbox/status", async (c) => {
@@ -1424,6 +1461,26 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "adjustment_batches_index_csv") {
       const items = await adjustments.listBatches(tenantId, 100);
       content = adjustmentBatchesIndexToCsv(items, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "skus_catalog_csv") {
+      const skus = await catalog.listSkus(tenantId);
+      content = skusCatalogToCsv(
+        skus.map((s) => ({
+          id: s.id,
+          sku_code: s.sku_code,
+          name: s.name,
+          landed_cost_mxn: s.landed_cost_mxn,
+        })),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "shops_csv") {
+      const shopItems = await shops.listShops(tenantId);
+      content = shopsToCsv(shopItems.map(shopPublicView), new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "category_rule_templates_csv") {
+      const templates = listCategoryRuleTemplates(tenantId);
+      content = categoryRuleTemplatesToCsv(templates, new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2486,6 +2543,19 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/category-rule-templates", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json({ items: listCategoryRuleTemplates(tenantId) });
+  });
+
+  app.get("/api/v1/category-rule-templates/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const templates = listCategoryRuleTemplates(tenantId);
+    const csv = categoryRuleTemplatesToCsv(templates, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="category-rule-templates.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/category-rule-templates/:categoryId", async (c) => {
