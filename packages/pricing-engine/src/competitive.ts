@@ -22,6 +22,9 @@ export function aggregateAnchor(
     }
     return sorted[mid];
   }
+  if (anchor_type === "buy_box") {
+    return sorted[0];
+  }
   throw new Error(`UNKNOWN_ANCHOR_TYPE:${anchor_type}`);
 }
 

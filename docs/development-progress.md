@@ -586,7 +586,35 @@
 | **日期** | 2026-07-22 |
 | **实现** | `p5-readiness` + `product/readiness` / `agent/milestones` P5；`POST apply-shared-fee-template`；Web Ops 展示 repricing 队列与 NFR；OpenAPI 补全 P5 路径 |
 | **测试** | `p5-readiness.test.ts`；TC-API-TPL-002 |
-| **下一步** | 按 [development-task-list.md](./development-task-list.md) 新开 Epic（生产渠道、HA 等） |
+| **下一步** | Loop 58+ Epic（特性开关、Buy Box、DLQ） |
+
+### Loop 58 — 特性开关扩展（X-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `FEATURE_BUY_BOX_ANCHOR`、`FEATURE_REPRICING_BATCH_WORKER`、`FEATURE_CHANNEL_LIVE_PUBLISH`；Web「里程碑」页展示 flags |
+| **测试** | `feature-flags.test.ts` |
+
+### Loop 59 — 产品里程碑 Web（X-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `ProductReadinessPage` + `nav-readiness`；`fetchProductReadiness` |
+| **测试** | Playwright 可扩展 `nav-readiness` |
+
+### Loop 60 — Buy Box 锚点（P3-E3-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 观测 `buy_box_winner`；`anchor.buy_box_mxn`；`anchor_type=buy_box` 引擎与重算 |
+| **测试** | `buy-box-anchor.test.ts`、`competitive-buy-box.test.ts` |
+
+### Loop 61 — Digest 死信队列（TC-NFR-REL-004）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `simulate_poison`、重试、`dead_letter` 状态、`GET digest/jobs/dead-letter`、ops `digest_queue.dead_letter` |
+| **测试** | `digest-dlq.test.ts` |
 
 ---
 

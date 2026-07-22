@@ -12,6 +12,7 @@ import type {
 } from "../repositories/dynamic-rule-types.js";
 import type { RepricingActivityRepository } from "../repositories/repricing-activity-types.js";
 import { computeEffectivePrice } from "../competitor-normalize.js";
+import { observationBuyBoxWinner } from "../competitor-buy-box.js";
 import {
   flushDebounce,
   recordCompetitorPriceChange,
@@ -226,15 +227,28 @@ export async function processRepricingEvent(
         ...o,
         latest_effective_mxn: latest?.effective_price ?? null,
         latest_observation_id: latest?.id ?? null,
+        latest_observation: latest,
       };
     })
   );
-  const observations = withLatest
+  let observations = withLatest
     .filter((o) => o.latest_effective_mxn != null)
     .map((o) => ({
       channel: o.channel,
       effective_price_mxn: o.latest_effective_mxn as number,
     }));
+  if (rule.anchor_type === "buy_box") {
+    observations = withLatest
+      .filter(
+        (o) =>
+          o.latest_effective_mxn != null &&
+          observationBuyBoxWinner(o.latest_observation)
+      )
+      .map((o) => ({
+        channel: o.channel,
+        effective_price_mxn: o.latest_effective_mxn as number,
+      }));
+  }
   const competitorSnapshotIds = withLatest
     .map((o) => o.latest_observation_id)
     .filter((id): id is string => Boolean(id));

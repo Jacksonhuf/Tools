@@ -46,4 +46,14 @@ test.describe("Web smoke", () => {
     await expect(page.getByTestId("ops-metrics")).toBeVisible();
     await expect(page.getByTestId("ops-metrics-adapter-driver")).toHaveText("mock");
   });
+
+  test("product milestones tab (Loop 59)", async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId("nav-readiness").click();
+    await expect(page.getByTestId("product-readiness")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("readiness-all-accepted")).toBeVisible();
+    await expect(page.getByTestId("feature-flags-panel")).toBeVisible();
+  });
 });

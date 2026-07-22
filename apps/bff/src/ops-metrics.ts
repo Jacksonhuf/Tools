@@ -3,7 +3,10 @@ import {
   countChannelSandboxEvents,
   getChannelSandboxStatus,
 } from "./channel-sandbox-ledger.js";
-import { listDigestQueuedJobs } from "./digest-job-queue.js";
+import {
+  listDigestQueuedJobs,
+  digestQueueSummary,
+} from "./digest-job-queue.js";
 import { repricingBatchQueueSummary } from "./repricing-batch-job-queue.js";
 import { getPricingNfrMetrics } from "./pricing-nfr-metrics.js";
 import type { CatalogRepository } from "./repositories/types.js";
@@ -17,6 +20,7 @@ export async function buildOpsMetricsSnapshot(
   const digestJobs = listDigestQueuedJobs(tenantId);
   const digestQueued = digestJobs.filter((j) => j.status === "queued").length;
   const digestFailed = digestJobs.filter((j) => j.status === "failed").length;
+  const digestSummary = digestQueueSummary(tenantId);
   const repricingBatch = await repricingBatchQueueSummary(tenantId);
 
   return {
@@ -35,9 +39,10 @@ export async function buildOpsMetricsSnapshot(
         adapters.listing_pull_http_url_configured,
     },
     digest_queue: {
-      total: digestJobs.length,
+      total: digestSummary.total,
       queued: digestQueued,
       failed: digestFailed,
+      dead_letter: digestSummary.dead_letter,
     },
     repricing_batch_queue: repricingBatch,
     nfr: getPricingNfrMetrics(),
