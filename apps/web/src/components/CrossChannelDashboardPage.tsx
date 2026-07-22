@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   fetchCrossChannelDashboard,
+  downloadCrossChannelDashboardCsv,
   type CrossChannelDashboardSnapshot,
 } from "../api/client";
 
@@ -9,6 +10,7 @@ export function CrossChannelDashboardPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
   const [data, setData] = useState<CrossChannelDashboardSnapshot | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -29,6 +31,7 @@ export function CrossChannelDashboardPage() {
       <h1>{t("crossChannelDashboardTitle")}</h1>
       <p className="hint">{t("crossChannelDashboardHint")}</p>
       {error && <p className="error">{error}</p>}
+      {message && <p className="message">{message}</p>}
       {data && (
         <section className="card" data-testid="cross-channel-dashboard">
           <p>
@@ -37,6 +40,17 @@ export function CrossChannelDashboardPage() {
               alerts: data.alert_count,
             })}
           </p>
+          <button
+            type="button"
+            data-testid="cross-channel-export"
+            onClick={() =>
+              void downloadCrossChannelDashboardCsv(locale).then(() =>
+                setMessage(t("crossChannelExportDone"))
+              )
+            }
+          >
+            {t("crossChannelExportCsv")}
+          </button>
           <table className="batch-table">
             <thead>
               <tr>

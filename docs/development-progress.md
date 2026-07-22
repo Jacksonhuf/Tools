@@ -868,6 +868,34 @@
 | **实现** | 通道页最近同步；竞品直链曲线；Ops 汇总与导出按钮 |
 | **测试** | `loop-94-97.test.ts` |
 
+### Loop 98 — 跨渠道看板 CSV（P3-E3-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /cross-channel/dashboard/export`；`POST /exports` → `cross_channel_dashboard_csv` |
+| **测试** | `loop-98-101.test.ts` |
+
+### Loop 99 — Cost Sheet CSV 导出（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /skus/:id/cost-sheets/export`；`POST /exports` → `cost_sheets_csv` |
+| **测试** | `loop-98-101.test.ts` |
+
+### Loop 100 — 重算批处理作业汇总/CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /repricing-batch/jobs/summary` 与 `/export`；`repricing_batch_jobs_csv` |
+| **测试** | `loop-98-101.test.ts` |
+
+### Loop 101 — 看板/定价/Ops Web（P3/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 跨渠道导出；定价页 Cost Sheet 导出；Ops 批处理摘要与导出 |
+| **测试** | `loop-98-101.test.ts` |
+
 ---
 
 ## 本地命令
@@ -936,3 +964,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.8 | 2026-07-22 | Loop 86–89 sync run-due, curve/batch CSV exports, Ops Web |
 | v5.9 | 2026-07-22 | Loop 90–93 sync jobs feed, direct CSV, cron/force, Ops jobs UI |
 | v6.0 | 2026-07-22 | Loop 94–97 sync status, jobs/recon CSV exports, Channels Web |
+| v6.1 | 2026-07-22 | Loop 98–101 cross-channel/cost sheet/repricing batch CSV + Web |
