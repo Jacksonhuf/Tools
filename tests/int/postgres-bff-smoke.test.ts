@@ -47,9 +47,13 @@ describe.skipIf(!RUN_PG || !DATABASE_URL)("TC-INT-PG BFF postgres path", () => {
       headers: { ...AUTH, ...TENANT, "Accept-Language": "en" },
     });
     expect(res.status).toBe(200);
-    const json = (await res.json()) as { sku_id: string; channels: unknown[] };
-    expect(json.sku_id).toBe("demo-sku-001");
-    expect(json.channels.length).toBeGreaterThanOrEqual(2);
+    const json = (await res.json()) as {
+      sku: { id: string };
+      floors: { mercado_libre: unknown; amazon_mx: unknown };
+    };
+    expect(json.sku.id).toBe("demo-sku-001");
+    expect(json.floors.mercado_libre).toBeTruthy();
+    expect(json.floors.amazon_mx).toBeTruthy();
   });
 
   it("POST price-version persists active version in PostgreSQL", async () => {
