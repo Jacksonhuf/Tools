@@ -1,0 +1,7 @@
+tests/**
+tools/**
+playwright-report/**
+**/node_modules/**
+.git/**
+*.md
+!README.md

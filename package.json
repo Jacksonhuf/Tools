@@ -1,6 +1,9 @@
 {
   "name": "mx-pricing",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -13,6 +16,9 @@
     "test:golden": "vitest run tests/golden/golden.test.ts",
     "test:api": "vitest run tests/api/bff.test.ts",
     "build": "npm run build -w @mx-pricing/pricing-engine && npm run build -w @mx-pricing/i18n-format && npm run build -w @mx-pricing/channel-adapters && npm run build -w @mx-pricing/db && npm run build -w @mx-pricing/bff && npm run build -w @mx-pricing/web",
+    "build:vercel": "npm run build",
+    "deploy:vercel": "bash scripts/vercel-deploy.sh",
+    "deploy:vercel:prod": "bash scripts/vercel-deploy.sh --prod",
     "db:up": "docker compose up -d postgres",
     "db:migrate": "npm run build -w @mx-pricing/db && DATABASE_URL=${DATABASE_URL:-postgresql://mx:mx@localhost:5432/mx_pricing} node packages/db/dist/migrate-cli.js",
     "dev:web": "npm run dev -w @mx-pricing/web",
