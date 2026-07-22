@@ -641,6 +641,63 @@ export async function updateListingSyncSchedule(
   return res.json();
 }
 
+export async function runListingSyncDue(locale: string) {
+  const res = await fetch(`/api/v1/ops/listing-sync/run-due`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-run-due ${res.status}`);
+  return res.json() as Promise<{
+    runs: Array<{ listing_id: string; job: { status: string } }>;
+  }>;
+}
+
+async function downloadExportCsv(
+  locale: string,
+  body: Record<string, unknown>,
+  filename: string
+): Promise<void> {
+  const post = await fetch(`/api/v1/exports`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!post.ok) throw new Error(`export ${post.status}`);
+  const meta = (await post.json()) as { download_path: string };
+  const dl = await fetch(meta.download_path, { headers: headers(locale) });
+  if (!dl.ok) throw new Error(`export-download ${dl.status}`);
+  const blob = await dl.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadCompetitorCurveCsv(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+): Promise<void> {
+  await downloadExportCsv(
+    locale,
+    { kind: "competitor_curve_csv", listing_id: listingId, range },
+    `competitor-curve-${listingId}.csv`
+  );
+}
+
+export async function downloadAdjustmentBatchCsv(
+  locale: string,
+  batchId: string
+): Promise<void> {
+  await downloadExportCsv(
+    locale,
+    { kind: "adjustment_batch_csv", batch_id: batchId },
+    `adjustment-batch-${batchId}.csv`
+  );
+}
+
 export async function fetchIngestStatus(locale: string, listingId: string) {
   const res = await fetch(`/api/v1/listings/${listingId}/ingest/status`, {
     headers: headers(locale),

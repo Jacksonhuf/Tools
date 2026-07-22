@@ -6,6 +6,7 @@ import {
   applyAdjustmentBatch,
   createAdjustmentBatch,
   fetchAdjustmentBatches,
+  downloadAdjustmentBatchCsv,
   type AdjustmentBatch,
 } from "../api/client";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
@@ -223,6 +224,17 @@ export function AdjustmentBatchesPage() {
             ))}
           </ul>
           <div className="batch-actions">
+            <button
+              type="button"
+              data-testid="adjustment-batch-export"
+              onClick={() =>
+                void downloadAdjustmentBatchCsv(locale, selected.id).then(() =>
+                  setMessage(t("adjustmentBatchExportDone"))
+                )
+              }
+            >
+              {t("adjustmentBatchExportCsv")}
+            </button>
             {selected.status === "pending_approval" && (
               <button
                 type="button"

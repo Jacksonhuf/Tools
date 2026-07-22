@@ -784,6 +784,34 @@
 | **实现** | Ops Cost Sheet CSV；定价页瀑布导出；竞品曲线天数展示 |
 | **测试** | `loop-82-85.test.ts` |
 
+### Loop 86 — Listing 到期同步执行（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /ops/listing-sync/run-due`；`listing-sync-run-due.ts`；`last_run_at` |
+| **测试** | `loop-86-89.test.ts` |
+
+### Loop 87 — 竞品曲线 CSV 导出（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /exports` kind `competitor_curve_csv` |
+| **测试** | `loop-86-89.test.ts`、`loop-86-89-csv.test.ts` |
+
+### Loop 88 — 调价单 CSV 导出（P0-E5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /exports` kind `adjustment_batch_csv` |
+| **测试** | `loop-86-89.test.ts` |
+
+### Loop 89 — Ops/竞品/调价 Web（P2-E3-06 续）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Ops 同步计划与 run-due；竞品曲线 CSV；调价单 CSV 下载 |
+| **测试** | `loop-86-89.test.ts` |
+
 ---
 
 ## 本地命令
@@ -849,3 +877,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.5 | 2026-07-22 | Loop 74–77 cost sheets, landed from sheet, CSV batch apply |
 | v5.6 | 2026-07-22 | Loop 78–81 waterfall export, policy patch, listing sync jobs |
 | v5.7 | 2026-07-22 | Loop 82–85 waterfall export store, sync schedule, competitor curve |
+| v5.8 | 2026-07-22 | Loop 86–89 sync run-due, curve/batch CSV exports, Ops Web |
