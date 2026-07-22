@@ -126,6 +126,7 @@ import {
 import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
 import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
+import { crossChannelGuardToCsv } from "./cross-channel-guard-csv.js";
 import { buildCrossChannelDashboard } from "./cross-channel-dashboard.js";
 import { crossChannelDashboardToCsv } from "./cross-channel-dashboard-csv.js";
 import { costSheetsToCsv } from "./cost-sheets-csv.js";
@@ -261,6 +262,9 @@ import {
   resetDigestDispatchForTests,
   upsertDigestSchedule,
 } from "./agent-digest-dispatch.js";
+import { digestScheduleToCsv } from "./digest-schedule-csv.js";
+import { buildListingDynamicRepricingRuleView } from "./dynamic-repricing-rule-view.js";
+import { dynamicRepricingRuleToCsv } from "./dynamic-repricing-rule-csv.js";
 import {
   enqueueDailyDigestJob,
   listDigestQueuedJobs,
@@ -446,6 +450,24 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const guard = await getCrossChannelGuardForSku(catalog, sku.id);
     return c.json(guard);
+  });
+
+  app.get("/api/v1/skus/:skuId/cross-channel-guard/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const guard = await getCrossChannelGuardForSku(catalog, sku.id);
+    const csv = crossChannelGuardToCsv(skuId, guard, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="cross-channel-guard-${skuId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/cross-channel/dashboard", async (c) => {
@@ -1732,6 +1754,33 @@ export function createApp(options: CreateAppOptions = {}) {
         new Date().toISOString()
       );
       content_type = "text/csv";
+    } else if (kind === "cross_channel_guard_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const guard = await getCrossChannelGuardForSku(catalog, skuId);
+      content = crossChannelGuardToCsv(skuId, guard, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_schedule_csv") {
+      content = digestScheduleToCsv(
+        getDigestSchedule(tenantId),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "dynamic_repricing_rule_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const view = await buildListingDynamicRepricingRuleView(
+        { catalog, dynamicRules, listingHealth },
+        tenantId,
+        listingId
+      );
+      if (!view) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      content = dynamicRepricingRuleToCsv(view, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1829,6 +1878,24 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json({ exported_at: exportedAt, sku_id: skuId, rows });
+  });
+
+  app.get("/api/v1/reports/pricing-snapshot/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.query("sku_id") ?? "demo-sku-001";
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
+    const csv = pricingSnapshotToCsv(rows, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="pricing-snapshot-${skuId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/reports/pricing-snapshots/export", async (c) => {
@@ -2338,25 +2405,43 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
+  app.get("/api/v1/listings/:listingId/dynamic-repricing-rule/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const view = await buildListingDynamicRepricingRuleView(
+      { catalog, dynamicRules, listingHealth },
+      tenantId,
+      listingId
+    );
+    if (!view) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = dynamicRepricingRuleToCsv(view, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="dynamic-repricing-rule-${listingId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/dynamic-repricing-rule", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
-    const listing = await catalog.getListing(tenantId, listingId);
-    if (!listing) {
+    const view = await buildListingDynamicRepricingRuleView(
+      { catalog, dynamicRules, listingHealth },
+      tenantId,
+      listingId
+    );
+    if (!view) {
       throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
     }
-    let rule = await dynamicRules.getRule(listingId);
-    if (!rule) {
-      rule = await dynamicRules.upsertRule(listingId, {});
-    }
-    const sku = await catalog.getSku(tenantId, listing.sku.id);
-    const categoryId = sku?.category_id;
-    const template = categoryId
-      ? getCategoryRuleTemplate(tenantId, categoryId)
-      : undefined;
-    const effective = applyCategoryDefaults(rule, template);
-    const stale = await listingHealth.getStale(listingId);
-    return c.json({ rule: effective, stale, category_template: template ?? null });
+    return c.json({
+      rule: view.rule,
+      stale: view.stale,
+      category_template: view.category_template,
+    });
   });
 
   app.put("/api/v1/listings/:listingId/dynamic-repricing-rule", async (c) => {
@@ -3360,6 +3445,18 @@ export function createApp(options: CreateAppOptions = {}) {
       date
     );
     return c.json(digest);
+  });
+
+  app.get("/api/v1/agent/digest/schedule/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const csv = digestScheduleToCsv(getDigestSchedule(tenantId), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-schedule.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/digest/schedule", async (c) => {

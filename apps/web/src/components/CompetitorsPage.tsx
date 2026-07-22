@@ -12,6 +12,7 @@ import {
   downloadRepricingEventsCsv,
   downloadCompetitorOffersCsv,
   downloadCompetitorAnchorCsv,
+  downloadDynamicRepricingRuleCsv,
   downloadListingIngestStatusCsv,
   fetchIngestStatus,
   fetchDynamicRule,
@@ -203,6 +204,17 @@ export function CompetitorsPage() {
         )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-dynamic-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(locale, listingId).then(() =>
+              setMessage(t("dynamicRepricingRuleExportDone"))
+            )
+          }
+        >
+          {t("dynamicRepricingRuleExportCsv")}
         </button>
         <button
           type="button"
