@@ -24,6 +24,7 @@ const DEMO_SKU_FEE_SNAPSHOT = {
   fee_ml: { ...DEMO_SKU.fee_ml },
   fee_amazon: { ...DEMO_SKU.fee_amazon },
 };
+const DEMO_SKU_POLICY_SNAPSHOT = { ...DEMO_SKU.policy };
 
 export class MemoryCatalogRepository implements CatalogRepository {
   readonly driver = "memory" as const;
@@ -125,11 +126,26 @@ export class MemoryCatalogRepository implements CatalogRepository {
     return sku;
   }
 
+  async updateSkuPolicy(
+    tenantId: string,
+    skuId: string,
+    patch: Partial<SkuRecord["policy"]>
+  ): Promise<SkuRecord | undefined> {
+    const sku = await this.getSku(tenantId, skuId);
+    if (!sku) return undefined;
+    sku.policy = { ...sku.policy, ...patch };
+    if (skuId === DEMO_SKU.id && tenantId === DEMO_SKU.tenant_id) {
+      DEMO_SKU.policy = { ...DEMO_SKU.policy, ...patch };
+    }
+    return sku;
+  }
+
   resetForTests(): void {
     resetVersionsForTests();
     DEMO_SKU.landed_cost_mxn = 1000;
     DEMO_SKU.fee_ml = { ...DEMO_SKU_FEE_SNAPSHOT.fee_ml };
     DEMO_SKU.fee_amazon = { ...DEMO_SKU_FEE_SNAPSHOT.fee_amazon };
+    DEMO_SKU.policy = { ...DEMO_SKU_POLICY_SNAPSHOT };
   }
 }
 

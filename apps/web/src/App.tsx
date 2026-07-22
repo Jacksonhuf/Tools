@@ -8,6 +8,7 @@ import { OpsCenterPage } from "./components/OpsCenterPage";
 import { CopilotPage } from "./components/CopilotPage";
 import { ProductReadinessPage } from "./components/ProductReadinessPage";
 import { CrossChannelDashboardPage } from "./components/CrossChannelDashboardPage";
+import { PolicyConfigPage } from "./components/PolicyConfigPage";
 
 type Tab =
   | "pricing"
@@ -17,7 +18,8 @@ type Tab =
   | "crossChannel"
   | "ops"
   | "copilot"
-  | "readiness";
+  | "readiness"
+  | "policy";
 
 export function App() {
   const { t, i18n } = useTranslation();
@@ -97,6 +99,14 @@ export function App() {
         >
           {t("navReadiness")}
         </button>
+        <button
+          type="button"
+          className={tab === "policy" ? "active" : ""}
+          onClick={() => setTab("policy")}
+          data-testid="nav-policy"
+        >
+          {t("navPolicy")}
+        </button>
       </nav>
       {tab === "pricing" ? (
         <PricingPage />
@@ -112,6 +122,8 @@ export function App() {
         <OpsCenterPage />
       ) : tab === "readiness" ? (
         <ProductReadinessPage />
+      ) : tab === "policy" ? (
+        <PolicyConfigPage />
       ) : (
         <CopilotPage />
       )}
