@@ -20,6 +20,7 @@ export interface PriceObservationRecord {
   shipping_addon: number;
   effective_price: number;
   currency: string;
+  raw_json?: Record<string, unknown> | null;
 }
 
 export interface CompetitorRepository {

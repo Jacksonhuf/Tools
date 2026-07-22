@@ -158,6 +158,12 @@ export function OpsCenterPage() {
               <dt>{t("opsMetricsDigestQueue")}</dt>
               <dd>
                 {metrics.digest_queue.queued} / {metrics.digest_queue.total}
+                {metrics.digest_queue.dead_letter > 0 && (
+                  <>
+                    {" "}
+                    · DLQ {metrics.digest_queue.dead_letter}
+                  </>
+                )}
               </dd>
             </div>
             <div>

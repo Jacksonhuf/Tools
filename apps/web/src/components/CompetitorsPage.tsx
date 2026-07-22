@@ -26,6 +26,7 @@ export function CompetitorsPage() {
   const [listingId, setListingId] = useState(LISTINGS[0].id);
   const [items, setItems] = useState<CompetitorOfferRow[]>([]);
   const [anchorMedian, setAnchorMedian] = useState<number | null>(null);
+  const [buyBoxMxn, setBuyBoxMxn] = useState<number | null>(null);
   const [historyCount, setHistoryCount] = useState(0);
   const [ref, setRef] = useState("MLM-COMP-001");
   const [label, setLabel] = useState("");
@@ -33,6 +34,7 @@ export function CompetitorsPage() {
   const [salePrice, setSalePrice] = useState(1399);
   const [shipping, setShipping] = useState(0);
   const [includeShipping, setIncludeShipping] = useState(false);
+  const [buyBoxWinner, setBuyBoxWinner] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ingestTier, setIngestTier] = useState("T1");
@@ -46,6 +48,7 @@ export function CompetitorsPage() {
       const data = await fetchCompetitorOffers(locale, listingId);
       setItems(data.items);
       setAnchorMedian(data.anchor.median_mxn);
+      setBuyBoxMxn(data.anchor.buy_box_mxn ?? null);
       setSelectedOffer((prev) =>
         prev && data.items.some((i) => i.id === prev)
           ? prev
@@ -93,7 +96,7 @@ export function CompetitorsPage() {
         sale_price: salePrice,
         shipping_addon: shipping,
         include_shipping: includeShipping,
-        source: "web-manual",
+        buy_box_winner: buyBoxWinner,
       });
       setMessage(t("observationAdded"));
       await load();
@@ -162,7 +165,11 @@ export function CompetitorsPage() {
         <p>
           {t("anchorMedian")}:{" "}
           {anchorMedian != null ? `${anchorMedian} MXN` : "—"} ·{" "}
-          {t("historyPoints", { count: historyCount })} ({listingLabel}) ·{" "}
+          {t("buyBoxPrice")}:{" "}
+          <span data-testid="competitor-buy-box-mxn">
+            {buyBoxMxn != null ? `${buyBoxMxn} MXN` : "—"}
+          </span>{" "}
+          · {t("historyPoints", { count: historyCount })} ({listingLabel}) ·{" "}
           {t("ingestTier")}: {ingestTier}
           {staleFrozen && (
             <span className="status status-expired"> {t("staleFrozen")}</span>
@@ -262,6 +269,15 @@ export function CompetitorsPage() {
               onChange={(e) => setIncludeShipping(e.target.checked)}
             />
             {t("includeShipping")}
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={buyBoxWinner}
+              onChange={(e) => setBuyBoxWinner(e.target.checked)}
+              data-testid="buy-box-winner-checkbox"
+            />
+            {t("buyBoxWinner")}
           </label>
           <button type="button" className="primary" onClick={() => void addObs()}>
             {t("addObservation")}

@@ -20,18 +20,25 @@ export type DigestDeliveryStatus =
   | "smtp_skipped"
   | "smtp_stub_queued";
 
-export interface DigestQueuedJob {
+export type DigestQueuedJob = {
   job_id: string;
   tenant_id: string;
   locale: AppLocale;
   date: string | null;
   channels: DigestDeliveryChannel[];
-  status: "queued" | "processing" | "completed" | "failed";
+  status:
+    | "queued"
+    | "processing"
+    | "completed"
+    | "failed"
+    | "dead_letter";
+  attempts: number;
+  simulate_poison?: boolean;
   created_at: string;
   updated_at: string;
   error: string | null;
   result: DigestDispatchResult | null;
-}
+};
 
 export interface DigestDeliveryResult {
   channel: DigestDeliveryChannel;
@@ -72,11 +79,32 @@ export function getDigestQueuedJob(
   return job;
 }
 
+export function listDigestDeadLetterJobs(
+  tenantId: string,
+  limit = 20
+): DigestQueuedJob[] {
+  return queue
+    .filter((j) => j.tenant_id === tenantId && j.status === "dead_letter")
+    .slice(-limit)
+    .reverse();
+}
+
+export function digestQueueSummary(tenantId: string) {
+  const jobs = queue.filter((j) => j.tenant_id === tenantId);
+  return {
+    total: jobs.length,
+    queued: jobs.filter((j) => j.status === "queued").length,
+    failed: jobs.filter((j) => j.status === "failed").length,
+    dead_letter: jobs.filter((j) => j.status === "dead_letter").length,
+  };
+}
+
 export function enqueueDailyDigestJob(input: {
   tenant_id: string;
   locale: AppLocale;
   date?: string;
   channels?: DigestDeliveryChannel[];
+  simulate_poison?: boolean;
 }): DigestQueuedJob {
   queueSeq += 1;
   const now = new Date().toISOString();
@@ -89,6 +117,8 @@ export function enqueueDailyDigestJob(input: {
       ? input.channels
       : ["email_stub", "webhook_queue"],
     status: "queued",
+    attempts: 0,
+    simulate_poison: input.simulate_poison === true,
     created_at: now,
     updated_at: now,
     error: null,
@@ -199,8 +229,12 @@ export async function processDigestQueue(
   tenantId: string,
   limit = 5
 ): Promise<{ processed: DigestQueuedJob[] }> {
+  const maxAttempts = Number(process.env.DIGEST_MAX_ATTEMPTS ?? "3");
   const pending = queue.filter(
-    (j) => j.tenant_id === tenantId && j.status === "queued"
+    (j) =>
+      j.tenant_id === tenantId &&
+      (j.status === "queued" ||
+        (j.status === "failed" && j.attempts < maxAttempts))
   );
   const batch = pending.slice(0, limit);
   const processed: DigestQueuedJob[] = [];
@@ -209,6 +243,9 @@ export async function processDigestQueue(
     job.status = "processing";
     job.updated_at = new Date().toISOString();
     try {
+      if (job.simulate_poison) {
+        throw new Error("POISON_MESSAGE");
+      }
       const result = await runDigestDeliveries(deps, tenantId, job.locale, {
         date: job.date ?? undefined,
         channels: job.channels,
@@ -217,8 +254,14 @@ export async function processDigestQueue(
       job.result = result;
       job.error = null;
     } catch (e) {
-      job.status = "failed";
+      job.attempts += 1;
       job.error = String(e);
+      const maxAttempts = Number(process.env.DIGEST_MAX_ATTEMPTS ?? "3");
+      if (job.attempts >= maxAttempts) {
+        job.status = "dead_letter";
+      } else {
+        job.status = "failed";
+      }
     }
     job.updated_at = new Date().toISOString();
     processed.push(job);

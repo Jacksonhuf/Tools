@@ -77,6 +77,7 @@ export class MemoryCompetitorRepository implements CompetitorRepository {
       shipping_addon: input.shipping_addon ?? 0,
       effective_price: input.effective_price,
       currency: input.currency ?? "MXN",
+      raw_json: input.raw_json ?? null,
     };
     const list = observations.get(input.offer_id) ?? [];
     list.push(record);

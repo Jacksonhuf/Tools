@@ -43,7 +43,11 @@ import {
   MemoryCompetitorRepository,
 } from "./repositories/competitor-index.js";
 import { computeEffectivePrice } from "./competitor-normalize.js";
-import { buildCompetitorAnchorSummary } from "./competitor-summary.js";
+import {
+  buildCompetitorAnchorSummary,
+  mapOffersWithLatestObservations,
+} from "./competitor-summary.js";
+import { buildObservationRawJson } from "./competitor-buy-box.js";
 import { getListingIdForChannel } from "./fixtures.js";
 import {
   type RepricingRepository,
@@ -159,6 +163,7 @@ import {
 import {
   enqueueDailyDigestJob,
   listDigestQueuedJobs,
+  listDigestDeadLetterJobs,
   processDigestQueue,
   resetDigestJobQueueForTests,
 } from "./digest-job-queue.js";
@@ -291,15 +296,9 @@ export function createApp(options: CreateAppOptions = {}) {
     const ch = channel ?? "MERCADO_LIBRE";
     const listingId = getListingIdForChannel(ch);
     if (listingId) {
-      const offers = await competitors.listOffers(listingId);
-      const withLatest = await Promise.all(
-        offers.map(async (o) => {
-          const latest = await competitors.latestObservation(o.id);
-          return {
-            ...o,
-            latest_effective_mxn: latest?.effective_price ?? null,
-          };
-        })
+      const withLatest = await mapOffersWithLatestObservations(
+        competitors,
+        listingId
       );
       Object.assign(ctx, {
         competitors: {
@@ -697,16 +696,9 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!listing) {
       throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
     }
-    const offers = await competitors.listOffers(listingId);
-    const withLatest = await Promise.all(
-      offers.map(async (o) => {
-        const latest = await competitors.latestObservation(o.id);
-        return {
-          ...o,
-          latest_effective_mxn: latest?.effective_price ?? null,
-          latest_observed_at: latest?.observed_at ?? null,
-        };
-      })
+    const withLatest = await mapOffersWithLatestObservations(
+      competitors,
+      listingId
     );
     return c.json({
       listing_id: listingId,
@@ -761,6 +753,7 @@ export function createApp(options: CreateAppOptions = {}) {
       include_shipping?: boolean;
       observed_at?: string;
       source?: string;
+      buy_box_winner?: boolean;
     };
     const include_shipping = body.include_shipping ?? false;
     const effective_price = computeEffectivePrice({
@@ -780,7 +773,10 @@ export function createApp(options: CreateAppOptions = {}) {
       sale_price: body.sale_price ?? null,
       shipping_addon: body.shipping_addon ?? 0,
       effective_price,
-      raw_json: body.source ? { source: body.source } : undefined,
+      raw_json: buildObservationRawJson({
+        source: body.source,
+        buy_box_winner: body.buy_box_winner,
+      }),
     });
     await notifyObservationChange(repricing, tenantId, {
       listing_id: offer.listing_id,
@@ -1633,12 +1629,14 @@ export function createApp(options: CreateAppOptions = {}) {
     const body = (await c.req.json().catch(() => ({}))) as {
       date?: string;
       channels?: Array<"email_stub" | "webhook_queue" | "smtp_queue">;
+      simulate_poison?: boolean;
     };
     const job = enqueueDailyDigestJob({
       tenant_id: tenantId,
       locale,
       date: body.date,
       channels: body.channels,
+      simulate_poison: body.simulate_poison,
     });
     return c.json({ job });
   });
@@ -1648,6 +1646,13 @@ export function createApp(options: CreateAppOptions = {}) {
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
     return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/dead-letter", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
+    return c.json({ items: listDigestDeadLetterJobs(tenantId, limit) });
   });
 
   app.post("/api/v1/agent/digest/jobs/process", async (c) => {

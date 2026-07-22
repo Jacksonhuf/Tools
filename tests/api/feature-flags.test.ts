@@ -11,7 +11,13 @@ describe("feature flags", () => {
       headers: { ...AUTH, ...TENANT },
     });
     expect(res.status).toBe(200);
-    const json = (await res.json()) as { agent_copilot: boolean };
+    const json = (await res.json()) as {
+      agent_copilot: boolean;
+      buy_box_anchor: boolean;
+      repricing_batch_worker: boolean;
+    };
     expect(json.agent_copilot).toBe(true);
+    expect(json.buy_box_anchor).toBe(true);
+    expect(json.repricing_batch_worker).toBe(true);
   });
 });

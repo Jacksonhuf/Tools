@@ -6,7 +6,7 @@ import type { CompetitorRepository } from "./repositories/competitor-index.js";
 import type { AgentToolAuditRepository } from "./repositories/agent-audit-types.js";
 import { buildPricingContext, runSimulate } from "./pricing-service.js";
 import { buildAdjustmentBatchInput } from "./adjustment-service.js";
-import { buildCompetitorAnchorSummary } from "./competitor-summary.js";
+import { buildCompetitorAnchorSummary, mapOffersWithLatestObservations } from "./competitor-summary.js";
 import { getListingIdForChannel } from "./fixtures.js";
 
 export const AGENT_TOOL_CATALOG = [
@@ -88,15 +88,9 @@ async function buildPricingContextPayload(
   const ch = channel ?? "MERCADO_LIBRE";
   const listingId = getListingIdForChannel(ch);
   if (listingId) {
-    const offers = await competitors.listOffers(listingId);
-    const withLatest = await Promise.all(
-      offers.map(async (o) => {
-        const latest = await competitors.latestObservation(o.id);
-        return {
-          ...o,
-          latest_effective_mxn: latest?.effective_price ?? null,
-        };
-      })
+    const withLatest = await mapOffersWithLatestObservations(
+      competitors,
+      listingId
     );
     Object.assign(ctx, {
       competitors: {

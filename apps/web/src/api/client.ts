@@ -374,6 +374,7 @@ export async function fetchCompetitorOffers(locale: string, listingId: string) {
       min_mxn: number | null;
       median_mxn: number | null;
       primary_mxn: number | null;
+      buy_box_mxn: number | null;
     };
   }>;
 }
@@ -406,6 +407,7 @@ export async function addCompetitorObservation(
     shipping_addon?: number;
     include_shipping?: boolean;
     source?: string;
+    buy_box_winner?: boolean;
   }
 ) {
   const res = await fetch(`/api/v1/competitor-offers/${offerId}/observations`, {
@@ -625,7 +627,7 @@ export interface OpsMetricsSnapshot {
     publish_http_url_configured: boolean;
     listing_pull_http_url_configured: boolean;
   };
-  digest_queue: { total: number; queued: number; failed: number };
+  digest_queue: { total: number; queued: number; failed: number; dead_letter: number };
   repricing_batch_queue: {
     driver: string;
     total: number;
@@ -850,6 +852,39 @@ export async function fetchAgentReadiness(locale: string) {
     milestone: string;
     checks: Array<{ id: string; passed: boolean; detail: string }>;
   }>;
+}
+
+export interface ProductReadinessSnapshot {
+  all_accepted: boolean;
+  milestones: Array<{
+    id: string;
+    status: string;
+    summary: string;
+    loops: string;
+  }>;
+  p3: { ready: boolean };
+  p4: { ready: boolean };
+  p5: { ready: boolean };
+}
+
+export async function fetchProductReadiness(locale: string) {
+  const res = await fetch(`/api/v1/product/readiness`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`product-readiness ${res.status}`);
+  return res.json() as Promise<ProductReadinessSnapshot>;
+}
+
+export type FeatureFlagsSnapshot = Record<string, boolean | string> & {
+  generated_at: string;
+};
+
+export async function fetchFeatureFlags(locale: string) {
+  const res = await fetch(`/api/v1/feature-flags`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`feature-flags ${res.status}`);
+  return res.json() as Promise<FeatureFlagsSnapshot>;
 }
 
 export async function enqueueDailyDigest(locale: string) {

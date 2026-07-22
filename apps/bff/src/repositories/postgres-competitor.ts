@@ -20,6 +20,14 @@ function mapOffer(row: Record<string, unknown>): CompetitorOfferRecord {
 }
 
 function mapObs(row: Record<string, unknown>): PriceObservationRecord {
+  const raw = row.raw_json;
+  let raw_json: Record<string, unknown> | null = null;
+  if (raw != null) {
+    raw_json =
+      typeof raw === "string"
+        ? (JSON.parse(raw) as Record<string, unknown>)
+        : (raw as Record<string, unknown>);
+  }
   return {
     id: row.id as string,
     offer_id: row.offer_id as string,
@@ -29,6 +37,7 @@ function mapObs(row: Record<string, unknown>): PriceObservationRecord {
     shipping_addon: Number(row.shipping_addon),
     effective_price: Number(row.effective_price),
     currency: row.currency as string,
+    raw_json,
   };
 }
 
@@ -117,7 +126,7 @@ export class PostgresCompetitorRepository implements CompetitorRepository {
       `INSERT INTO price_observations
        (id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency, raw_json)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency`,
+       RETURNING id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency, raw_json`,
       [
         id,
         input.offer_id,
@@ -137,7 +146,7 @@ export class PostgresCompetitorRepository implements CompetitorRepository {
     offerId: string
   ): Promise<PriceObservationRecord | undefined> {
     const res = await this.pool.query(
-      `SELECT id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency
+      `SELECT id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency, raw_json
        FROM price_observations WHERE offer_id = $1
        ORDER BY observed_at DESC LIMIT 1`,
       [offerId]
@@ -152,7 +161,7 @@ export class PostgresCompetitorRepository implements CompetitorRepository {
   ): Promise<PriceObservationRecord[]> {
     const res = await this.pool.query(
       `SELECT o.id, o.offer_id, o.observed_at, o.list_price, o.sale_price,
-              o.shipping_addon, o.effective_price, o.currency
+              o.shipping_addon, o.effective_price, o.currency, o.raw_json
        FROM price_observations o
        JOIN competitor_offers c ON c.id = o.offer_id
        WHERE c.listing_id = $1 AND o.observed_at >= $2
