@@ -115,6 +115,7 @@ import {
   createChannelPublishAdapter,
 } from "./channel-adapter-factory.js";
 import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
+import { opsMetricsToCsv } from "./ops-metrics-csv.js";
 import { recordPricingSimulate } from "./pricing-nfr-metrics.js";
 import {
   applyCategoryDefaults,
@@ -179,7 +180,8 @@ import { priceHistoryToCsv } from "./price-history-csv.js";
 import { repricingEventsToCsv } from "./repricing-events-csv.js";
 import { categoryRuleTemplatesToCsv } from "./category-rule-templates-csv.js";
 import { competitorOffersToCsv } from "./competitor-offers-csv.js";
-import { opsMetricsToCsv } from "./ops-metrics-csv.js";
+import { agentToolsToCsv } from "./agent-tools-csv.js";
+import { listingSyncOpsStatusToCsv } from "./listing-sync-ops-status-csv.js";
 import { sharedFeeTemplatesToCsv } from "./shared-fee-templates-csv.js";
 import { shopsToCsv } from "./shops-csv.js";
 import { skusCatalogToCsv } from "./skus-catalog-csv.js";
@@ -1303,6 +1305,7 @@ export function createApp(options: CreateAppOptions = {}) {
       range?: string;
       batch_id?: string;
       limit?: number;
+      sample?: number;
       date?: string;
     };
     const kind = body.kind ?? "version_backup";
@@ -1517,6 +1520,24 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "ops_metrics_csv") {
       const snapshot = await buildOpsMetricsSnapshot(catalog, tenantId);
       content = opsMetricsToCsv(snapshot, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "listing_sync_ops_status_csv") {
+      const sample = Math.min(100, Math.max(1, Number(body.sample ?? 50) || 50));
+      const status = buildListingSyncOpsStatus(tenantId, sample);
+      content = listingSyncOpsStatusToCsv(status, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "listing_sync_jobs_listing_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listListingSyncJobs(tenantId, listingId, limit);
+      content = listingSyncJobsToCsv(jobs, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "agent_tools_csv") {
+      content = agentToolsToCsv(listAgentTools(), new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2678,6 +2699,19 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ category_id: sku.category_id, template });
   });
 
+  app.get("/api/v1/reconciliation-alerts/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const items = await reconciliationAlerts.listAlerts(tenantId);
+    const csv = reconciliationAlertsToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="reconciliation-alerts.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/reconciliation-alerts", async (c) => {
     const tenantId = c.get("tenantId");
     const items = await reconciliationAlerts.listAlerts(tenantId);
@@ -2712,6 +2746,23 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("sample") ?? "50") || 50)
     );
     return c.json(buildListingSyncOpsStatus(tenantId, sample));
+  });
+
+  app.get("/api/v1/ops/listing-sync/status/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sample = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("sample") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const status = buildListingSyncOpsStatus(tenantId, sample);
+    const csv = listingSyncOpsStatusToCsv(status, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-sync-ops-status.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/ops/listing-sync/jobs/export", async (c) => {
@@ -2756,6 +2807,28 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({
       schedule: getListingSyncSchedule(tenantId),
       runs: result.runs,
+    });
+  });
+
+  app.get("/api/v1/listings/:listingId/sync/jobs/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listListingSyncJobs(tenantId, listingId, limit);
+    const csv = listingSyncJobsToCsv(jobs, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-sync-jobs-${listingId}.csv"`,
+      },
     });
   });
 
@@ -2840,6 +2913,17 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/agent/tools/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = agentToolsToCsv(listAgentTools(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-tools.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/tools", async (c) => {

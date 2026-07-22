@@ -5,6 +5,7 @@ import {
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
   downloadShopsCsv,
+  downloadListingSyncJobsForListingCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -181,6 +182,18 @@ export function ChannelsPage() {
           }
         >
           {t("shopsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channel-listing-sync-export"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-ml-001"
+            ).then(() => setMessage(t("channelListingSyncExportDone")))
+          }
+        >
+          {t("channelListingSyncExportCsv")}
         </button>
       </div>
 

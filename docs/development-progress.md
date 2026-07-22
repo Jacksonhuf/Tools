@@ -1092,6 +1092,34 @@
 | **实现** | 竞品 Offer、共享费用模板、运维指标 CSV 导出 |
 | **测试** | `loop-126-129.test.ts` |
 
+### Loop 130 — 对账告警直链 CSV（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reconciliation-alerts/export`（复用 `reconciliationAlertsToCsv`） |
+| **测试** | `loop-130-133.test.ts` |
+
+### Loop 131 — Listing 同步运维状态 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `listing-sync-ops-status-csv.ts`；`GET /ops/listing-sync/status/export`；`listing_sync_ops_status_csv` |
+| **测试** | `loop-130-133.test.ts` |
+
+### Loop 132 — 单 Listing 同步作业 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /listings/:id/sync/jobs/export`；`listing_sync_jobs_listing_csv` |
+| **测试** | `loop-130-133.test.ts` |
+
+### Loop 133 — Ops/通道/Copilot Web（P3/P1/P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 对账直链、同步状态、Listing 同步作业、Agent 工具目录导出 |
+| **测试** | `loop-130-133.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1168,3 +1196,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.6 | 2026-07-22 | Loop 118–121 price history/repricing events/adjustment index CSV + Web |
 | v6.7 | 2026-07-22 | Loop 122–125 SKU/shops/category templates CSV + Web |
 | v6.8 | 2026-07-22 | Loop 126–129 competitor offers/fee templates/ops metrics CSV + Web |
+| v6.9 | 2026-07-22 | Loop 130–133 reconciliation/sync status/listing sync/agent tools CSV + Web |

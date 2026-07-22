@@ -16,6 +16,8 @@ import {
   fetchListingSyncJobs,
   fetchListingSyncOpsStatus,
   downloadListingSyncJobsCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadReconciliationAlertsDirectCsv,
   downloadReconciliationAlertsExport,
   downloadRepricingBatchJobsCsv,
   downloadRepricingQueueCsv,
@@ -389,6 +391,17 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-listing-sync-status-export"
+          onClick={() =>
+            void downloadListingSyncOpsStatusCsv(locale).then(() =>
+              setMessage(t("opsListingSyncStatusExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncStatusExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-reconciliation-export"
           onClick={() =>
             void downloadReconciliationAlertsExport(locale).then(() =>
@@ -397,6 +410,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsReconciliationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-direct-export"
+          onClick={() =>
+            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+              setMessage(t("opsReconciliationDirectExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationDirectExportCsv")}
         </button>
         <button
           type="button"
