@@ -375,6 +375,14 @@ paths:
   /api/v1/listings/{listingId}/sync/jobs:
     get:
       summary: Recent listing sync jobs for listing
+  /api/v1/ops/listing-sync/schedule:
+    get:
+      summary: Listing channel sync cron config (P1-E2-04 stub)
+    put:
+      summary: Update listing sync schedule
+  /api/v1/listings/{listingId}/competitors/curve:
+    get:
+      summary: Daily competitor effective price curve (P2-E1-03)
   /api/v1/exports:
     post:
       summary: Create signed export artifact (P0-E1-06)

@@ -6,6 +6,10 @@ const AUTH = { Authorization: "Bearer dev-token" };
 const TENANT = { "X-Tenant-Id": "tenant-demo" };
 const JSON_HEADERS = { ...AUTH, ...TENANT, "Content-Type": "application/json" };
 
+function recentIso(minutesAgo = 1): string {
+  return new Date(Date.now() - minutesAgo * 60_000).toISOString();
+}
+
 async function seedOffer(app: ReturnType<typeof createTestApp>["app"]) {
   const create = await app.request(
     "/api/v1/listings/listing-ml-001/competitors",
@@ -46,8 +50,8 @@ describe("TC-INT-EVT-001 CompetitorPriceChanged enqueue", () => {
   it("flushes debounced change into repricing event", async () => {
     const { app } = createTestApp();
     const offer = await seedOffer(app);
-    await addObs(app, offer.id, 1500, "2026-07-21T08:00:00.000Z");
-    await addObs(app, offer.id, 1400, "2026-07-21T08:01:00.000Z");
+    await addObs(app, offer.id, 1500, recentIso(3));
+    await addObs(app, offer.id, 1400, recentIso(2));
     const flush = await app.request(
       "/api/v1/listings/listing-ml-001/repricing-events/flush",
       { method: "POST", headers: JSON_HEADERS }
@@ -80,7 +84,7 @@ describe("TC-INT-EVT-002 debounce merges ticks", () => {
         app,
         offer.id,
         1500 - i,
-        `2026-07-21T09:0${i}:00.000Z`
+        recentIso(10 - i)
       );
     }
     const flush = await app.request(
@@ -122,7 +126,7 @@ describe("TC-INT-EVT-003 suggested version on process", () => {
       body: JSON.stringify({ explicit_price_mxn: 1600 }),
     });
     const offer = await seedOffer(app);
-    await addObs(app, offer.id, 1400, "2026-07-21T10:00:00.000Z");
+    await addObs(app, offer.id, 1400, recentIso(1));
     const flush = await app.request(
       "/api/v1/listings/listing-ml-001/repricing-events/flush",
       { method: "POST", headers: JSON_HEADERS }
@@ -159,7 +163,7 @@ describe("TC-INT-EVT-004 process idempotency", () => {
     const { app, catalog } = createTestApp();
     resetDebounceForTests();
     const offer = await seedOffer(app);
-    await addObs(app, offer.id, 1300, "2026-07-21T11:00:00.000Z");
+    await addObs(app, offer.id, 1300, recentIso(1));
     const flush = await app.request(
       "/api/v1/listings/listing-ml-001/repricing-events/flush",
       { method: "POST", headers: JSON_HEADERS }

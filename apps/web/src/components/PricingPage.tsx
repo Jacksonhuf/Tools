@@ -9,6 +9,7 @@ import {
   fetchPricingContext,
   fetchSkus,
   patchSkuLandedCost,
+  downloadWaterfallExportCsv,
   publishChannelPrice,
   publishPrice,
   simulatePricing,
@@ -242,6 +243,21 @@ export function PricingPage() {
       </section>
 
       <section className="card controls">
+        <button
+          type="button"
+          data-testid="pricing-waterfall-export"
+          onClick={() =>
+            void downloadWaterfallExportCsv(locale, {
+              channel: "MERCADO_LIBRE",
+              pricing_mode: mode,
+              target_margin_pct: mode === "cost" ? margin : undefined,
+              competitor_price_mxn:
+                mode === "competitive_with_floor" ? competitorMl : undefined,
+            }).then(() => setMessage(t("waterfallExportDone")))
+          }
+        >
+          {t("waterfallExportCsv")}
+        </button>
         <label>
           {t("pricingMode")}
           <select

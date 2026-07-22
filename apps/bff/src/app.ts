@@ -156,6 +156,11 @@ import {
   listListingSyncJobs,
   runListingChannelSync,
 } from "./listing-sync-service.js";
+import {
+  getListingSyncSchedule,
+  upsertListingSyncSchedule,
+} from "./listing-sync-schedule.js";
+import { buildCompetitorCurve } from "./competitor-curve.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
@@ -1097,7 +1102,14 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.post("/api/v1/exports", async (c) => {
     const tenantId = c.get("tenantId");
-    const body = (await c.req.json()) as { kind?: string; sku_id?: string };
+    const body = (await c.req.json()) as {
+      kind?: string;
+      sku_id?: string;
+      channel?: "MERCADO_LIBRE" | "AMAZON_MX";
+      pricing_mode?: string;
+      target_margin_pct?: number;
+      competitor_price_mxn?: number;
+    };
     const kind = body.kind ?? "version_backup";
     let content = "";
     let content_type = "application/json";
@@ -1105,9 +1117,26 @@ export function createApp(options: CreateAppOptions = {}) {
       const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
       content = JSON.stringify(snapshot, null, 2);
     } else if (kind === "pricing_snapshot_csv") {
-      const skuId = (body as { sku_id?: string }).sku_id ?? "demo-sku-001";
+      const skuId = body.sku_id ?? "demo-sku-001";
       const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
       content = pricingSnapshotToCsv(rows, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "waterfall_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      content = buildWaterfallExportCsv(
+        sku,
+        {
+          channel: body.channel ?? "MERCADO_LIBRE",
+          pricing_mode: body.pricing_mode ?? "cost",
+          target_margin_pct: body.target_margin_pct,
+          competitor_price_mxn: body.competitor_price_mxn,
+        },
+        c.get("locale")
+      );
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -1425,6 +1454,26 @@ export function createApp(options: CreateAppOptions = {}) {
       range,
       observations,
     });
+  });
+
+  app.get("/api/v1/listings/:listingId/competitors/curve", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const range = c.req.query("range") ?? "7d";
+    const days = range === "30d" ? 30 : 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const observations = await competitors.listObservations(listingId, since);
+    const points = buildCompetitorCurve(
+      observations.map((o) => ({
+        observed_at: o.observed_at,
+        effective_price: o.effective_price,
+      }))
+    );
+    return c.json({ listing_id: listingId, range, points });
   });
 
   app.get("/api/v1/listings/:listingId/ingest/status", async (c) => {
@@ -2059,6 +2108,20 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const items = await reconciliationAlerts.listAlerts(tenantId);
     return c.json({ items });
+  });
+
+  app.get("/api/v1/ops/listing-sync/schedule", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json(getListingSyncSchedule(tenantId));
+  });
+
+  app.put("/api/v1/ops/listing-sync/schedule", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      enabled?: boolean;
+      cron_expression?: string;
+    };
+    return c.json(upsertListingSyncSchedule(tenantId, body));
   });
 
   app.get("/api/v1/listings/:listingId/sync/jobs", async (c) => {

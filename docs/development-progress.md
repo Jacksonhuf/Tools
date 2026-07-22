@@ -756,6 +756,34 @@
 | **实现** | `PolicyConfigPage`；`POST/GET listings/:id/sync`；通道页同步按钮 |
 | **测试** | `loop-78-81.test.ts` |
 
+### Loop 82 — 瀑布导出对象存储（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /exports` kind `waterfall_csv` |
+| **测试** | `loop-82-85.test.ts` |
+
+### Loop 83 — Listing 定时同步配置（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET/PUT /ops/listing-sync/schedule` |
+| **测试** | `loop-82-85.test.ts` |
+
+### Loop 84 — 竞品价格曲线 API（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /listings/:id/competitors/curve`；`competitor-curve.ts` |
+| **测试** | `loop-82-85.test.ts`、`competitor-curve.test.ts` |
+
+### Loop 85 — Ops/定价/竞品 Web（P2-E3-06 部分）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Ops Cost Sheet CSV；定价页瀑布导出；竞品曲线天数展示 |
+| **测试** | `loop-82-85.test.ts` |
+
 ---
 
 ## 本地命令
@@ -820,3 +848,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.4 | 2026-07-22 | Loop 70–73 HS tariff, adjustment preview/import, Ops UI |
 | v5.5 | 2026-07-22 | Loop 74–77 cost sheets, landed from sheet, CSV batch apply |
 | v5.6 | 2026-07-22 | Loop 78–81 waterfall export, policy patch, listing sync jobs |
+| v5.7 | 2026-07-22 | Loop 82–85 waterfall export store, sync schedule, competitor curve |
