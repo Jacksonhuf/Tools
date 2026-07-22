@@ -84,6 +84,12 @@ import {
   runRepricingBatchForTenant,
 } from "./repricing-batch-shard.js";
 import {
+  enqueueRepricingBatchJob,
+  getRepricingBatchJob,
+  listRepricingBatchJobs,
+  processRepricingBatchQueue,
+} from "./repricing-batch-job-queue.js";
+import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
   MemoryRepricingActivityRepository,
@@ -1281,6 +1287,81 @@ export function createApp(options: CreateAppOptions = {}) {
       skuIds: body.sku_ids,
     });
     return c.json(result);
+  });
+
+  app.post("/api/v1/repricing-batch/jobs/enqueue", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      scope?: "tenant" | "sku";
+      sku_id?: string;
+      shard_total?: number;
+      sku_ids?: string[];
+    };
+    const scope = body.scope ?? "tenant";
+    const shardTotal = body.shard_total ?? 2;
+    if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+    }
+    if (scope === "sku") {
+      if (!body.sku_id?.trim()) {
+        throw new HTTPException(400, { message: "SKU_ID_REQUIRED" });
+      }
+      const sku = await catalog.getSku(tenantId, body.sku_id);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+    }
+    try {
+      const job = enqueueRepricingBatchJob({
+        tenant_id: tenantId,
+        scope,
+        sku_id: body.sku_id,
+        shard_total: shardTotal,
+        sku_ids: body.sku_ids,
+      });
+      return c.json({ job }, 201);
+    } catch (e) {
+      if (String(e).includes("SKU_ID_REQUIRED")) {
+        throw new HTTPException(400, { message: "SKU_ID_REQUIRED" });
+      }
+      throw e;
+    }
+  });
+
+  app.get("/api/v1/repricing-batch/jobs", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limitRaw = c.req.query("limit");
+    const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
+    return c.json({ items: listRepricingBatchJobs(tenantId, limit) });
+  });
+
+  app.get("/api/v1/repricing-batch/jobs/:jobId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const job = getRepricingBatchJob(tenantId, c.req.param("jobId"));
+    if (!job) {
+      throw new HTTPException(404, { message: "JOB_NOT_FOUND" });
+    }
+    return c.json(job);
+  });
+
+  app.post("/api/v1/repricing-batch/jobs/process", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as { limit?: number };
+    const limit =
+      body.limit != null ? Math.min(20, Math.max(1, body.limit)) : 5;
+    const out = await processRepricingBatchQueue(
+      {
+        catalog,
+        competitors,
+        repricing,
+        dynamicRules,
+        listingHealth,
+        repricingActivity,
+      },
+      tenantId,
+      limit
+    );
+    return c.json(out);
   });
 
   app.get("/api/v1/reconciliation-alerts", async (c) => {

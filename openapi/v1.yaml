@@ -257,6 +257,18 @@ paths:
   /api/v1/repricing-batch/recompute-all:
     post:
       summary: Run all shards for tenant SKUs (P5-05 Loop 45)
+  /api/v1/repricing-batch/jobs/enqueue:
+    post:
+      summary: Enqueue repricing batch job (P5-05 Loop 48)
+  /api/v1/repricing-batch/jobs:
+    get:
+      summary: List repricing batch jobs
+  /api/v1/repricing-batch/jobs/{jobId}:
+    get:
+      summary: Get repricing batch job by id
+  /api/v1/repricing-batch/jobs/process:
+    post:
+      summary: Process queued repricing batch jobs
   /api/v1/reconciliation-alerts:
     get:
       summary: Open channel vs active price alerts (TC-INT-RECON-001)

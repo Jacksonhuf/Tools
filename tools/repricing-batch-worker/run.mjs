@@ -68,16 +68,35 @@ async function runOrchestrated() {
   });
 }
 
+async function runQueued() {
+  const scope = skuId ? "sku" : "tenant";
+  const body = { scope, shard_total: shardTotal };
+  if (skuId) body.sku_id = skuId;
+  const { job } = await request("/api/v1/repricing-batch/jobs/enqueue", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  const out = await request("/api/v1/repricing-batch/jobs/process", {
+    method: "POST",
+    body: JSON.stringify({ limit: 5 }),
+  });
+  return { mode: "queue", job_id: job.job_id, ...out };
+}
+
 async function main() {
   const mode = (process.env.REPRICING_WORKER_MODE ?? "orchestrated").toLowerCase();
   if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
     console.error("REPRICING_SHARD_TOTAL must be 1..64");
     process.exit(1);
   }
-  const summary =
-    mode === "per_shard" && skuId
-      ? await runSkuScoped()
-      : await runOrchestrated();
+  let summary;
+  if (mode === "queue") {
+    summary = await runQueued();
+  } else if (mode === "per_shard" && skuId) {
+    summary = await runSkuScoped();
+  } else {
+    summary = await runOrchestrated();
+  }
   console.log(JSON.stringify(summary, null, 2));
 }
 

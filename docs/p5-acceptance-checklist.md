@@ -8,7 +8,7 @@
 | P5-02 | 品类规则模板继承 | 未做 |
 | P5-03 | 报表导出 | 部分（Loop 38：定价快照 CSV/JSON） |
 | P5-04 | 多租户模板共享 | 部分（`X-Tenant-Id` 隔离） |
-| P5-05 | 批量重算分片 | 部分（Loop 44–45：分片 API + worker + tenant 编排） |
+| P5-05 | 批量重算分片 | 部分（Loop 44–48：分片 + worker + 内存 job 队列） |
 | P5-06 | ci-nfr-weekly | 部分（Loop 42：`ci-nfr-weekly.yml`） |
 
 已交付相关能力：
