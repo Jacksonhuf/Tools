@@ -67,6 +67,15 @@ export async function buildTenantRepricingQueue(
   return rows;
 }
 
+export async function buildSkuRepricingQueueRows(
+  catalog: CatalogRepository,
+  tenantId: string,
+  skuId: string
+): Promise<TenantRepricingQueueRow[]> {
+  const { items } = await listRepricingQueue(catalog, tenantId, skuId);
+  return items.map((item) => ({ ...item, sku_id: skuId }));
+}
+
 export async function promoteVersionsToPending(
   catalog: CatalogRepository,
   versionIds: string[]

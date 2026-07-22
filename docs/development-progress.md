@@ -1288,6 +1288,34 @@
 | **实现** | `dynamic-repricing-rule-view.ts` + `dynamic-repricing-rule-csv.ts`；`GET /listings/:id/dynamic-repricing-rule/export`；`dynamic_repricing_rule_csv`；定价/Copilot/竞品页导出按钮 |
 | **测试** | `loop-154-157.test.ts`、`loop-154-157-csv.test.ts` |
 
+### Loop 158 — SKU 重算队列 CSV（P3/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `buildSkuRepricingQueueRows`；`GET /skus/:skuId/repricing-queue/export`；`repricing_queue_sku_csv` |
+| **测试** | `loop-158-161.test.ts` |
+
+### Loop 159 — 重算批分片计划 CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `repricing-batch-shard-plan-csv.ts`；`GET .../repricing-batch/shard-plan/export`；`repricing_batch_shard_plan_csv` |
+| **测试** | `loop-158-161.test.ts`、`loop-158-161-csv.test.ts` |
+
+### Loop 160 — SKU 类目规则模板 CSV（P2-E3-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `sku-category-rule-template-csv.ts`；`GET /skus/:skuId/category-rule-template/export`；`sku_category_rule_template_csv` |
+| **测试** | `loop-158-161.test.ts`、`loop-158-161-csv.test.ts` |
+
+### Loop 161 — 对账报表专用导出 + Web（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reports/reconciliation-alerts/export`；指挥中心 SKU 队列/分片计划/对账报表导出；策略页 SKU 类目模板导出 |
+| **测试** | `loop-158-161.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1371,3 +1399,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.3 | 2026-07-22 | Loop 146–149 auth, sandbox status, digest DLQ summary CSV + Web |
 | v7.4 | 2026-07-22 | Loop 150–153 listing sync schedule, milestones, approval policy, workers summary CSV + Web |
 | v7.5 | 2026-07-22 | Loop 154–157 pricing snapshot export path, cross-channel guard, digest schedule, dynamic rule CSV + Web |
+| v7.6 | 2026-07-22 | Loop 158–161 SKU repricing queue, shard plan, category template, reconciliation report export + Web |

@@ -20,9 +20,12 @@ import {
   downloadListingSyncScheduleCsv,
   downloadReconciliationAlertsDirectCsv,
   downloadReconciliationAlertsExport,
+  downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsCsv,
   downloadRepricingBatchJobsSummaryCsv,
+  downloadRepricingBatchShardPlanCsv,
   downloadRepricingQueueCsv,
+  downloadSkuRepricingQueueCsv,
   downloadWorkerHeartbeatsCsv,
   downloadOpsWorkersStatusSummaryCsv,
   downloadOpsMetricsCsv,
@@ -452,6 +455,17 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("opsReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-repricing-batch-export"
           onClick={() =>
             void downloadRepricingBatchJobsCsv(locale).then(() =>
@@ -460,6 +474,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingBatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("opsRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchShardPlanExportCsv")}
         </button>
         <button
           type="button"
@@ -671,6 +696,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingQueueExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-queue-sku-export"
+          onClick={() =>
+            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsRepricingQueueSkuExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingQueueSkuExportCsv")}
         </button>
         <table className="batch-table" data-testid="repricing-queue-table">
           <thead>

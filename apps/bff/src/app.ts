@@ -81,6 +81,7 @@ import {
   listRepricingQueue,
   promoteVersionsToPending,
   buildTenantRepricingQueue,
+  buildSkuRepricingQueueRows,
 } from "./repricing-queue-service.js";
 import { repricingQueueToCsv } from "./repricing-queue-csv.js";
 import {
@@ -89,6 +90,7 @@ import {
   runRepricingBatchAllShards,
   runRepricingBatchForTenant,
 } from "./repricing-batch-shard.js";
+import { repricingBatchShardPlanToCsv } from "./repricing-batch-shard-plan-csv.js";
 import {
   enqueueRepricingBatchJob,
   getRepricingBatchJob,
@@ -123,6 +125,7 @@ import {
   getCategoryRuleTemplate,
   listCategoryRuleTemplates,
 } from "./category-rule-template.js";
+import { skuCategoryRuleTemplateToCsv } from "./sku-category-rule-template-csv.js";
 import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
 import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
@@ -1403,6 +1406,7 @@ export function createApp(options: CreateAppOptions = {}) {
       limit?: number;
       sample?: number;
       date?: string;
+      shard_total?: number;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1781,6 +1785,45 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       content = dynamicRepricingRuleToCsv(view, new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "repricing_queue_sku_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const rows = await buildSkuRepricingQueueRows(catalog, tenantId, skuId);
+      content = repricingQueueToCsv(rows, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "repricing_batch_shard_plan_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const shardTotal = Math.min(
+        64,
+        Math.max(1, Number(body.shard_total ?? 2) || 2)
+      );
+      const plan = planRepricingShards(tenantId, skuId, shardTotal);
+      content = repricingBatchShardPlanToCsv(plan, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "sku_category_rule_template_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const categoryId = sku.category_id ?? null;
+      const template = categoryId
+        ? getCategoryRuleTemplate(tenantId, categoryId)
+        : undefined;
+      content = skuCategoryRuleTemplateToCsv(
+        skuId,
+        categoryId,
+        template ?? null,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1927,6 +1970,19 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json({ exported_at: exportedAt, items });
+  });
+
+  app.get("/api/v1/reports/reconciliation-alerts/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const items = await reconciliationAlerts.listAlerts(tenantId);
+    const csv = reconciliationAlertsToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="reconciliation-alerts.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/channels/sandbox/events/export", async (c) => {
@@ -2698,6 +2754,27 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
+  app.get("/api/v1/skus/:skuId/repricing-queue/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    try {
+      const rows = await buildSkuRepricingQueueRows(catalog, tenantId, skuId);
+      const exportedAt = new Date().toISOString();
+      const csv = repricingQueueToCsv(rows, exportedAt);
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="repricing-queue-${skuId}.csv"`,
+        },
+      });
+    } catch (e) {
+      if (String(e).includes("SKU_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
   app.get("/api/v1/skus/:skuId/repricing-queue", async (c) => {
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
@@ -2732,6 +2809,29 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const result = await promoteVersionsToPending(catalog, body.version_ids);
     return c.json(result);
+  });
+
+  app.get("/api/v1/skus/:skuId/repricing-batch/shard-plan/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const shardTotalRaw = c.req.query("shard_total") ?? "2";
+    const shardTotal = Number.parseInt(shardTotalRaw, 10);
+    if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
+      throw new HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+    }
+    const exportedAt = new Date().toISOString();
+    const plan = planRepricingShards(tenantId, skuId, shardTotal);
+    const csv = repricingBatchShardPlanToCsv(plan, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-batch-shard-plan-${skuId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/skus/:skuId/repricing-batch/shard-plan", async (c) => {
@@ -3028,6 +3128,32 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "SKU_OR_TEMPLATE_NOT_FOUND" });
     }
     return c.json(result);
+  });
+
+  app.get("/api/v1/skus/:skuId/category-rule-template/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const categoryId = sku.category_id ?? null;
+    const template = categoryId
+      ? getCategoryRuleTemplate(tenantId, categoryId)
+      : undefined;
+    const exportedAt = new Date().toISOString();
+    const csv = skuCategoryRuleTemplateToCsv(
+      skuId,
+      categoryId,
+      template ?? null,
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="sku-category-rule-template-${skuId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/skus/:skuId/category-rule-template", async (c) => {
