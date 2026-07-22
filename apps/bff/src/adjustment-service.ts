@@ -4,8 +4,10 @@ import type {
   AdjustmentRepository,
   AdjustmentStatus,
 } from "./repositories/adjustment-types.js";
-
-const APPROVAL_DROP_PCT = Number(process.env.APPROVAL_DROP_PCT ?? "5");
+import {
+  getAdjustmentApprovalPolicy,
+  impliedMarginBelowTarget,
+} from "./adjustment-approval-policy.js";
 
 export function computeDropPct(
   fromPrice: number | null,
@@ -33,6 +35,7 @@ export async function buildAdjustmentBatchInput(
   }> = [];
 
   let maxDrop = 0;
+  let marginBelowTarget = false;
 
   for (const item of body.items) {
     const listing = await catalog.getListing(tenantId, item.listing_id);
@@ -60,6 +63,20 @@ export async function buildAdjustmentBatchInput(
     }
     const drop = computeDropPct(from_price_mxn, item.explicit_price_mxn);
     maxDrop = Math.max(maxDrop, drop);
+    if (
+      from_price_mxn !== null &&
+      item.explicit_price_mxn < from_price_mxn &&
+      impliedMarginBelowTarget({
+        landed_cost_mxn: sku.landed_cost_mxn,
+        publish_price_mxn: item.explicit_price_mxn,
+        fee_template: fee,
+        tax_strategy: sku.policy.tax_strategy,
+        iva_rate: sku.policy.iva_rate,
+        target_margin_pct: sku.policy.target_margin_pct,
+      })
+    ) {
+      marginBelowTarget = true;
+    }
     prepared.push({
       listing_id: item.listing_id,
       explicit_price_mxn: item.explicit_price_mxn,
@@ -69,10 +86,28 @@ export async function buildAdjustmentBatchInput(
     });
   }
 
-  const status: AdjustmentStatus =
-    maxDrop > APPROVAL_DROP_PCT ? "pending_approval" : "draft";
+  const policy = getAdjustmentApprovalPolicy();
+  const approval_triggers: string[] = [];
+  if (maxDrop > policy.max_drop_pct_without_approval) {
+    approval_triggers.push("DROP_EXCEEDS_THRESHOLD");
+  }
+  if (
+    marginBelowTarget &&
+    policy.require_approval_below_target_margin
+  ) {
+    approval_triggers.push("MARGIN_BELOW_TARGET");
+  }
 
-  return { status, reason_code: body.reason_code, prepared, maxDrop };
+  const status: AdjustmentStatus =
+    approval_triggers.length > 0 ? "pending_approval" : "draft";
+
+  return {
+    status,
+    reason_code: body.reason_code,
+    prepared,
+    maxDrop,
+    approval_triggers,
+  };
 }
 
 export async function applyAdjustmentBatch(

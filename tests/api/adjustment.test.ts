@@ -61,7 +61,7 @@ describe("TC-API-ADJ-001 adjustment batch draft", () => {
       headers: JSON_HEADERS,
       body: JSON.stringify({
         reason_code: "promo",
-        items: [{ listing_id: "listing-ml-001", explicit_price_mxn: 1550 }],
+        items: [{ listing_id: "listing-ml-001", explicit_price_mxn: 1600 }],
       }),
     });
     expect(res.status).toBe(201);
@@ -91,6 +91,26 @@ describe("TC-API-ADJ-002 approval threshold", () => {
       { method: "POST", headers: JSON_HEADERS }
     );
     expect(applyRes.status).toBe(422);
+  });
+
+  it("requires approval when margin below target (small drop)", async () => {
+    const { app, catalog, adjustments } = createTestApp();
+    catalog.resetForTests?.();
+    adjustments.resetForTests?.();
+    await seedActivePrice(app, 1600);
+    const createRes = await app.request("/api/v1/adjustment-batches", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        items: [{ listing_id: "listing-ml-001", explicit_price_mxn: 1550 }],
+      }),
+    });
+    const batch = (await createRes.json()) as {
+      status: string;
+      approval_triggers?: string[];
+    };
+    expect(batch.status).toBe("pending_approval");
+    expect(batch.approval_triggers).toContain("MARGIN_BELOW_TARGET");
   });
 });
 
