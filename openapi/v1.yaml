@@ -322,6 +322,27 @@ paths:
   /api/v1/imports/landed-cost:
     post:
       summary: Import SKU landed costs from CSV (P0-E5-03)
+  /api/v1/fx-rates:
+    get:
+      summary: Tenant FX rate table (P0-E2-03)
+  /api/v1/fx-rates/{base}/{quote}:
+    put:
+      summary: Upsert FX rate row
+  /api/v1/skus/{skuId}/landed-cost/from-fx:
+    post:
+      summary: Compute landed cost from COGS + FX (TC-UNIT-COST-001)
+  /api/v1/exports:
+    post:
+      summary: Create signed export artifact (P0-E1-06)
+  /api/v1/exports/{exportId}:
+    get:
+      summary: Download export with token query param
+  /api/v1/adjustment-batches/approval-policy:
+    get:
+      summary: Adjustment approval thresholds (P0-E5-02)
+  /api/v1/ops/version-backup/validate:
+    post:
+      summary: Validate version backup JSON (X-05 drill)
   /api/v1/ops/version-backup:
     get:
       summary: Tenant price version backup snapshot (X-05)

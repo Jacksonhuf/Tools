@@ -644,6 +644,34 @@
 | **实现** | `tools/async-worker/run.mjs`；`npm run dev:async-worker`；heartbeat + `GET /ops/workers/status` |
 | **测试** | TC-API-WKR-001 |
 
+### Loop 66 — 汇率表与 FX Landed Cost（P0-E2-03 / TC-UNIT-COST-001）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET/PUT /fx-rates`；`POST /skus/:id/landed-cost/from-fx`（`computeLandedCost`） |
+| **测试** | `loop-66-69.test.ts`、`landed-cost-fx.test.ts` |
+
+### Loop 67 — 调价审批策略增强（P0-E5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `MARGIN_BELOW_TARGET` 触发 `pending_approval`；`GET /adjustment-batches/approval-policy`；创建批次返回 `approval_triggers` |
+| **测试** | `loop-66-69.test.ts` |
+
+### Loop 68 — 对象存储导出占位（P0-E1-06）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /exports` + 签名 token；`GET /exports/:id?token=` 下载 |
+| **测试** | `loop-66-69.test.ts` |
+
+### Loop 69 — Version 备份演练校验（X-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /ops/version-backup/validate`；`version-backup-validate.ts` |
+| **测试** | `loop-66-69.test.ts` |
+
 ---
 
 ## 本地命令

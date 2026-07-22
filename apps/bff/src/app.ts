@@ -125,6 +125,14 @@ import {
   parseLandedCostCsv,
 } from "./landed-cost-import.js";
 import { buildVersionBackupSnapshot } from "./version-backup-service.js";
+import { validateVersionBackupSnapshot } from "./version-backup-validate.js";
+import {
+  createStoredExport,
+  getStoredExport,
+} from "./export-file-store.js";
+import { listFxRates, upsertFxRate } from "./fx-rate-table.js";
+import { computeLandedFromFx } from "./landed-cost-fx.js";
+import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
   getAsyncWorkerStatus,
   recordWorkerHeartbeat,
@@ -480,6 +488,10 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items });
   });
 
+  app.get("/api/v1/adjustment-batches/approval-policy", async (c) => {
+    return c.json(getAdjustmentApprovalPolicy());
+  });
+
   app.post("/api/v1/adjustment-batches", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
@@ -502,7 +514,10 @@ export function createApp(options: CreateAppOptions = {}) {
           guard_result: p.guard_result,
         })),
       });
-      return c.json(batch, 201);
+      return c.json(
+        { ...batch, approval_triggers: built.approval_triggers, max_drop_pct: built.maxDrop },
+        201
+      );
     } catch (e) {
       const msg = String(e);
       if (msg.includes("GUARD_REJECTED")) {
@@ -598,6 +613,125 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json(snapshot);
+  });
+
+  app.post("/api/v1/ops/version-backup/validate", async (c) => {
+    const body = (await c.req.json()) as { snapshot?: unknown };
+    if (body.snapshot === undefined) {
+      throw new HTTPException(400, { message: "SNAPSHOT_REQUIRED" });
+    }
+    return c.json(validateVersionBackupSnapshot(body.snapshot));
+  });
+
+  app.get("/api/v1/fx-rates", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json({ items: listFxRates(tenantId) });
+  });
+
+  app.put("/api/v1/fx-rates/:base/:quote", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      rate?: number;
+      buffer_pct?: number;
+      effective_from?: string;
+      source?: string;
+    };
+    if (body.rate === undefined || body.rate <= 0) {
+      throw new HTTPException(400, { message: "RATE_REQUIRED" });
+    }
+    const items = upsertFxRate(tenantId, {
+      base: c.req.param("base").toUpperCase(),
+      quote: c.req.param("quote").toUpperCase(),
+      rate: body.rate,
+      buffer_pct: body.buffer_pct ?? 2,
+      effective_from: body.effective_from ?? new Date().toISOString(),
+      source: body.source ?? "tenant-config",
+    });
+    return c.json({ items });
+  });
+
+  app.post("/api/v1/skus/:skuId/landed-cost/from-fx", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      cogs_amount: number;
+      cogs_currency?: string;
+      freight_alloc_mxn?: number;
+      tariff_rate?: number;
+      customs_fee_mxn?: number;
+      apply?: boolean;
+    };
+    try {
+      const computed = computeLandedFromFx(tenantId, {
+        cogs_amount: body.cogs_amount,
+        cogs_currency: body.cogs_currency ?? "USD",
+        freight_alloc_mxn: body.freight_alloc_mxn,
+        tariff_rate: body.tariff_rate,
+        customs_fee_mxn: body.customs_fee_mxn,
+      });
+      let sku_record = sku;
+      if (body.apply === true) {
+        const updated = await catalog.updateSkuLandedCost(
+          tenantId,
+          skuId,
+          computed.landed_cost_mxn
+        );
+        if (updated) sku_record = updated;
+      }
+      return c.json({ computed, sku: { id: sku_record.id, landed_cost_mxn: sku_record.landed_cost_mxn } });
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("FX_RATE_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/exports", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as { kind?: string };
+    const kind = body.kind ?? "version_backup";
+    let content = "";
+    let content_type = "application/json";
+    if (kind === "version_backup") {
+      const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
+      content = JSON.stringify(snapshot, null, 2);
+    } else {
+      throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
+    }
+    const stored = createStoredExport({
+      tenant_id: tenantId,
+      kind,
+      content_type,
+      body: content,
+    });
+    return c.json({
+      export_id: stored.export_id,
+      token: stored.token,
+      expires_at: stored.expires_at,
+      download_path: `/api/v1/exports/${stored.export_id}?token=${stored.token}`,
+    });
+  });
+
+  app.get("/api/v1/exports/:exportId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const token = c.req.query("token") ?? "";
+    const row = getStoredExport(tenantId, c.req.param("exportId"), token);
+    if (!row) {
+      throw new HTTPException(404, { message: "EXPORT_NOT_FOUND" });
+    }
+    return new Response(row.body, {
+      status: 200,
+      headers: {
+        "Content-Type": row.content_type,
+        "Content-Disposition": `attachment; filename="${row.kind}-${row.export_id}.json"`,
+      },
+    });
   });
 
   app.get("/api/v1/ops/workers/status", async (c) => {
