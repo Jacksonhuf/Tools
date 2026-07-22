@@ -672,6 +672,34 @@
 | **实现** | `POST /ops/version-backup/validate`；`version-backup-validate.ts` |
 | **测试** | `loop-66-69.test.ts` |
 
+### Loop 70 — HS 关税表与 duty Landed Cost（P0-E2-04 / TC-UNIT-COST-002）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET/PUT /tariff-hs-rates`；`POST /skus/:id/landed-cost/from-hs`（GL-COST-002） |
+| **测试** | `loop-70-73.test.ts` |
+
+### Loop 71 — 调价批次预览（P0-E5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /adjustment-batches/preview`（不落库） |
+| **测试** | `loop-70-73.test.ts` |
+
+### Loop 72 — 调价 CSV 导入与模板（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /imports/adjustment-prices/template`；`POST /imports/adjustment-prices` |
+| **测试** | `loop-70-73.test.ts`、`adjustment-price-import.test.ts` |
+
+### Loop 73 — Ops 成本/调价工具（Web）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 指挥中心 HS 试算、关税表只读、调价 CSV 预览；`POST /exports` `pricing_snapshot_csv` |
+| **测试** | `loop-70-73.test.ts` |
+
 ---
 
 ## 本地命令
@@ -733,3 +761,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.1 | 2026-07-22 | Loop 47 JWT iss/aud claims |
 | v5.2 | 2026-07-22 | Loop 48 repricing batch job queue |
 | v5.3 | 2026-07-22 | Loop 49 PG repricing batch job store |
+| v5.4 | 2026-07-22 | Loop 70–73 HS tariff, adjustment preview/import, Ops UI |

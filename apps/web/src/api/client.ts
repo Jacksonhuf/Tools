@@ -687,6 +687,55 @@ export async function importLandedCostCsv(locale: string, csv: string) {
   }>;
 }
 
+export interface TariffHsRow {
+  hs_code: string;
+  description: string;
+  tariff_rate: number;
+  customs_fee_mxn: number;
+}
+
+export async function fetchTariffHsRates(locale: string) {
+  const res = await fetch(`/api/v1/tariff-hs-rates`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`tariff-hs-rates ${res.status}`);
+  return res.json() as Promise<{ items: TariffHsRow[] }>;
+}
+
+export async function previewLandedCostFromHs(
+  locale: string,
+  skuId: string,
+  cogs_amount: number
+) {
+  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-hs`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ cogs_amount, cogs_currency: "MXN" }),
+  });
+  if (!res.ok) throw new Error(`landed-cost-from-hs ${res.status}`);
+  return res.json() as Promise<{
+    computed: { landed_cost_mxn: number; duty_mxn: number };
+    hs_code: string;
+  }>;
+}
+
+export async function previewAdjustmentPricesCsv(locale: string, csv: string) {
+  const res = await fetch(`/api/v1/imports/adjustment-prices`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ csv }),
+  });
+  if (!res.ok) throw new Error(`adjustment-prices-import ${res.status}`);
+  return res.json() as Promise<{
+    parse_errors: string[];
+    preview: {
+      status: string;
+      approval_triggers: string[];
+      items: Array<{ listing_id: string; explicit_price_mxn: number }>;
+    };
+  }>;
+}
+
 export async function downloadVersionBackup(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/ops/version-backup?format=download`, {
     headers: headers(locale),

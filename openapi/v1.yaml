@@ -331,6 +331,24 @@ paths:
   /api/v1/skus/{skuId}/landed-cost/from-fx:
     post:
       summary: Compute landed cost from COGS + FX (TC-UNIT-COST-001)
+  /api/v1/tariff-hs-rates:
+    get:
+      summary: Tenant HS tariff table (P0-E2-04)
+  /api/v1/tariff-hs-rates/{hsCode}:
+    put:
+      summary: Upsert HS tariff row
+  /api/v1/skus/{skuId}/landed-cost/from-hs:
+    post:
+      summary: Compute landed cost from COGS + HS duty (TC-UNIT-COST-002)
+  /api/v1/adjustment-batches/preview:
+    post:
+      summary: Preview adjustment batch without persisting (P0-E5-04)
+  /api/v1/imports/adjustment-prices/template:
+    get:
+      summary: CSV template for bulk adjustment prices (P0-E5-03)
+  /api/v1/imports/adjustment-prices:
+    post:
+      summary: Parse adjustment CSV and return batch preview
   /api/v1/exports:
     post:
       summary: Create signed export artifact (P0-E1-06)
