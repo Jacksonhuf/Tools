@@ -16,6 +16,7 @@ import {
   fetchDigestSchedule,
   fetchDigestDeadLetterSummary,
   downloadDigestDeadLetterCsv,
+  downloadDigestDeadLetterSummaryCsv,
   fetchDigestQueuedJobsSummary,
   downloadDigestQueuedJobsCsv,
   downloadDigestQueuedJobsSummaryCsv,
@@ -459,6 +460,17 @@ export function CopilotPage() {
             }
           >
             {t("copilotDigestDlqRefresh")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-dlq-summary-export"
+            onClick={() =>
+              void downloadDigestDeadLetterSummaryCsv(locale).then(() =>
+                setMessage(t("copilotDigestDlqSummaryExportDone"))
+              )
+            }
+          >
+            {t("copilotDigestDlqSummaryExportCsv")}
           </button>
           <button
             type="button"

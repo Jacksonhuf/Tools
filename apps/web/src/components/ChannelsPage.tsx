@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchChannelAdapterStatus,
   downloadChannelAdapterStatusCsv,
+  downloadChannelSandboxStatusCsv,
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
   downloadShopsCsv,
@@ -173,6 +174,17 @@ export function ChannelsPage() {
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
       <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="channel-sandbox-status-export"
+          onClick={() =>
+            void downloadChannelSandboxStatusCsv(locale).then(() =>
+              setMessage(t("channelSandboxStatusExportDone"))
+            )
+          }
+        >
+          {t("channelSandboxStatusExportCsv")}
+        </button>
         <button
           type="button"
           data-testid="channels-shops-export"

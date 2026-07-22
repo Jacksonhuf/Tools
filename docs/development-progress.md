@@ -1204,6 +1204,34 @@
 | **实现** | Digest 队列汇总、规则编译器、渠道适配器状态 CSV 导出按钮 |
 | **测试** | `loop-142-145.test.ts` |
 
+### Loop 146 — 认证状态 CSV（P0-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `auth-status-csv.ts`；`GET /auth/status/export`；`auth_status_csv` |
+| **测试** | `loop-146-149.test.ts` |
+
+### Loop 147 — 渠道沙箱状态 CSV（P3-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `channel-sandbox-status-csv.ts`；`GET /channels/sandbox/status/export`；`channel_sandbox_status_csv` |
+| **测试** | `loop-146-149.test.ts` |
+
+### Loop 148 — Digest 死信汇总 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-dead-letter-summary-csv.ts`；`GET /agent/digest/jobs/dead-letter/summary/export`；`digest_dead_letter_summary_csv` |
+| **测试** | `loop-146-149.test.ts` |
+
+### Loop 149 — 指挥中心/通道/Copilot Web（P0/P3/P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 认证状态、沙箱状态、死信汇总 CSV 导出按钮 |
+| **测试** | `loop-146-149.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1284,3 +1312,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.0 | 2026-07-22 | Loop 134–137 repricing batch summary, ingest status, feature flags CSV + Web |
 | v7.1 | 2026-07-22 | Loop 138–141 agent/product readiness and competitor anchor CSV + Web |
 | v7.2 | 2026-07-22 | Loop 142–145 digest summary, channel adapters, rule compiler CSV + Web |
+| v7.3 | 2026-07-22 | Loop 146–149 auth, sandbox status, digest DLQ summary CSV + Web |

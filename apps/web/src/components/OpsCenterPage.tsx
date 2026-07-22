@@ -33,6 +33,7 @@ import {
   previewLandedCostFromHs,
   downloadTariffHsRatesCsv,
   downloadFxRatesCsv,
+  downloadAuthStatusCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -192,6 +193,19 @@ export function OpsCenterPage() {
       <p className="hint">{t("opsHint")}</p>
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
+      <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="ops-auth-export"
+          onClick={() =>
+            void downloadAuthStatusCsv(locale).then(() =>
+              setMessage(t("opsAuthExportDone"))
+            )
+          }
+        >
+          {t("opsAuthExportCsv")}
+        </button>
+      </div>
 
       {metrics && (
         <section className="card" data-testid="ops-metrics">
