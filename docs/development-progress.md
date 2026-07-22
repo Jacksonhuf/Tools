@@ -1008,6 +1008,34 @@
 | **实现** | `worker-heartbeats-csv.ts`；`GET /ops/workers/status/export`；Ops/Copilot 导出按钮 |
 | **测试** | `loop-114-117.test.ts`、`loop-114-117-csv.test.ts` |
 
+### Loop 118 — 竞品价格历史 CSV（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `price-history-csv.ts`；`GET /listings/:id/price-history/export`；`price_history_csv` |
+| **测试** | `loop-118-121.test.ts` |
+
+### Loop 119 — 重算事件 CSV（P2-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `repricing-events-csv.ts`；`GET /listings/:id/repricing-events/export`；`repricing_events_csv` |
+| **测试** | `loop-118-121.test.ts` |
+
+### Loop 120 — 调价单索引 CSV（P0-E5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `adjustment-batches-index-csv.ts`；`GET /adjustment-batches/export`；`adjustment_batches_index_csv` |
+| **测试** | `loop-118-121.test.ts` |
+
+### Loop 121 — 竞品/调价 Web（P2/P0-E5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 价格历史与重算事件导出；调价单索引导出 |
+| **测试** | `loop-118-121.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1081,3 +1109,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.3 | 2026-07-22 | Loop 106–109 FX/audit CSV, digest run-due, Copilot/Ops Web |
 | v6.4 | 2026-07-22 | Loop 110–113 tenant pricing/sandbox/DLQ CSV + Web |
 | v6.5 | 2026-07-22 | Loop 114–117 repricing/digest queue/dispatches/workers CSV + Web |
+| v6.6 | 2026-07-22 | Loop 118–121 price history/repricing events/adjustment index CSV + Web |

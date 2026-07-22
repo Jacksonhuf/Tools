@@ -8,6 +8,8 @@ import {
   fetchCompetitorCurve,
   downloadCompetitorCurveCsv,
   downloadCompetitorCurveDirect,
+  downloadPriceHistoryCsv,
+  downloadRepricingEventsCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -198,6 +200,28 @@ export function CompetitorsPage() {
         )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-price-history-export"
+          onClick={() =>
+            void downloadPriceHistoryCsv(locale, listingId, "7d").then(() =>
+              setMessage(t("priceHistoryExportDone"))
+            )
+          }
+        >
+          {t("priceHistoryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-events-export"
+          onClick={() =>
+            void downloadRepricingEventsCsv(locale, listingId).then(() =>
+              setMessage(t("repricingEventsExportDone"))
+            )
+          }
+        >
+          {t("repricingEventsExportCsv")}
         </button>
         <button
           type="button"

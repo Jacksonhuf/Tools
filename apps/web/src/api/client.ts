@@ -612,6 +612,59 @@ export async function fetchPriceHistory(
   }>;
 }
 
+export async function downloadPriceHistoryCsv(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/price-history/export?range=${range}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`price-history-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `price-history-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadRepricingEventsCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/repricing-events/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-events-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `repricing-events-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadAdjustmentBatchesIndexCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/adjustment-batches/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`adjustment-batches-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "adjustment-batches-index.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchCompetitorCurve(
   locale: string,
   listingId: string,

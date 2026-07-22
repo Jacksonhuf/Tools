@@ -7,6 +7,7 @@ import {
   createAdjustmentBatch,
   fetchAdjustmentBatches,
   downloadAdjustmentBatchCsv,
+  downloadAdjustmentBatchesIndexCsv,
   type AdjustmentBatch,
 } from "../api/client";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
@@ -113,6 +114,19 @@ export function AdjustmentBatchesPage() {
   return (
     <div className="page page-wide" data-testid="adjustment-batches-page">
       <h1>{t("adjustmentsTitle")}</h1>
+      <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="adjustment-batches-index-export"
+          onClick={() =>
+            void downloadAdjustmentBatchesIndexCsv(locale).then(() =>
+              setMessage(t("adjustmentBatchesIndexExportDone"))
+            )
+          }
+        >
+          {t("adjustmentBatchesIndexExportCsv")}
+        </button>
+      </div>
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
 

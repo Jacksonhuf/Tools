@@ -137,6 +137,9 @@ paths:
       responses:
         "201":
           description: Batch created
+  /api/v1/adjustment-batches/export:
+    get:
+      summary: Download adjustment batch index as CSV
   /api/v1/adjustment-batches/{batchId}/approve:
     post:
       summary: Approve batch pending approval
@@ -210,6 +213,9 @@ paths:
           schema:
             type: string
             enum: [7d, 30d]
+  /api/v1/listings/{listingId}/price-history/export:
+    get:
+      summary: Download price observation history as CSV
   /api/v1/listings/{listingId}/ingest/status:
     get:
       summary: Ingest tier schedule (SDD §8.1)
@@ -222,6 +228,9 @@ paths:
   /api/v1/listings/{listingId}/repricing-events:
     get:
       summary: List CompetitorPriceChanged events
+  /api/v1/listings/{listingId}/repricing-events/export:
+    get:
+      summary: Download repricing events as CSV
   /api/v1/repricing-events/{eventId}/process:
     post:
       summary: Process event into suggested version (P2-E3-04)
