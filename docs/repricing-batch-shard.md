@@ -52,9 +52,9 @@ BFF_BASE_URL=http://127.0.0.1:3000 REPRICING_SHARD_TOTAL=4 npm run repricing-bat
 | `X_TENANT_ID` | `tenant-demo` | Tenant header |
 | `REPRICING_SHARD_TOTAL` | `4` | Shard count |
 | `REPRICING_SKU_ID` | _(unset)_ | If set, SKU-scoped orchestration |
-| `REPRICING_WORKER_MODE` | `orchestrated` | `orchestrated` or `per_shard` (requires `REPRICING_SKU_ID`) |
+| `REPRICING_WORKER_MODE` | `orchestrated` | `orchestrated`, `per_shard`, or `queue` (Loop 48) |
 
-Implementation: `tools/repricing-batch-worker/run.mjs`.
+Implementation: `tools/repricing-batch-worker/run.mjs`. Job queue: [repricing-batch-queue.md](./repricing-batch-queue.md).
 
 ## Auth
 
@@ -63,8 +63,9 @@ Same as other BFF routes: `Authorization: Bearer dev-token`, `X-Tenant-Id: tenan
 ## Tests
 
 - `tests/api/repricing-batch-shard.test.ts` — TC-API-REPR-BATCH-001/002/003
+- `tests/api/repricing-batch-job-queue.test.ts` — TC-API-REPR-BATCH-004
 
 ## Out of scope
 
-- Durable queue / multi-process lease (use orchestrated API + worker CLI as demo)
+- PostgreSQL-backed queue / multi-process lease
 - Production autoscaler wiring

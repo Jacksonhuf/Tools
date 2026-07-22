@@ -4,6 +4,7 @@ import {
   getChannelSandboxStatus,
 } from "./channel-sandbox-ledger.js";
 import { listDigestQueuedJobs } from "./digest-job-queue.js";
+import { repricingBatchQueueSummary } from "./repricing-batch-job-queue.js";
 import type { CatalogRepository } from "./repositories/types.js";
 
 export function buildOpsMetricsSnapshot(
@@ -15,6 +16,7 @@ export function buildOpsMetricsSnapshot(
   const digestJobs = listDigestQueuedJobs(tenantId);
   const digestQueued = digestJobs.filter((j) => j.status === "queued").length;
   const digestFailed = digestJobs.filter((j) => j.status === "failed").length;
+  const repricingBatch = repricingBatchQueueSummary(tenantId);
 
   return {
     tenant_id: tenantId,
@@ -36,6 +38,7 @@ export function buildOpsMetricsSnapshot(
       queued: digestQueued,
       failed: digestFailed,
     },
+    repricing_batch_queue: repricingBatch,
     generated_at: new Date().toISOString(),
   };
 }
