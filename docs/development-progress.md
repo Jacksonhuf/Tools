@@ -616,6 +616,34 @@
 | **实现** | `simulate_poison`、重试、`dead_letter` 状态、`GET digest/jobs/dead-letter`、ops `digest_queue.dead_letter` |
 | **测试** | `digest-dlq.test.ts` |
 
+### Loop 62 — 跨渠道价差看板（P3-E3-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /cross-channel/dashboard`；Web「跨渠道价差」页 |
+| **测试** | `loop-62-65.test.ts` TC-API-XCH-002 |
+
+### Loop 63 — 落地成本 CSV 导入（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /imports/landed-cost`；指挥中心 CSV 粘贴导入 |
+| **测试** | `landed-cost-import.test.ts`、TC-API-IMP-001 |
+
+### Loop 64 — Version 备份导出（X-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /ops/version-backup`（JSON / download）；Ops 下载按钮 |
+| **测试** | TC-API-OPS-002 |
+
+### Loop 65 — 异步 Worker 骨架（P0-E1-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `tools/async-worker/run.mjs`；`npm run dev:async-worker`；heartbeat + `GET /ops/workers/status` |
+| **测试** | TC-API-WKR-001 |
+
 ---
 
 ## 本地命令
