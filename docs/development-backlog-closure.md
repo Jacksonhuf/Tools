@@ -20,4 +20,6 @@
 
 后续工作请按 [development-task-list.md](./development-task-list.md) 新开 Epic PR，而非固定 Loop 编号。
 
+**Loop 57（已合入计划）**：`GET /api/v1/product/readiness` 含 **P5** 里程碑；`POST /api/v1/skus/:skuId/apply-shared-fee-template`；运维中心展示 repricing 队列与 NFR 指标。
+
 门禁：`npm ci && npm run build && npm test && npm run test:smoke`

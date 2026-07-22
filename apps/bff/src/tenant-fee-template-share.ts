@@ -41,3 +41,10 @@ const SHARED: SharedFeeTemplate[] = [
 export function listSharedFeeTemplates(tenantId: string): SharedFeeTemplate[] {
   return SHARED.filter((t) => t.tenant_id === tenantId);
 }
+
+export function getSharedFeeTemplate(
+  tenantId: string,
+  templateId: string
+): SharedFeeTemplate | undefined {
+  return SHARED.find((t) => t.tenant_id === tenantId && t.id === templateId);
+}

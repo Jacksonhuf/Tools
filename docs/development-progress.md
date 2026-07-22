@@ -579,6 +579,15 @@
 
 | **测试** | **145+** Vitest（含 `jwks-cache`、`category-rule-template`、`pricing-timing`） |
 
+### Loop 57 — `main` 收官（P5 readiness + Ops UI + 费率套用）
+
+| 项 | 内容 |
+|----|------|
+| **日期** | 2026-07-22 |
+| **实现** | `p5-readiness` + `product/readiness` / `agent/milestones` P5；`POST apply-shared-fee-template`；Web Ops 展示 repricing 队列与 NFR；OpenAPI 补全 P5 路径 |
+| **测试** | `p5-readiness.test.ts`；TC-API-TPL-002 |
+| **下一步** | 按 [development-task-list.md](./development-task-list.md) 新开 Epic（生产渠道、HA 等） |
+
 ---
 
 ## 本地命令

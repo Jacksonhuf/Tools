@@ -20,6 +20,11 @@ import {
 } from "../version-store.js";
 import type { CatalogRepository } from "./types.js";
 
+const DEMO_SKU_FEE_SNAPSHOT = {
+  fee_ml: { ...DEMO_SKU.fee_ml },
+  fee_amazon: { ...DEMO_SKU.fee_amazon },
+};
+
 export class MemoryCatalogRepository implements CatalogRepository {
   readonly driver = "memory" as const;
 
@@ -102,9 +107,29 @@ export class MemoryCatalogRepository implements CatalogRepository {
     return sku;
   }
 
+  async updateSkuChannelFee(
+    tenantId: string,
+    skuId: string,
+    channel: "MERCADO_LIBRE" | "AMAZON_MX",
+    fee: import("@mx-pricing/pricing-engine").FeeTemplate
+  ): Promise<SkuRecord | undefined> {
+    const sku = await this.getSku(tenantId, skuId);
+    if (!sku) return undefined;
+    const next = { ...fee };
+    if (channel === "MERCADO_LIBRE") sku.fee_ml = next;
+    else sku.fee_amazon = next;
+    if (skuId === DEMO_SKU.id && tenantId === DEMO_SKU.tenant_id) {
+      if (channel === "MERCADO_LIBRE") DEMO_SKU.fee_ml = next;
+      else DEMO_SKU.fee_amazon = next;
+    }
+    return sku;
+  }
+
   resetForTests(): void {
     resetVersionsForTests();
     DEMO_SKU.landed_cost_mxn = 1000;
+    DEMO_SKU.fee_ml = { ...DEMO_SKU_FEE_SNAPSHOT.fee_ml };
+    DEMO_SKU.fee_amazon = { ...DEMO_SKU_FEE_SNAPSHOT.fee_amazon };
   }
 }
 

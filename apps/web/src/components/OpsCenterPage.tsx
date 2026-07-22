@@ -160,6 +160,23 @@ export function OpsCenterPage() {
                 {metrics.digest_queue.queued} / {metrics.digest_queue.total}
               </dd>
             </div>
+            <div>
+              <dt>{t("opsMetricsRepricingQueue")}</dt>
+              <dd data-testid="ops-metrics-repricing-queue">
+                {metrics.repricing_batch_queue.queued} /{" "}
+                {metrics.repricing_batch_queue.total} (
+                <code>{metrics.repricing_batch_queue.driver}</code>)
+              </dd>
+            </div>
+            <div>
+              <dt>{t("opsMetricsNfr")}</dt>
+              <dd data-testid="ops-metrics-nfr">
+                {t("opsMetricsNfrSimulate", {
+                  count: metrics.nfr.pricing_simulate_count,
+                  avgMs: metrics.nfr.pricing_calc_duration_ms_avg,
+                })}
+              </dd>
+            </div>
           </dl>
         </section>
       )}

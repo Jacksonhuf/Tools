@@ -113,6 +113,7 @@ import {
   listCategoryRuleTemplates,
 } from "./category-rule-template.js";
 import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
+import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import {
   buildPricingSnapshotRows,
@@ -1404,6 +1405,25 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(403, { message: "TENANT_MISMATCH" });
     }
     return c.json({ items: listSharedFeeTemplates(tenantId) });
+  });
+
+  app.post("/api/v1/skus/:skuId/apply-shared-fee-template", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const body = (await c.req.json()) as { template_id?: string };
+    if (!body.template_id?.trim()) {
+      throw new HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+    }
+    const result = await applySharedFeeTemplateToSku(
+      catalog,
+      tenantId,
+      skuId,
+      body.template_id.trim()
+    );
+    if (!result) {
+      throw new HTTPException(404, { message: "SKU_OR_TEMPLATE_NOT_FOUND" });
+    }
+    return c.json(result);
   });
 
   app.get("/api/v1/skus/:skuId/category-rule-template", async (c) => {

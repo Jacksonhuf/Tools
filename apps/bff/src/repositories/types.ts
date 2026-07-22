@@ -41,6 +41,12 @@ export interface CatalogRepository {
     skuId: string,
     landed_cost_mxn: number
   ): Promise<SkuRecord | undefined>;
+  updateSkuChannelFee(
+    tenantId: string,
+    skuId: string,
+    channel: "MERCADO_LIBRE" | "AMAZON_MX",
+    fee: FeeTemplate
+  ): Promise<SkuRecord | undefined>;
   resetForTests?(): void;
 }
 

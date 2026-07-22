@@ -197,4 +197,22 @@ export class PostgresCatalogRepository implements CatalogRepository {
     if (r.rowCount === 0) return undefined;
     return rowToSku(r.rows[0]);
   }
+
+  async updateSkuChannelFee(
+    tenantId: string,
+    skuId: string,
+    channel: "MERCADO_LIBRE" | "AMAZON_MX",
+    fee: import("@mx-pricing/pricing-engine").FeeTemplate
+  ) {
+    const column =
+      channel === "MERCADO_LIBRE" ? "fee_ml_json" : "fee_amazon_json";
+    const r = await this.pool.query(
+      `UPDATE skus SET ${column} = $3::jsonb
+       WHERE tenant_id = $1 AND id = $2
+       RETURNING *`,
+      [tenantId, skuId, JSON.stringify(fee)]
+    );
+    if (r.rowCount === 0) return undefined;
+    return rowToSku(r.rows[0]);
+  }
 }

@@ -269,6 +269,21 @@ paths:
   /api/v1/repricing-batch/jobs/process:
     post:
       summary: Process queued repricing batch jobs
+  /api/v1/category-rule-templates:
+    get:
+      summary: List category repricing rule templates (P5-02)
+  /api/v1/category-rule-templates/{categoryId}:
+    get:
+      summary: Get category rule template by id
+  /api/v1/skus/{skuId}/category-rule-template:
+    get:
+      summary: Resolve category template for SKU
+  /api/v1/tenants/{tenantId}/shared-fee-templates:
+    get:
+      summary: Shared fee templates per tenant (P5-04)
+  /api/v1/skus/{skuId}/apply-shared-fee-template:
+    post:
+      summary: Apply shared fee template to SKU channel fees (P5-04)
   /api/v1/reconciliation-alerts:
     get:
       summary: Open channel vs active price alerts (TC-INT-RECON-001)

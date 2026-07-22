@@ -24,5 +24,10 @@ describe("GET /api/v1/agent/milestones", () => {
     expect(json.milestones.find((m) => m.id === "P4")?.status).toBe(
       "accepted"
     );
+    const jsonP5 = json as { p5_readiness?: { ready: boolean } };
+    expect(jsonP5.p5_readiness?.ready).toBe(true);
+    expect(json.milestones.find((m) => m.id === "P5")?.status).toBe(
+      "accepted"
+    );
   });
 });

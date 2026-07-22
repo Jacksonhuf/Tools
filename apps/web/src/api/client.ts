@@ -626,6 +626,17 @@ export interface OpsMetricsSnapshot {
     listing_pull_http_url_configured: boolean;
   };
   digest_queue: { total: number; queued: number; failed: number };
+  repricing_batch_queue: {
+    driver: string;
+    total: number;
+    queued: number;
+    failed: number;
+  };
+  nfr: {
+    pricing_simulate_count: number;
+    pricing_calc_duration_ms_avg: number;
+    repricing_lag_seconds: number | null;
+  };
   generated_at: string;
 }
 

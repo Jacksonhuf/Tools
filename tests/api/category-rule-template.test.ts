@@ -46,4 +46,25 @@ describe("TC-API-TPL-001 shared fee templates (P5-04)", () => {
     const json = (await res.json()) as { items: unknown[] };
     expect(json.items.length).toBeGreaterThanOrEqual(2);
   });
+
+  it("applies shared fee template to SKU (TC-API-TPL-002)", async () => {
+    const { app } = createTestApp();
+    const res = await app.request(
+      "/api/v1/skus/demo-sku-001/apply-shared-fee-template",
+      {
+        method: "POST",
+        headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
+        body: JSON.stringify({ template_id: "fee-tpl-amz-electronics" }),
+      }
+    );
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      channel: string;
+      applied_template_id: string;
+      fee_template: { commission_pct_of_price: number };
+    };
+    expect(json.applied_template_id).toBe("fee-tpl-amz-electronics");
+    expect(json.channel).toBe("AMAZON_MX");
+    expect(json.fee_template.commission_pct_of_price).toBe(15);
+  });
 });
