@@ -670,6 +670,47 @@ export async function fetchListingSyncJobs(locale: string, limit = 10) {
   return res.json() as Promise<{ items: ListingSyncJobRow[] }>;
 }
 
+export async function fetchListingSyncOpsStatus(locale: string) {
+  const res = await fetch(`/api/v1/ops/listing-sync/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-status ${res.status}`);
+  return res.json() as Promise<{
+    schedule: { enabled: boolean; last_run_at: string | null };
+    job_summary: {
+      sampled: number;
+      ok: number;
+      failed: number;
+      last_finished_at: string | null;
+    };
+  }>;
+}
+
+export async function fetchListingSyncJobsForListing(
+  locale: string,
+  listingId: string
+) {
+  const res = await fetch(`/api/v1/listings/${listingId}/sync/jobs`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-jobs-listing ${res.status}`);
+  return res.json() as Promise<{ items: ListingSyncJobRow[] }>;
+}
+
+export async function downloadListingSyncJobsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/ops/listing-sync/jobs/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-jobs-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "listing-sync-jobs.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function downloadExportCsv(
   locale: string,
   body: Record<string, unknown>,
@@ -714,6 +755,35 @@ export async function downloadAdjustmentBatchCsv(
     { kind: "adjustment_batch_csv", batch_id: batchId },
     `adjustment-batch-${batchId}.csv`
   );
+}
+
+export async function downloadReconciliationAlertsExport(
+  locale: string
+): Promise<void> {
+  await downloadExportCsv(
+    locale,
+    { kind: "reconciliation_alerts_csv" },
+    "reconciliation-alerts.csv"
+  );
+}
+
+export async function downloadCompetitorCurveDirect(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/competitors/curve/export?range=${range}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-curve-direct ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `competitor-curve-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchIngestStatus(locale: string, listingId: string) {

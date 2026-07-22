@@ -87,7 +87,7 @@ describe("TC-API-REPR-BATCH-002 batch recompute shard", () => {
       headers: JSON_HEADERS,
       body: JSON.stringify({
         sale_price: 1350,
-        observed_at: "2026-07-21T12:00:00.000Z",
+        observed_at: new Date().toISOString(),
       }),
     });
     const flush = await app.request(

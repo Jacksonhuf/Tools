@@ -165,6 +165,8 @@ import { runDueListingChannelSyncs } from "./listing-sync-run-due.js";
 import { buildCompetitorCurve } from "./competitor-curve.js";
 import { competitorCurvePointsToCsv } from "./competitor-curve-csv.js";
 import { adjustmentBatchToCsv } from "./adjustment-batch-csv.js";
+import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
+import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
@@ -1132,6 +1134,7 @@ export function createApp(options: CreateAppOptions = {}) {
       listing_id?: string;
       range?: string;
       batch_id?: string;
+      limit?: number;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1189,6 +1192,15 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
       }
       content = adjustmentBatchToCsv(batch);
+      content_type = "text/csv";
+    } else if (kind === "listing_sync_jobs_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listListingSyncJobsForTenant(tenantId, limit);
+      content = listingSyncJobsToCsv(jobs, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "reconciliation_alerts_csv") {
+      const items = await reconciliationAlerts.listAlerts(tenantId);
+      content = reconciliationAlertsToCsv(items, new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2207,6 +2219,32 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/ops/listing-sync/status", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sample = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("sample") ?? "50") || 50)
+    );
+    return c.json(buildListingSyncOpsStatus(tenantId, sample));
+  });
+
+  app.get("/api/v1/ops/listing-sync/jobs/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listListingSyncJobsForTenant(tenantId, limit);
+    const csv = listingSyncJobsToCsv(jobs, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-sync-jobs.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/ops/listing-sync/jobs", async (c) => {

@@ -386,6 +386,12 @@ paths:
   /api/v1/ops/listing-sync/jobs:
     get:
       summary: Recent listing sync jobs for tenant (P1-E2-04)
+  /api/v1/ops/listing-sync/jobs/export:
+    get:
+      summary: Download listing sync jobs as CSV (P1-E2-04)
+  /api/v1/ops/listing-sync/status:
+    get:
+      summary: Listing sync schedule plus recent job summary (P1-E2-04)
   /api/v1/listings/{listingId}/competitors/curve/export:
     get:
       summary: Download competitor price curve as CSV (P2-E1-03)
