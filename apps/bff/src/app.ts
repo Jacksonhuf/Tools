@@ -160,7 +160,10 @@ import {
   getListingSyncSchedule,
   upsertListingSyncSchedule,
 } from "./listing-sync-schedule.js";
+import { runDueListingChannelSyncs } from "./listing-sync-run-due.js";
 import { buildCompetitorCurve } from "./competitor-curve.js";
+import { competitorCurvePointsToCsv } from "./competitor-curve-csv.js";
+import { adjustmentBatchToCsv } from "./adjustment-batch-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
@@ -1109,6 +1112,9 @@ export function createApp(options: CreateAppOptions = {}) {
       pricing_mode?: string;
       target_margin_pct?: number;
       competitor_price_mxn?: number;
+      listing_id?: string;
+      range?: string;
+      batch_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1137,6 +1143,35 @@ export function createApp(options: CreateAppOptions = {}) {
         },
         c.get("locale")
       );
+      content_type = "text/csv";
+    } else if (kind === "competitor_curve_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const range = body.range ?? "7d";
+      const days = range === "30d" ? 30 : 7;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const observations = await competitors.listObservations(listingId, since);
+      const points = buildCompetitorCurve(
+        observations.map((o) => ({
+          observed_at: o.observed_at,
+          effective_price: o.effective_price,
+        }))
+      );
+      content = competitorCurvePointsToCsv(points);
+      content_type = "text/csv";
+    } else if (kind === "adjustment_batch_csv") {
+      const batchId = body.batch_id?.trim();
+      if (!batchId) {
+        throw new HTTPException(400, { message: "BATCH_ID_REQUIRED" });
+      }
+      const batch = await adjustments.getBatch(tenantId, batchId);
+      if (!batch) {
+        throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      }
+      content = adjustmentBatchToCsv(batch);
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2122,6 +2157,23 @@ export function createApp(options: CreateAppOptions = {}) {
       cron_expression?: string;
     };
     return c.json(upsertListingSyncSchedule(tenantId, body));
+  });
+
+  app.post("/api/v1/ops/listing-sync/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const result = await runDueListingChannelSyncs(
+      catalog,
+      shops,
+      listingAdapter,
+      tenantId
+    );
+    if (result.skipped) {
+      throw new HTTPException(409, { message: "SCHEDULE_DISABLED" });
+    }
+    return c.json({
+      schedule: getListingSyncSchedule(tenantId),
+      runs: result.runs,
+    });
   });
 
   app.get("/api/v1/listings/:listingId/sync/jobs", async (c) => {

@@ -380,6 +380,9 @@ paths:
       summary: Listing channel sync cron config (P1-E2-04 stub)
     put:
       summary: Update listing sync schedule
+  /api/v1/ops/listing-sync/run-due:
+    post:
+      summary: Run scheduled listing sync for all demo listings when enabled (P1-E2-04)
   /api/v1/listings/{listingId}/competitors/curve:
     get:
       summary: Daily competitor effective price curve (P2-E1-03)

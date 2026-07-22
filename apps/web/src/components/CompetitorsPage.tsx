@@ -6,6 +6,7 @@ import {
   fetchCompetitorOffers,
   fetchPriceHistory,
   fetchCompetitorCurve,
+  downloadCompetitorCurveCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -196,6 +197,17 @@ export function CompetitorsPage() {
         )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-curve-export"
+          onClick={() =>
+            void downloadCompetitorCurveCsv(locale, listingId, "7d").then(() =>
+              setMessage(t("competitorCurveExportDone"))
+            )
+          }
+        >
+          {t("competitorCurveExportCsv")}
         </button>
       </section>
 

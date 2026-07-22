@@ -9,6 +9,9 @@ import {
   fetchWorkerStatus,
   importCostSheetsCsv,
   importLandedCostCsv,
+  fetchListingSyncSchedule,
+  updateListingSyncSchedule,
+  runListingSyncDue,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
   fetchTariffHsRates,
@@ -48,22 +51,28 @@ export function OpsCenterPage() {
   );
   const [tariffRows, setTariffRows] = useState<TariffHsRow[]>([]);
   const [workerCount, setWorkerCount] = useState(0);
+  const [syncEnabled, setSyncEnabled] = useState(false);
+  const [syncCron, setSyncCron] = useState("0 */6 * * *");
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers, tariffs] = await Promise.all([
+      const [data, alertData, ops, workers, tariffs, syncSchedule] =
+        await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
         fetchOpsMetrics(locale),
         fetchWorkerStatus(locale),
         fetchTariffHsRates(locale),
+        fetchListingSyncSchedule(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
       setMetrics(ops);
       setTariffRows(tariffs.items);
       setWorkerCount(workers.workers.filter((w) => !w.stale).length);
+      setSyncEnabled(syncSchedule.enabled);
+      setSyncCron(syncSchedule.cron_expression);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -233,6 +242,53 @@ export function OpsCenterPage() {
           onClick={() => void downloadVersionBackup(locale)}
         >
           {t("opsVersionBackup")}
+        </button>
+      </section>
+
+      <section className="card" data-testid="ops-listing-sync-schedule">
+        <h2>{t("opsListingSyncSchedule")}</h2>
+        <label>
+          <input
+            type="checkbox"
+            checked={syncEnabled}
+            onChange={(e) => setSyncEnabled(e.target.checked)}
+          />
+          {t("opsListingSyncEnabled")}
+        </label>
+        <label>
+          {t("opsListingSyncCron")}
+          <input
+            type="text"
+            value={syncCron}
+            onChange={(e) => setSyncCron(e.target.value)}
+            style={{ width: "100%", fontFamily: "monospace" }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() =>
+            void updateListingSyncSchedule(locale, {
+              enabled: syncEnabled,
+              cron_expression: syncCron,
+            }).then(() => setMessage(t("policySaved")))
+          }
+        >
+          {t("opsListingSyncSave")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-run-due"
+          onClick={() =>
+            void runListingSyncDue(locale)
+              .then((r) =>
+                setMessage(
+                  t("opsListingSyncRunDone", { count: r.runs.length })
+                )
+              )
+              .catch(() => setError(t("opsListingSyncDisabled")))
+          }
+        >
+          {t("opsListingSyncRunDue")}
         </button>
       </section>
 
