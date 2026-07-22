@@ -46,6 +46,64 @@ export async function patchSkuLandedCost(
   return res.json();
 }
 
+export interface CostSheetRow {
+  id: string;
+  batch_no: string;
+  cogs_amount: number;
+  cogs_currency: string;
+  freight_alloc_mxn: number;
+  freight_alloc_rule: string;
+  effective_from: string;
+}
+
+export async function fetchCostSheets(locale: string, skuId: string) {
+  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`cost-sheets ${res.status}`);
+  return res.json() as Promise<{ items: CostSheetRow[] }>;
+}
+
+export async function createCostSheetRow(
+  locale: string,
+  skuId: string,
+  body: {
+    batch_no: string;
+    cogs_amount: number;
+    cogs_currency?: string;
+    freight_alloc_mxn?: number;
+    freight_alloc_rule?: "PER_UNIT" | "WEIGHT_BASED";
+  }
+) {
+  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`create cost-sheet ${res.status}`);
+  return res.json() as Promise<CostSheetRow>;
+}
+
+export async function applyLandedFromCostSheet(
+  locale: string,
+  skuId: string,
+  cost_sheet_id: string
+) {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-cost-sheet`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify({ cost_sheet_id, apply: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`landed-from-cost-sheet ${res.status}`);
+  return res.json() as Promise<{
+    computed: { landed_cost_mxn: number };
+    sku: { landed_cost_mxn: number };
+  }>;
+}
+
 export async function fetchPricingContext(locale: string, channel: Channel) {
   const res = await fetch(
     `/api/v1/skus/${DEMO_SKU}/pricing-context?channel=${channel}`,
@@ -734,6 +792,31 @@ export async function previewAdjustmentPricesCsv(locale: string, csv: string) {
       items: Array<{ listing_id: string; explicit_price_mxn: number }>;
     };
   }>;
+}
+
+export async function applyAdjustmentPricesCsv(
+  locale: string,
+  csv: string,
+  reason_code?: string
+) {
+  const res = await fetch(`/api/v1/imports/adjustment-prices`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ csv, reason_code, apply: true }),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof json === "object" && json && "error" in json
+        ? String((json as { error: string }).error)
+        : `adjustment-prices-apply ${res.status}`
+    );
+  }
+  return json as {
+    parse_errors: string[];
+    preview: { status: string };
+    batch: AdjustmentBatch;
+  };
 }
 
 export async function downloadVersionBackup(locale: string): Promise<void> {

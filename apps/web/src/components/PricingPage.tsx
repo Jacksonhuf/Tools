@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  applyAdjustmentPricesCsv,
+  applyLandedFromCostSheet,
+  createCostSheetRow,
+  fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
   fetchSkus,
@@ -10,6 +14,7 @@ import {
   simulatePricing,
   type Channel,
   type CrossChannelGuardResponse,
+  type CostSheetRow,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
 
@@ -35,20 +40,25 @@ export function PricingPage() {
   const [crossChannelWarning, setCrossChannelWarning] = useState<
     CrossChannelGuardResponse["warning"]
   >(null);
+  const [costSheets, setCostSheets] = useState<CostSheetRow[]>([]);
+  const [batchNo, setBatchNo] = useState("BATCH-DEMO-01");
+  const [cogsAmount, setCogsAmount] = useState(1000);
 
   const locale = i18n.language;
 
   const loadAll = useCallback(async () => {
     setError(null);
     try {
-      const [ml, amz, skuList, xch] = await Promise.all([
+      const [ml, amz, skuList, xch, sheets] = await Promise.all([
         fetchPricingContext(locale, "MERCADO_LIBRE"),
         fetchPricingContext(locale, "AMAZON_MX"),
         fetchSkus(locale),
         fetchCrossChannelGuard(locale),
+        fetchCostSheets(locale, "demo-sku-001"),
       ]);
       setContextByChannel({ MERCADO_LIBRE: ml, AMAZON_MX: amz });
       setCrossChannelWarning(xch.warning);
+      setCostSheets(sheets.items);
       const first = skuList.items[0];
       if (first) setLandedEdit(first.landed_cost_mxn);
     } catch (e) {
@@ -121,6 +131,44 @@ export function PricingPage() {
     }
   };
 
+  const addCostSheet = async () => {
+    setError(null);
+    try {
+      await createCostSheetRow(locale, "demo-sku-001", {
+        batch_no: batchNo,
+        cogs_amount: cogsAmount,
+        cogs_currency: "MXN",
+      });
+      await loadAll();
+      setMessage(t("costSheetCreated"));
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const applySheetLanded = async () => {
+    const latest = costSheets[0];
+    if (!latest) {
+      setError(t("costSheetEmpty"));
+      return;
+    }
+    setError(null);
+    try {
+      const r = await applyLandedFromCostSheet(
+        locale,
+        "demo-sku-001",
+        latest.id
+      );
+      setLandedEdit(r.sku.landed_cost_mxn);
+      await loadAll();
+      setMessage(
+        t("costSheetLandedApplied", { landed: r.sku.landed_cost_mxn })
+      );
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
   const fmt = (n: number) =>
     new Intl.NumberFormat(
       locale === "es-MX" ? "es-MX" : locale === "zh-CN" ? "zh-CN" : "en-US",
@@ -158,6 +206,40 @@ export function PricingPage() {
           </label>
         </section>
       )}
+
+      <section className="card" data-testid="cost-sheets-panel">
+        <h2>{t("costSheetsTitle")}</h2>
+        <p className="hint">{t("costSheetsHint")}</p>
+        <label>
+          {t("costSheetBatch")}
+          <input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
+        </label>
+        <label>
+          COGS (MXN)
+          <input
+            type="number"
+            value={cogsAmount}
+            onChange={(e) => setCogsAmount(Number(e.target.value))}
+          />
+        </label>
+        <button type="button" data-testid="cost-sheet-add" onClick={() => void addCostSheet()}>
+          {t("costSheetAdd")}
+        </button>
+        <button
+          type="button"
+          data-testid="cost-sheet-apply-landed"
+          onClick={() => void applySheetLanded()}
+        >
+          {t("costSheetApplyLanded")}
+        </button>
+        <ul>
+          {costSheets.slice(0, 3).map((s) => (
+            <li key={s.id}>
+              <code>{s.batch_no}</code>: {s.cogs_amount} {s.cogs_currency}
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="card controls">
         <label>
