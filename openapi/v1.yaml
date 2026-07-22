@@ -323,12 +323,18 @@ paths:
   /api/v1/reconciliation-alerts:
     get:
       summary: Open channel vs active price alerts (TC-INT-RECON-001)
+  /api/v1/reconciliation-alerts/export:
+    get:
+      summary: Download reconciliation alerts as CSV
   /api/v1/listings/{listingId}/reconcile:
     post:
       summary: Compare active version to channel pull price
   /api/v1/agent/tools:
     get:
       summary: Agent tool catalog (TC-NFR-SEC-004)
+  /api/v1/agent/tools/export:
+    get:
+      summary: Download agent tool catalog as CSV
   /api/v1/agent/tools/invoke:
     post:
       summary: Invoke agent tool with audit (TC-INT-AGENT-001/004)
@@ -461,6 +467,9 @@ paths:
   /api/v1/ops/listing-sync/status:
     get:
       summary: Listing sync schedule plus recent job summary (P1-E2-04)
+  /api/v1/ops/listing-sync/status/export:
+    get:
+      summary: Download listing sync ops status as CSV
   /api/v1/listings/{listingId}/competitors/curve/export:
     get:
       summary: Download competitor price curve as CSV (P2-E1-03)

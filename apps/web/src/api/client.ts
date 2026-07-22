@@ -899,6 +899,56 @@ export async function downloadListingSyncJobsCsv(locale: string): Promise<void> 
   URL.revokeObjectURL(url);
 }
 
+export async function downloadListingSyncOpsStatusCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/ops/listing-sync/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-status-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "listing-sync-ops-status.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadListingSyncJobsForListingCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/sync/jobs/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`listing-sync-jobs-listing-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `listing-sync-jobs-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadReconciliationAlertsDirectCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/reconciliation-alerts/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`reconciliation-alerts-direct ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "reconciliation-alerts.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function downloadExportCsv(
   locale: string,
   body: Record<string, unknown>,
@@ -1541,6 +1591,20 @@ export async function fetchAgentTools(locale: string) {
   return json as {
     items: Array<{ name: string; mode: string; description: string }>;
   };
+}
+
+export async function downloadAgentToolsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/tools/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`agent-tools-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agent-tools.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchAgentToolAudit(locale: string, limit = 20) {
