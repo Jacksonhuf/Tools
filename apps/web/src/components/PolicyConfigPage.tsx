@@ -7,6 +7,8 @@ import {
   fetchSharedFeeTemplates,
   patchSkuPolicy,
   batchPatchSkuPolicies,
+  fetchCategoryRuleTemplates,
+  downloadCategoryRuleTemplatesCsv,
 } from "../api/client";
 
 export function PolicyConfigPage() {
@@ -17,15 +19,19 @@ export function PolicyConfigPage() {
   const [templates, setTemplates] = useState<
     Array<{ id: string; name: string; channel: string }>
   >([]);
+  const [categoryTemplates, setCategoryTemplates] = useState<
+    Array<{ category_id: string; name: string }>
+  >([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [ctx, tpl] = await Promise.all([
+      const [ctx, tpl, catTpl] = await Promise.all([
         fetchPricingContext(locale, "MERCADO_LIBRE"),
         fetchSharedFeeTemplates(locale),
+        fetchCategoryRuleTemplates(locale),
       ]);
       setTargetMargin(ctx.policy.target_margin_pct);
       setMinMargin(ctx.policy.min_margin_pct);
@@ -36,6 +42,7 @@ export function PolicyConfigPage() {
           channel: row.channel,
         }))
       );
+      setCategoryTemplates(catTpl.items);
     } catch (e) {
       setError(String(e));
     }
@@ -134,6 +141,28 @@ export function PolicyConfigPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="card" data-testid="policy-category-templates">
+        <h2>{t("categoryRuleTemplatesTitle")}</h2>
+        <ul>
+          {categoryTemplates.map((tpl) => (
+            <li key={tpl.category_id}>
+              <code>{tpl.category_id}</code> — {tpl.name}
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          data-testid="policy-category-templates-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplatesCsv(locale).then(() =>
+              setMessage(t("categoryRuleTemplatesExportDone"))
+            )
+          }
+        >
+          {t("categoryRuleTemplatesExportCsv")}
+        </button>
       </section>
     </div>
   );

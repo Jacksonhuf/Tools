@@ -12,6 +12,9 @@ paths:
       responses:
         "200":
           description: SKU list
+  /api/v1/skus/export:
+    get:
+      summary: Download tenant SKU catalog as CSV
   /api/v1/skus/{skuId}:
     patch:
       summary: Update SKU landed cost
@@ -187,6 +190,9 @@ paths:
           description: Shop summaries without secrets
     post:
       summary: Create shop record
+  /api/v1/shops/export:
+    get:
+      summary: Download tenant shops as CSV
   /api/v1/shops/{shopId}/oauth/start:
     post:
       summary: Start OAuth placeholder (ML / Amazon LWA)
@@ -290,6 +296,9 @@ paths:
   /api/v1/category-rule-templates:
     get:
       summary: List category repricing rule templates (P5-02)
+  /api/v1/category-rule-templates/export:
+    get:
+      summary: Download category rule templates as CSV
   /api/v1/category-rule-templates/{categoryId}:
     get:
       summary: Get category rule template by id

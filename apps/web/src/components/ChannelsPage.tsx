@@ -4,6 +4,7 @@ import {
   fetchChannelAdapterStatus,
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
+  downloadShopsCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -169,6 +170,19 @@ export function ChannelsPage() {
       )}
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
+      <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="channels-shops-export"
+          onClick={() =>
+            void downloadShopsCsv(locale).then(() =>
+              setMessage(t("shopsExportDone"))
+            )
+          }
+        >
+          {t("shopsExportCsv")}
+        </button>
+      </div>
 
       {adapterStatus && (
         <section className="card" data-testid="channel-adapter-status">

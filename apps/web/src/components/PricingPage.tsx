@@ -5,6 +5,7 @@ import {
   applyLandedFromCostSheet,
   createCostSheetRow,
   downloadCostSheetsCsv,
+  downloadSkusCatalogCsv,
   fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
@@ -183,6 +184,20 @@ export function PricingPage() {
   return (
     <div className="page page-wide">
       {error && <p className="error">{error}</p>}
+      {message && <p className="message">{message}</p>}
+      <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="pricing-skus-export"
+          onClick={() =>
+            void downloadSkusCatalogCsv(locale).then(() =>
+              setMessage(t("skusCatalogExportDone"))
+            )
+          }
+        >
+          {t("skusCatalogExportCsv")}
+        </button>
+      </div>
       {crossChannelWarning && (
         <p className="error" data-testid="cross-channel-guard-banner">
           {t("crossChannelSpreadWarning", {

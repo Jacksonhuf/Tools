@@ -1036,6 +1036,34 @@
 | **实现** | 价格历史与重算事件导出；调价单索引导出 |
 | **测试** | `loop-118-121.test.ts` |
 
+### Loop 122 — SKU 目录 CSV（P0-E2-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `skus-catalog-csv.ts`；`GET /skus/export`；`skus_catalog_csv` |
+| **测试** | `loop-122-125.test.ts` |
+
+### Loop 123 — 店铺连接 CSV（P1-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `shops-csv.ts`；`GET /shops/export`；`shops_csv` |
+| **测试** | `loop-122-125.test.ts` |
+
+### Loop 124 — 类目规则模板 CSV（P5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `category-rule-templates-csv.ts`；`GET /category-rule-templates/export`；`category_rule_templates_csv` |
+| **测试** | `loop-122-125.test.ts` |
+
+### Loop 125 — 定价/通道/策略 Web（P0/P1/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | SKU 目录、店铺、类目模板 CSV 导出按钮 |
+| **测试** | `loop-122-125.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1110,3 +1138,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.4 | 2026-07-22 | Loop 110–113 tenant pricing/sandbox/DLQ CSV + Web |
 | v6.5 | 2026-07-22 | Loop 114–117 repricing/digest queue/dispatches/workers CSV + Web |
 | v6.6 | 2026-07-22 | Loop 118–121 price history/repricing events/adjustment index CSV + Web |
+| v6.7 | 2026-07-22 | Loop 122–125 SKU/shops/category templates CSV + Web |
