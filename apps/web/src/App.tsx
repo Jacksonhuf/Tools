@@ -7,8 +7,17 @@ import { CompetitorsPage } from "./components/CompetitorsPage";
 import { OpsCenterPage } from "./components/OpsCenterPage";
 import { CopilotPage } from "./components/CopilotPage";
 import { ProductReadinessPage } from "./components/ProductReadinessPage";
+import { CrossChannelDashboardPage } from "./components/CrossChannelDashboardPage";
 
-type Tab = "pricing" | "adjustments" | "channels" | "competitors" | "ops" | "copilot" | "readiness";
+type Tab =
+  | "pricing"
+  | "adjustments"
+  | "channels"
+  | "competitors"
+  | "crossChannel"
+  | "ops"
+  | "copilot"
+  | "readiness";
 
 export function App() {
   const { t, i18n } = useTranslation();
@@ -60,6 +69,14 @@ export function App() {
         </button>
         <button
           type="button"
+          className={tab === "crossChannel" ? "active" : ""}
+          onClick={() => setTab("crossChannel")}
+          data-testid="nav-cross-channel"
+        >
+          {t("navCrossChannel")}
+        </button>
+        <button
+          type="button"
           className={tab === "ops" ? "active" : ""}
           onClick={() => setTab("ops")}
         >
@@ -89,6 +106,8 @@ export function App() {
         <ChannelsPage />
       ) : tab === "competitors" ? (
         <CompetitorsPage />
+      ) : tab === "crossChannel" ? (
+        <CrossChannelDashboardPage />
       ) : tab === "ops" ? (
         <OpsCenterPage />
       ) : tab === "readiness" ? (

@@ -4,7 +4,10 @@ import {
   batchChannelPublish,
   DEMO_SKU,
   downloadPricingSnapshotCsv,
+  downloadVersionBackup,
   fetchOpsMetrics,
+  fetchWorkerStatus,
+  importLandedCostCsv,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
   promoteRepricingToPending,
@@ -29,18 +32,24 @@ export function OpsCenterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<OpsMetricsSnapshot | null>(null);
+  const [importCsv, setImportCsv] = useState(
+    "sku_id,landed_cost_mxn\ndemo-sku-001,1050"
+  );
+  const [workerCount, setWorkerCount] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops] = await Promise.all([
+      const [data, alertData, ops, workers] = await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
         fetchOpsMetrics(locale),
+        fetchWorkerStatus(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
       setMetrics(ops);
+      setWorkerCount(workers.workers.filter((w) => !w.stale).length);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -204,6 +213,41 @@ export function OpsCenterPage() {
         >
           {t("opsExportPricingCsv")}
         </button>
+        <button
+          type="button"
+          data-testid="ops-version-backup"
+          onClick={() => void downloadVersionBackup(locale)}
+        >
+          {t("opsVersionBackup")}
+        </button>
+      </section>
+
+      <section className="card" data-testid="ops-landed-cost-import">
+        <h2>{t("opsLandedCostImport")}</h2>
+        <p className="hint">{t("opsLandedCostImportHint")}</p>
+        <textarea
+          rows={3}
+          value={importCsv}
+          onChange={(e) => setImportCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void importLandedCostCsv(locale, importCsv).then((r) =>
+              setMessage(
+                t("opsLandedCostImportDone", { count: r.updated.length })
+              )
+            )
+          }
+        >
+          {t("opsLandedCostImportRun")}
+        </button>
+        {workerCount > 0 && (
+          <p className="hint" data-testid="ops-workers-live">
+            {t("opsWorkersLive", { count: workerCount })}
+          </p>
+        )}
       </section>
 
       <section className="card">

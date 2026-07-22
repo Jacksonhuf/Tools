@@ -119,6 +119,16 @@ import {
 import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
 import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
+import { buildCrossChannelDashboard } from "./cross-channel-dashboard.js";
+import {
+  applyLandedCostImport,
+  parseLandedCostCsv,
+} from "./landed-cost-import.js";
+import { buildVersionBackupSnapshot } from "./version-backup-service.js";
+import {
+  getAsyncWorkerStatus,
+  recordWorkerHeartbeat,
+} from "./worker-heartbeat.js";
 import {
   buildPricingSnapshotRows,
   pricingSnapshotToCsv,
@@ -318,6 +328,36 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const guard = await getCrossChannelGuardForSku(catalog, sku.id);
     return c.json(guard);
+  });
+
+  app.get("/api/v1/cross-channel/dashboard", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json(await buildCrossChannelDashboard(catalog, tenantId));
+  });
+
+  app.post("/api/v1/imports/landed-cost", async (c) => {
+    const tenantId = c.get("tenantId");
+    const contentType = c.req.header("content-type") ?? "";
+    let csvText: string;
+    if (contentType.includes("application/json")) {
+      const body = (await c.req.json()) as { csv?: string };
+      if (!body.csv?.trim()) {
+        throw new HTTPException(400, { message: "CSV_REQUIRED" });
+      }
+      csvText = body.csv;
+    } else {
+      csvText = await c.req.text();
+    }
+    const parsed = parseLandedCostCsv(csvText);
+    if (parsed.rows.length === 0) {
+      throw new HTTPException(400, { message: "IMPORT_PARSE_FAILED" });
+    }
+    const result = await applyLandedCostImport(
+      catalog,
+      tenantId,
+      parsed.rows
+    );
+    return c.json({ parse_errors: parsed.errors, ...result });
   });
 
   app.post("/api/v1/listings/:listingId/price-versions", async (c) => {
@@ -542,6 +582,41 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/ops/metrics", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json(await buildOpsMetricsSnapshot(catalog, tenantId));
+  });
+
+  app.get("/api/v1/ops/version-backup", async (c) => {
+    const tenantId = c.get("tenantId");
+    const format = (c.req.query("format") ?? "json").toLowerCase();
+    const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
+    if (format === "download") {
+      return new Response(JSON.stringify(snapshot, null, 2), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Disposition": `attachment; filename="version-backup-${tenantId}.json"`,
+        },
+      });
+    }
+    return c.json(snapshot);
+  });
+
+  app.get("/api/v1/ops/workers/status", async (c) => {
+    return c.json(getAsyncWorkerStatus());
+  });
+
+  app.post("/api/v1/ops/workers/heartbeat", async (c) => {
+    const body = (await c.req.json()) as {
+      worker_id?: string;
+      details?: Record<string, unknown>;
+    };
+    if (!body.worker_id?.trim()) {
+      throw new HTTPException(400, { message: "WORKER_ID_REQUIRED" });
+    }
+    const beat = recordWorkerHeartbeat({
+      worker_id: body.worker_id.trim(),
+      details: body.details,
+    });
+    return c.json({ ok: true, heartbeat: beat });
   });
 
   app.get("/api/v1/reports/pricing-snapshot", async (c) => {

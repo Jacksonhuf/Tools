@@ -648,6 +648,70 @@ export async function fetchOpsMetrics(locale: string) {
   return res.json() as Promise<OpsMetricsSnapshot>;
 }
 
+export interface CrossChannelDashboardItem {
+  sku_id: string;
+  sku_code: string;
+  name: string;
+  mercado_libre_active_mxn: number | null;
+  amazon_mx_active_mxn: number | null;
+  warning: { code: string; spread_pct: number; max_spread_pct: number } | null;
+}
+
+export interface CrossChannelDashboardSnapshot {
+  tenant_id: string;
+  sku_count: number;
+  alert_count: number;
+  items: CrossChannelDashboardItem[];
+  generated_at: string;
+}
+
+export async function fetchCrossChannelDashboard(locale: string) {
+  const res = await fetch(`/api/v1/cross-channel/dashboard`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`cross-channel-dashboard ${res.status}`);
+  return res.json() as Promise<CrossChannelDashboardSnapshot>;
+}
+
+export async function importLandedCostCsv(locale: string, csv: string) {
+  const res = await fetch(`/api/v1/imports/landed-cost`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ csv }),
+  });
+  if (!res.ok) throw new Error(`landed-cost-import ${res.status}`);
+  return res.json() as Promise<{
+    updated: Array<{ sku_id: string; landed_cost_mxn: number }>;
+    skipped: unknown[];
+    parse_errors: string[];
+  }>;
+}
+
+export async function downloadVersionBackup(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/ops/version-backup?format=download`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`version-backup ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "version-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchWorkerStatus(locale: string) {
+  const res = await fetch(`/api/v1/ops/workers/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`workers-status ${res.status}`);
+  return res.json() as Promise<{
+    workers: Array<{ worker_id: string; reported_at: string; stale: boolean }>;
+    scripts: Record<string, string>;
+  }>;
+}
+
 export async function downloadPricingSnapshotCsv(
   locale: string,
   skuId = DEMO_SKU

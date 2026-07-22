@@ -56,4 +56,12 @@ test.describe("Web smoke", () => {
     await expect(page.getByTestId("readiness-all-accepted")).toBeVisible();
     await expect(page.getByTestId("feature-flags-panel")).toBeVisible();
   });
+
+  test("cross-channel dashboard tab (Loop 62)", async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId("nav-cross-channel").click();
+    await expect(page.getByTestId("cross-channel-dashboard")).toBeVisible({
+      timeout: 15_000,
+    });
+  });
 });
