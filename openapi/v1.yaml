@@ -152,6 +152,9 @@ paths:
   /api/v1/channels/sandbox/status:
     get:
       summary: Channel sandbox mode (mock write-back)
+  /api/v1/channels/sandbox/status/export:
+    get:
+      summary: Download channel sandbox status as CSV
   /api/v1/channels/adapters/status:
     get:
       summary: Channel publish/pull adapter driver (mock vs http_stub)
@@ -173,6 +176,9 @@ paths:
   /api/v1/auth/status:
     get:
       summary: Auth driver status (dev / oidc_stub)
+  /api/v1/auth/status/export:
+    get:
+      summary: Download auth driver status as CSV
   /api/v1/feature-flags:
     get:
       summary: Environment feature flags (X-02)
@@ -560,6 +566,9 @@ paths:
   /api/v1/agent/digest/jobs/dead-letter/summary:
     get:
       summary: Digest dead-letter queue summary with sampled jobs
+  /api/v1/agent/digest/jobs/dead-letter/summary/export:
+    get:
+      summary: Download digest dead-letter queue summary as CSV
   /api/v1/agent/digest/jobs/dead-letter/export:
     get:
       summary: Download digest dead-letter jobs as CSV

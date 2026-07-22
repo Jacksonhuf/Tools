@@ -504,6 +504,22 @@ export async function fetchChannelSandboxStatus(locale: string) {
   }>;
 }
 
+export async function downloadChannelSandboxStatusCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/channels/sandbox/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`channel-sandbox-status-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "channel-sandbox-status.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export interface ChannelSandboxEvent {
   id: string;
   tenant_id: string;
@@ -1409,6 +1425,20 @@ export async function downloadFeatureFlagsCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadAuthStatusCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/auth/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`auth-status-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "auth-status.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function importLandedCostCsv(locale: string, csv: string) {
   const res = await fetch(`/api/v1/imports/landed-cost`, {
     method: "POST",
@@ -1842,6 +1872,23 @@ export async function fetchDigestDeadLetterSummary(locale: string, limit = 20) {
       updated_at: string;
     }>;
   }>;
+}
+
+export async function downloadDigestDeadLetterSummaryCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/digest/jobs/dead-letter/summary/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-dlq-summary-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-dead-letter-summary.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function downloadDigestDeadLetterCsv(locale: string): Promise<void> {

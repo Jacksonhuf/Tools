@@ -208,6 +208,7 @@ import {
   digestDeadLetterJobsToCsv,
   buildDigestDeadLetterSummary,
 } from "./digest-dead-letter-csv.js";
+import { digestDeadLetterSummaryToCsv } from "./digest-dead-letter-summary-csv.js";
 import {
   digestQueuedJobsToCsv,
   buildDigestQueuedJobsSummary,
@@ -221,6 +222,7 @@ import {
   listChannelSandboxEvents,
   recordChannelSandboxEvent,
 } from "./channel-sandbox-ledger.js";
+import { channelSandboxStatusToCsv } from "./channel-sandbox-status-csv.js";
 import {
   invokeAgentTool,
   listAgentTools,
@@ -276,6 +278,7 @@ import {
   MemoryAgentToolAuditRepository,
 } from "./repositories/agent-audit-index.js";
 import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
+import { authStatusToCsv } from "./auth-status-csv.js";
 import { getFeatureFlags } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
@@ -361,6 +364,17 @@ export function createApp(options: CreateAppOptions = {}) {
   );
 
   app.get("/api/v1/auth/status", (c) => c.json(getAuthStatus()));
+
+  app.get("/api/v1/auth/status/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = authStatusToCsv(getAuthStatus(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="auth-status.csv"`,
+      },
+    });
+  });
 
   app.get("/api/v1/feature-flags", (c) => c.json(getFeatureFlags()));
 
@@ -956,6 +970,17 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/channels/sandbox/status", async (c) => {
     return c.json(getChannelSandboxStatus());
+  });
+
+  app.get("/api/v1/channels/sandbox/status/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = channelSandboxStatusToCsv(getChannelSandboxStatus(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="channel-sandbox-status.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/channels/adapters/status", async (c) => {
@@ -1640,6 +1665,28 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "rule_compiler_status_csv") {
       content = ruleCompilerStatusToCsv(
         getRuleCompilerStatus(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "auth_status_csv") {
+      content = authStatusToCsv(getAuthStatus(), new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "channel_sandbox_status_csv") {
+      content = channelSandboxStatusToCsv(
+        getChannelSandboxStatus(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "digest_dead_letter_summary_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      const summary = buildDigestDeadLetterSummary(
+        tenantId,
+        jobs,
+        digestQueueSummary(tenantId)
+      );
+      content = digestDeadLetterSummaryToCsv(
+        summary,
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -3402,6 +3449,28 @@ export function createApp(options: CreateAppOptions = {}) {
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
     return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/dead-letter/summary/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const summary = buildDigestDeadLetterSummary(
+      tenantId,
+      jobs,
+      digestQueueSummary(tenantId)
+    );
+    const csv = digestDeadLetterSummaryToCsv(summary, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-dead-letter-summary.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/digest/jobs/dead-letter/summary", async (c) => {
