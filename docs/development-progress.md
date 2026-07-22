@@ -980,6 +980,34 @@
 | **实现** | 租户定价快照导出；沙箱事件 CSV；Copilot DLQ 摘要与导出 |
 | **测试** | `loop-110-113.test.ts` |
 
+### Loop 114 — 租户重算队列 CSV（P3-E3-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `buildTenantRepricingQueue`；`GET /repricing-queue/export`；`repricing_queue_csv` |
+| **测试** | `loop-114-117.test.ts` |
+
+### Loop 115 — Digest 派发历史 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-dispatches-csv.ts`；`GET /agent/digest/dispatches/export`；`digest_dispatches_csv` |
+| **测试** | `loop-114-117.test.ts` |
+
+### Loop 116 — Digest 排队作业摘要与 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-queued-jobs-csv.ts`；`GET .../jobs/summary` 与 `/jobs/export`；`digest_queued_jobs_csv` |
+| **测试** | `loop-114-117.test.ts` |
+
+### Loop 117 — Worker 心跳 CSV + Web（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `worker-heartbeats-csv.ts`；`GET /ops/workers/status/export`；Ops/Copilot 导出按钮 |
+| **测试** | `loop-114-117.test.ts`、`loop-114-117-csv.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1052,3 +1080,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.2 | 2026-07-22 | Loop 102–105 digest/tariff CSV, SKU policy batch, Web |
 | v6.3 | 2026-07-22 | Loop 106–109 FX/audit CSV, digest run-due, Copilot/Ops Web |
 | v6.4 | 2026-07-22 | Loop 110–113 tenant pricing/sandbox/DLQ CSV + Web |
+| v6.5 | 2026-07-22 | Loop 114–117 repricing/digest queue/dispatches/workers CSV + Web |

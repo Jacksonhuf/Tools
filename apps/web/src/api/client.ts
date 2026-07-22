@@ -938,6 +938,20 @@ export async function fetchRepricingQueue(locale: string, skuId: string) {
   return res.json() as Promise<{ items: RepricingQueueItem[] }>;
 }
 
+export async function downloadRepricingQueueCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/repricing-queue/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`repricing-queue-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "repricing-queue-tenant.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function promoteRepricingToPending(
   locale: string,
   versionIds: string[]
@@ -1499,6 +1513,71 @@ export async function downloadDigestDeadLetterCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "digest-dead-letter.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchDigestQueuedJobsSummary(locale: string, limit = 20) {
+  const res = await fetch(
+    `/api/v1/agent/digest/jobs/summary?limit=${encodeURIComponent(String(limit))}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-jobs-summary ${res.status}`);
+  return res.json() as Promise<{
+    queue: {
+      total: number;
+      queued: number;
+      failed: number;
+      dead_letter: number;
+    };
+    sampled: number;
+    items: Array<{
+      job_id: string;
+      status: string;
+      attempts: number;
+      updated_at: string;
+    }>;
+  }>;
+}
+
+export async function downloadDigestQueuedJobsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/digest/jobs/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-jobs-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-queued-jobs.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadDigestDispatchesCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/digest/dispatches/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-dispatches-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-dispatches.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadWorkerHeartbeatsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/ops/workers/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`workers-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "worker-heartbeats.csv";
   a.click();
   URL.revokeObjectURL(url);
 }

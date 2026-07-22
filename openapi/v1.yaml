@@ -251,6 +251,9 @@ paths:
   /api/v1/repricing-queue/promote-pending:
     post:
       summary: Batch promote Suggested to Pending (TC-E2E-OPS-002)
+  /api/v1/repricing-queue/export:
+    get:
+      summary: Download tenant repricing queue (suggested/pending) as CSV
   /api/v1/skus/{skuId}/repricing-batch/shard-plan:
     get:
       summary: Plan repricing batch shards per SKU listing (P5-05)
@@ -331,6 +334,9 @@ paths:
   /api/v1/agent/digest/dispatches:
     get:
       summary: Recent digest dispatch jobs
+  /api/v1/agent/digest/dispatches/export:
+    get:
+      summary: Download digest dispatch history as CSV
   /api/v1/cross-channel/dashboard:
     get:
       summary: Cross-channel spread dashboard per SKU (P3-E3-04)
@@ -455,6 +461,9 @@ paths:
   /api/v1/ops/workers/status:
     get:
       summary: Async worker heartbeats (P0-E1-05)
+  /api/v1/ops/workers/status/export:
+    get:
+      summary: Download worker heartbeats as CSV
   /api/v1/ops/workers/heartbeat:
     post:
       summary: Worker liveness heartbeat
@@ -473,6 +482,12 @@ paths:
   /api/v1/agent/digest/jobs:
     get:
       summary: List queued digest jobs
+  /api/v1/agent/digest/jobs/summary:
+    get:
+      summary: Digest job queue summary with sampled jobs
+  /api/v1/agent/digest/jobs/export:
+    get:
+      summary: Download digest queued jobs as CSV
   /api/v1/agent/digest/jobs/process:
     post:
       summary: Process queued digest jobs

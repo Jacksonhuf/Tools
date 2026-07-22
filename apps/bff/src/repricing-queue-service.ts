@@ -46,6 +46,27 @@ export async function listRepricingQueue(
   return { items };
 }
 
+export type TenantRepricingQueueRow = RepricingQueueItem & { sku_id: string };
+
+export async function buildTenantRepricingQueue(
+  catalog: CatalogRepository,
+  tenantId: string
+): Promise<TenantRepricingQueueRow[]> {
+  const skus = await catalog.listSkus(tenantId);
+  const rows: TenantRepricingQueueRow[] = [];
+  for (const sku of skus) {
+    const { items } = await listRepricingQueue(catalog, tenantId, sku.id);
+    for (const item of items) {
+      rows.push({ ...item, sku_id: sku.id });
+    }
+  }
+  rows.sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+  return rows;
+}
+
 export async function promoteVersionsToPending(
   catalog: CatalogRepository,
   versionIds: string[]
