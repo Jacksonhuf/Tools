@@ -16,6 +16,8 @@ import {
   fetchListingSyncOpsStatus,
   downloadListingSyncJobsCsv,
   downloadReconciliationAlertsExport,
+  downloadRepricingBatchJobsCsv,
+  fetchRepricingBatchJobsSummary,
   type ListingSyncJobRow,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
@@ -62,11 +64,13 @@ export function OpsCenterPage() {
   const [syncJobs, setSyncJobs] = useState<ListingSyncJobRow[]>([]);
   const [syncJobOk, setSyncJobOk] = useState(0);
   const [syncJobFailed, setSyncJobFailed] = useState(0);
+  const [repricingBatchQueued, setRepricingBatchQueued] = useState(0);
+  const [repricingBatchDriver, setRepricingBatchDriver] = useState("memory");
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed, syncStatus] =
+      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed, syncStatus, repricingBatch] =
         await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
@@ -76,6 +80,7 @@ export function OpsCenterPage() {
         fetchListingSyncSchedule(locale),
         fetchListingSyncJobs(locale, 8),
         fetchListingSyncOpsStatus(locale),
+        fetchRepricingBatchJobsSummary(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
@@ -88,6 +93,8 @@ export function OpsCenterPage() {
       setSyncJobs(syncJobFeed.items);
       setSyncJobOk(syncStatus.job_summary.ok);
       setSyncJobFailed(syncStatus.job_summary.failed);
+      setRepricingBatchQueued(repricingBatch.summary.queued);
+      setRepricingBatchDriver(repricingBatch.driver);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -222,6 +229,15 @@ export function OpsCenterPage() {
               </dd>
             </div>
             <div>
+              <dt>{t("opsRepricingBatchSummary")}</dt>
+              <dd data-testid="ops-repricing-batch-summary">
+                {t("opsRepricingBatchSummaryLine", {
+                  queued: repricingBatchQueued,
+                  driver: repricingBatchDriver,
+                })}
+              </dd>
+            </div>
+            <div>
               <dt>{t("opsMetricsNfr")}</dt>
               <dd data-testid="ops-metrics-nfr">
                 {t("opsMetricsNfrSimulate", {
@@ -353,6 +369,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsReconciliationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsCsv(locale).then(() =>
+              setMessage(t("opsRepricingBatchExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchExportCsv")}
         </button>
         {syncJobs.length > 0 && (
           <table

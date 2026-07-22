@@ -4,6 +4,7 @@ import {
   applyAdjustmentPricesCsv,
   applyLandedFromCostSheet,
   createCostSheetRow,
+  downloadCostSheetsCsv,
   fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
@@ -232,6 +233,17 @@ export function PricingPage() {
           onClick={() => void applySheetLanded()}
         >
           {t("costSheetApplyLanded")}
+        </button>
+        <button
+          type="button"
+          data-testid="cost-sheet-export"
+          onClick={() =>
+            void downloadCostSheetsCsv(locale, "demo-sku-001").then(() =>
+              setMessage(t("costSheetExportDone"))
+            )
+          }
+        >
+          {t("costSheetExportCsv")}
         </button>
         <ul>
           {costSheets.slice(0, 3).map((s) => (

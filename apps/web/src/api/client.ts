@@ -1025,6 +1025,74 @@ export async function fetchCrossChannelDashboard(locale: string) {
   return res.json() as Promise<CrossChannelDashboardSnapshot>;
 }
 
+export async function downloadCrossChannelDashboardCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/cross-channel/dashboard/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`cross-channel-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "cross-channel-dashboard.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadCostSheetsCsv(
+  locale: string,
+  skuId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`cost-sheets-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cost-sheets-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchRepricingBatchJobsSummary(locale: string) {
+  const res = await fetch(`/api/v1/repricing-batch/jobs/summary`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`repricing-batch-summary ${res.status}`);
+  return res.json() as Promise<{
+    driver: string;
+    summary: {
+      sampled: number;
+      queued: number;
+      processing: number;
+      completed: number;
+      failed: number;
+    };
+    last_job_at: string | null;
+  }>;
+}
+
+export async function downloadRepricingBatchJobsCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/repricing-batch/jobs/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`repricing-batch-jobs-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "repricing-batch-jobs.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function importLandedCostCsv(locale: string, csv: string) {
   const res = await fetch(`/api/v1/imports/landed-cost`, {
     method: "POST",

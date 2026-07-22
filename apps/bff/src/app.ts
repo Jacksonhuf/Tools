@@ -94,6 +94,8 @@ import {
   listRepricingBatchJobs,
   processRepricingBatchQueue,
 } from "./repricing-batch-job-queue.js";
+import { repricingBatchJobsToCsv } from "./repricing-batch-jobs-csv.js";
+import { summarizeRepricingBatchJobs } from "./repricing-batch-jobs-summary.js";
 import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
@@ -121,6 +123,8 @@ import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
 import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import { buildCrossChannelDashboard } from "./cross-channel-dashboard.js";
+import { crossChannelDashboardToCsv } from "./cross-channel-dashboard-csv.js";
+import { costSheetsToCsv } from "./cost-sheets-csv.js";
 import {
   applyLandedCostImport,
   parseLandedCostCsv,
@@ -379,6 +383,18 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(await buildCrossChannelDashboard(catalog, tenantId));
   });
 
+  app.get("/api/v1/cross-channel/dashboard/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
+    const csv = crossChannelDashboardToCsv(snapshot);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="cross-channel-dashboard.csv"`,
+      },
+    });
+  });
+
   app.post("/api/v1/imports/landed-cost", async (c) => {
     const tenantId = c.get("tenantId");
     const contentType = c.req.header("content-type") ?? "";
@@ -572,6 +588,23 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
     return c.json({ items: listCostSheets(tenantId, skuId) });
+  });
+
+  app.get("/api/v1/skus/:skuId/cost-sheets/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = costSheetsToCsv(listCostSheets(tenantId, skuId), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="cost-sheets-${skuId}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/skus/:skuId/cost-sheets", async (c) => {
@@ -1201,6 +1234,26 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "reconciliation_alerts_csv") {
       const items = await reconciliationAlerts.listAlerts(tenantId);
       content = reconciliationAlertsToCsv(items, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "cross_channel_dashboard_csv") {
+      const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
+      content = crossChannelDashboardToCsv(snapshot);
+      content_type = "text/csv";
+    } else if (kind === "cost_sheets_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      content = costSheetsToCsv(
+        listCostSheets(tenantId, skuId),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "repricing_batch_jobs_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = await listRepricingBatchJobs(tenantId, limit);
+      content = repricingBatchJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2094,6 +2147,32 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/repricing-batch/jobs/summary", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    return c.json(await summarizeRepricingBatchJobs(tenantId, limit));
+  });
+
+  app.get("/api/v1/repricing-batch/jobs/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = await listRepricingBatchJobs(tenantId, limit);
+    const csv = repricingBatchJobsToCsv(jobs, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-batch-jobs.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/repricing-batch/jobs", async (c) => {
