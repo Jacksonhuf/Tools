@@ -155,6 +155,9 @@ paths:
   /api/v1/reports/pricing-snapshot:
     get:
       summary: Pricing snapshot export (JSON or CSV)
+  /api/v1/reports/pricing-snapshots/export:
+    get:
+      summary: Download all SKU pricing snapshot rows for tenant as CSV
   /api/v1/reports/reconciliation-alerts:
     get:
       summary: Reconciliation alerts export (JSON or CSV)
@@ -170,6 +173,9 @@ paths:
   /api/v1/channels/sandbox/events:
     get:
       summary: Recent sandbox channel events for tenant
+  /api/v1/channels/sandbox/events/export:
+    get:
+      summary: Download sandbox channel events as CSV
   /api/v1/shops:
     get:
       summary: List tenant shops (P1-E1)
@@ -470,6 +476,12 @@ paths:
   /api/v1/agent/digest/jobs/process:
     post:
       summary: Process queued digest jobs
+  /api/v1/agent/digest/jobs/dead-letter/summary:
+    get:
+      summary: Digest dead-letter queue summary with sampled jobs
+  /api/v1/agent/digest/jobs/dead-letter/export:
+    get:
+      summary: Download digest dead-letter jobs as CSV
   /api/v1/agent/digest/jobs/dead-letter:
     get:
       summary: Digest jobs moved to dead-letter queue (TC-NFR-REL-004) (email_stub / webhook_queue)

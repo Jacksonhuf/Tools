@@ -952,6 +952,34 @@
 | **实现** | Digest 计划与 run-due；审计/FX CSV 导出 |
 | **测试** | `loop-106-109.test.ts` |
 
+### Loop 110 — 租户定价快照 CSV（P0-E4-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `buildTenantPricingSnapshotRows`；`GET /reports/pricing-snapshots/export`；`pricing_snapshots_tenant_csv` |
+| **测试** | `loop-110-113.test.ts`、`loop-110-113-csv.test.ts` |
+
+### Loop 111 — 渠道沙箱事件 CSV（P1-E3）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `channel-sandbox-csv.ts`；`GET /channels/sandbox/events/export`；`channel_sandbox_events_csv` |
+| **测试** | `loop-110-113.test.ts` |
+
+### Loop 112 — Digest DLQ 摘要与 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-dead-letter-csv.ts`；`GET .../dead-letter/summary` 与 `/export`；`digest_dead_letter_csv` |
+| **测试** | `loop-110-113.test.ts` |
+
+### Loop 113 — Ops/Channels/Copilot Web（P0/P1/P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 租户定价快照导出；沙箱事件 CSV；Copilot DLQ 摘要与导出 |
+| **测试** | `loop-110-113.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1023,3 +1051,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.1 | 2026-07-22 | Loop 98–101 cross-channel/cost sheet/repricing batch CSV + Web |
 | v6.2 | 2026-07-22 | Loop 102–105 digest/tariff CSV, SKU policy batch, Web |
 | v6.3 | 2026-07-22 | Loop 106–109 FX/audit CSV, digest run-due, Copilot/Ops Web |
+| v6.4 | 2026-07-22 | Loop 110–113 tenant pricing/sandbox/DLQ CSV + Web |

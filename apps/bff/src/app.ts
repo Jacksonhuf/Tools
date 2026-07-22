@@ -182,8 +182,14 @@ import {
 } from "./worker-heartbeat.js";
 import {
   buildPricingSnapshotRows,
+  buildTenantPricingSnapshotRows,
   pricingSnapshotToCsv,
 } from "./pricing-report-service.js";
+import { channelSandboxEventsToCsv } from "./channel-sandbox-csv.js";
+import {
+  digestDeadLetterJobsToCsv,
+  buildDigestDeadLetterSummary,
+} from "./digest-dead-letter-csv.js";
 import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
@@ -228,6 +234,7 @@ import {
   enqueueDailyDigestJob,
   listDigestQueuedJobs,
   listDigestDeadLetterJobs,
+  digestQueueSummary,
   processDigestQueue,
   resetDigestJobQueueForTests,
 } from "./digest-job-queue.js";
@@ -1333,6 +1340,20 @@ export function createApp(options: CreateAppOptions = {}) {
       const items = await agentAudit.listInvocations(tenantId, limit);
       content = agentToolAuditToCsv(items, new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "pricing_snapshots_tenant_csv") {
+      const rows = await buildTenantPricingSnapshotRows(catalog, tenantId);
+      content = pricingSnapshotToCsv(rows, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "channel_sandbox_events_csv") {
+      const limit = Math.min(200, Math.max(1, Number(body.limit ?? 100) || 100));
+      const events = listChannelSandboxEvents(tenantId, limit);
+      content = channelSandboxEventsToCsv(events, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_dead_letter_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      content = digestDeadLetterJobsToCsv(jobs, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1408,6 +1429,19 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ exported_at: exportedAt, sku_id: skuId, rows });
   });
 
+  app.get("/api/v1/reports/pricing-snapshots/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const rows = await buildTenantPricingSnapshotRows(catalog, tenantId);
+    const csv = pricingSnapshotToCsv(rows, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="pricing-snapshots-tenant.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/reports/reconciliation-alerts", async (c) => {
     const tenantId = c.get("tenantId");
     const format = (c.req.query("format") ?? "json").toLowerCase();
@@ -1424,6 +1458,23 @@ export function createApp(options: CreateAppOptions = {}) {
       });
     }
     return c.json({ exported_at: exportedAt, items });
+  });
+
+  app.get("/api/v1/channels/sandbox/events/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      200,
+      Math.max(1, Number(c.req.query("limit") ?? "100") || 100)
+    );
+    const exportedAt = new Date().toISOString();
+    const items = listChannelSandboxEvents(tenantId, limit);
+    const csv = channelSandboxEventsToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="channel-sandbox-events.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/channels/sandbox/events", async (c) => {
@@ -2735,6 +2786,35 @@ export function createApp(options: CreateAppOptions = {}) {
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
     return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/dead-letter/summary", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
+    );
+    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    return c.json(
+      buildDigestDeadLetterSummary(tenantId, jobs, digestQueueSummary(tenantId))
+    );
+  });
+
+  app.get("/api/v1/agent/digest/jobs/dead-letter/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const csv = digestDeadLetterJobsToCsv(jobs, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-dead-letter.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/digest/jobs/dead-letter", async (c) => {

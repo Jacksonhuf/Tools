@@ -62,3 +62,15 @@ export function pricingSnapshotToCsv(
   );
   return [header, ...lines].join("\n");
 }
+
+export async function buildTenantPricingSnapshotRows(
+  catalog: CatalogRepository,
+  tenantId: string
+): Promise<PricingSnapshotRow[]> {
+  const skus = await catalog.listSkus(tenantId);
+  const rows: PricingSnapshotRow[] = [];
+  for (const sku of skus) {
+    rows.push(...(await buildPricingSnapshotRows(catalog, tenantId, sku.id)));
+  }
+  return rows;
+}
