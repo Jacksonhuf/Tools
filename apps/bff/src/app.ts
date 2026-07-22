@@ -81,7 +81,9 @@ import {
 import {
   listRepricingQueue,
   promoteVersionsToPending,
+  buildTenantRepricingQueue,
 } from "./repricing-queue-service.js";
+import { repricingQueueToCsv } from "./repricing-queue-csv.js";
 import {
   planRepricingShards,
   runRepricingBatchShard,
@@ -190,6 +192,12 @@ import {
   digestDeadLetterJobsToCsv,
   buildDigestDeadLetterSummary,
 } from "./digest-dead-letter-csv.js";
+import {
+  digestQueuedJobsToCsv,
+  buildDigestQueuedJobsSummary,
+} from "./digest-queued-jobs-csv.js";
+import { digestDispatchesToCsv } from "./digest-dispatches-csv.js";
+import { workerHeartbeatsToCsv } from "./worker-heartbeats-csv.js";
 import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
@@ -1354,6 +1362,24 @@ export function createApp(options: CreateAppOptions = {}) {
       const jobs = listDigestDeadLetterJobs(tenantId, limit);
       content = digestDeadLetterJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "repricing_queue_csv") {
+      const rows = await buildTenantRepricingQueue(catalog, tenantId);
+      content = repricingQueueToCsv(rows, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_dispatches_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const items = listDigestDispatches(tenantId, limit);
+      content = digestDispatchesToCsv(items, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_queued_jobs_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listDigestQueuedJobs(tenantId, limit);
+      content = digestQueuedJobsToCsv(jobs, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "worker_heartbeats_csv") {
+      const status = getAsyncWorkerStatus();
+      content = workerHeartbeatsToCsv(status.workers, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1389,6 +1415,18 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status", async (c) => {
     return c.json(getAsyncWorkerStatus());
+  });
+
+  app.get("/api/v1/ops/workers/status/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const status = getAsyncWorkerStatus();
+    const csv = workerHeartbeatsToCsv(status.workers, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="worker-heartbeats.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/ops/workers/heartbeat", async (c) => {
@@ -2124,6 +2162,19 @@ export function createApp(options: CreateAppOptions = {}) {
     }
   });
 
+  app.get("/api/v1/repricing-queue/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const rows = await buildTenantRepricingQueue(catalog, tenantId);
+    const csv = repricingQueueToCsv(rows, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-queue-tenant.csv"`,
+      },
+    });
+  });
+
   app.post("/api/v1/repricing-queue/promote-pending", async (c) => {
     const body = (await c.req.json()) as { version_ids?: string[] };
     if (!body.version_ids?.length) {
@@ -2756,6 +2807,23 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ job: record, digest });
   });
 
+  app.get("/api/v1/agent/digest/dispatches/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const items = listDigestDispatches(tenantId, limit);
+    const csv = digestDispatchesToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-dispatches.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/agent/digest/dispatches", async (c) => {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
@@ -2779,6 +2847,33 @@ export function createApp(options: CreateAppOptions = {}) {
       simulate_poison: body.simulate_poison,
     });
     return c.json({ job });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/summary", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
+    );
+    const jobs = listDigestQueuedJobs(tenantId, limit);
+    return c.json(buildDigestQueuedJobsSummary(tenantId, jobs));
+  });
+
+  app.get("/api/v1/agent/digest/jobs/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listDigestQueuedJobs(tenantId, limit);
+    const csv = digestQueuedJobsToCsv(jobs, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-queued-jobs.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/digest/jobs", async (c) => {

@@ -16,6 +16,9 @@ import {
   fetchDigestSchedule,
   fetchDigestDeadLetterSummary,
   downloadDigestDeadLetterCsv,
+  fetchDigestQueuedJobsSummary,
+  downloadDigestQueuedJobsCsv,
+  downloadDigestDispatchesCsv,
   updateDigestSchedule,
   runDigestRunDue,
   fetchRuleCompilerStatus,
@@ -62,6 +65,10 @@ export function CopilotPage() {
   const [digestDlq, setDigestDlq] = useState<{
     queue: { dead_letter: number; queued: number };
     items: Array<{ job_id: string; error: string | null }>;
+  } | null>(null);
+  const [digestJobs, setDigestJobs] = useState<{
+    queue: { queued: number; failed: number; dead_letter: number };
+    items: Array<{ job_id: string; status: string }>;
   } | null>(null);
   const [p4Ready, setP4Ready] = useState<boolean | null>(null);
 
@@ -157,6 +164,8 @@ export function CopilotPage() {
           queue: dlq.queue,
           items: dlq.items,
         });
+        const jobs = await fetchDigestQueuedJobsSummary(locale);
+        setDigestJobs({ queue: jobs.queue, items: jobs.items });
       } catch {
         /* non-fatal on demo load */
       }
@@ -353,6 +362,34 @@ export function CopilotPage() {
             onClick={() => void downloadAgentToolAuditCsv(locale)}
           >
             {t("copilotAuditExportCsv")}
+          </button>
+        </div>
+      </section>
+      <section className="card" data-testid="copilot-digest-jobs">
+        <h2>{t("copilotDigestJobsTitle")}</h2>
+        <p className="hint" data-testid="copilot-digest-jobs-summary">
+          {digestJobs
+            ? t("copilotDigestJobsSummary", {
+                queued: digestJobs.queue.queued,
+                failed: digestJobs.queue.failed,
+                dead: digestJobs.queue.dead_letter,
+              })
+            : t("copilotDigestJobsLoading")}
+        </p>
+        <div className="shop-actions">
+          <button
+            type="button"
+            data-testid="copilot-digest-dispatches-export"
+            onClick={() => void downloadDigestDispatchesCsv(locale)}
+          >
+            {t("copilotDigestDispatchesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-jobs-export"
+            onClick={() => void downloadDigestQueuedJobsCsv(locale)}
+          >
+            {t("copilotDigestJobsExportCsv")}
           </button>
         </div>
       </section>

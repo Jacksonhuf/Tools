@@ -18,6 +18,8 @@ import {
   downloadListingSyncJobsCsv,
   downloadReconciliationAlertsExport,
   downloadRepricingBatchJobsCsv,
+  downloadRepricingQueueCsv,
+  downloadWorkerHeartbeatsCsv,
   fetchRepricingBatchJobsSummary,
   type ListingSyncJobRow,
   fetchReconciliationAlerts,
@@ -452,6 +454,17 @@ export function OpsCenterPage() {
             {t("opsWorkersLive", { count: workerCount })}
           </p>
         )}
+        <button
+          type="button"
+          data-testid="ops-workers-export"
+          onClick={() =>
+            void downloadWorkerHeartbeatsCsv(locale).then(() =>
+              setMessage(t("opsWorkersExportDone"))
+            )
+          }
+        >
+          {t("opsWorkersExportCsv")}
+        </button>
       </section>
 
       <section className="card" data-testid="ops-cost-sheet-import">
@@ -562,6 +575,17 @@ export function OpsCenterPage() {
 
       <section className="card">
         <h2>{t("opsQueue")}</h2>
+        <button
+          type="button"
+          data-testid="ops-repricing-queue-export"
+          onClick={() =>
+            void downloadRepricingQueueCsv(locale).then(() =>
+              setMessage(t("opsRepricingQueueExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingQueueExportCsv")}
+        </button>
         <table className="batch-table" data-testid="repricing-queue-table">
           <thead>
             <tr>
