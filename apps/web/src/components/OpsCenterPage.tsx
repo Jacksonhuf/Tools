@@ -13,6 +13,9 @@ import {
   updateListingSyncSchedule,
   runListingSyncDue,
   fetchListingSyncJobs,
+  fetchListingSyncOpsStatus,
+  downloadListingSyncJobsCsv,
+  downloadReconciliationAlertsExport,
   type ListingSyncJobRow,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
@@ -57,11 +60,13 @@ export function OpsCenterPage() {
   const [syncCron, setSyncCron] = useState("0 */6 * * *");
   const [syncLastRun, setSyncLastRun] = useState<string | null>(null);
   const [syncJobs, setSyncJobs] = useState<ListingSyncJobRow[]>([]);
+  const [syncJobOk, setSyncJobOk] = useState(0);
+  const [syncJobFailed, setSyncJobFailed] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed] =
+      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed, syncStatus] =
         await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
@@ -70,6 +75,7 @@ export function OpsCenterPage() {
         fetchTariffHsRates(locale),
         fetchListingSyncSchedule(locale),
         fetchListingSyncJobs(locale, 8),
+        fetchListingSyncOpsStatus(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
@@ -80,6 +86,8 @@ export function OpsCenterPage() {
       setSyncCron(syncSchedule.cron_expression);
       setSyncLastRun(syncSchedule.last_run_at);
       setSyncJobs(syncJobFeed.items);
+      setSyncJobOk(syncStatus.job_summary.ok);
+      setSyncJobFailed(syncStatus.job_summary.failed);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -271,6 +279,13 @@ export function OpsCenterPage() {
             style={{ width: "100%", fontFamily: "monospace" }}
           />
         </label>
+        <p className="hint" data-testid="ops-listing-sync-summary">
+          {t("opsListingSyncSummary", {
+            ok: syncJobOk,
+            failed: syncJobFailed,
+            sampled: syncJobOk + syncJobFailed,
+          })}
+        </p>
         <p className="hint" data-testid="ops-listing-sync-last-run">
           {t("opsListingSyncLastRun")}:{" "}
           {syncLastRun ? new Date(syncLastRun).toLocaleString(locale) : "—"}
@@ -316,6 +331,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsListingSyncRunDue")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-export"
+          onClick={() =>
+            void downloadListingSyncJobsCsv(locale).then(() =>
+              setMessage(t("opsListingSyncExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncExportJobs")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-export"
+          onClick={() =>
+            void downloadReconciliationAlertsExport(locale).then(() =>
+              setMessage(t("opsReconciliationExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationExportCsv")}
         </button>
         {syncJobs.length > 0 && (
           <table

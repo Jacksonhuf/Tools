@@ -7,6 +7,7 @@ import {
   fetchPriceHistory,
   fetchCompetitorCurve,
   downloadCompetitorCurveCsv,
+  downloadCompetitorCurveDirect,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -208,6 +209,17 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorCurveExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-curve-direct-export"
+          onClick={() =>
+            void downloadCompetitorCurveDirect(locale, listingId, "7d").then(() =>
+              setMessage(t("competitorCurveDirectExportDone"))
+            )
+          }
+        >
+          {t("competitorCurveDirectExport")}
         </button>
       </section>
 

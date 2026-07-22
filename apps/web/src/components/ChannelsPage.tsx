@@ -10,6 +10,7 @@ import {
   pullShopListing,
   startShopOAuth,
   syncListingChannel,
+  fetchListingSyncJobsForListing,
   type ChannelAdapterStatus,
   type ChannelSandboxEvent,
   type ShopSummary,
@@ -18,6 +19,11 @@ import {
 const DEMO_REFS: Record<string, string> = {
   MERCADO_LIBRE: "MLM123456",
   AMAZON_MX: "B0TEST123",
+};
+
+const SHOP_LISTING_ID: Record<string, string> = {
+  "shop-ml-demo": "listing-ml-001",
+  "shop-amz-demo": "listing-amz-001",
 };
 
 export function ChannelsPage() {
@@ -31,6 +37,9 @@ export function ChannelsPage() {
   const [adapterStatus, setAdapterStatus] = useState<ChannelAdapterStatus | null>(
     null
   );
+  const [lastSyncByListing, setLastSyncByListing] = useState<
+    Record<string, { status: string; price: number | null }>
+  >({});
 
   const load = useCallback(async () => {
     setError(null);
@@ -45,6 +54,31 @@ export function ChannelsPage() {
       setSandboxNote(sandbox.enabled ? sandbox.note : null);
       setSandboxEvents(sandbox.enabled ? events.items : []);
       setAdapterStatus(adapters);
+      const syncEntries = await Promise.all(
+        Object.values(SHOP_LISTING_ID).map(async (listingId) => {
+          try {
+            const jobs = await fetchListingSyncJobsForListing(locale, listingId);
+            const latest = jobs.items[0];
+            return [
+              listingId,
+              latest
+                ? {
+                    status: latest.status,
+                    price: latest.channel_price_mxn,
+                  }
+                : null,
+            ] as const;
+          } catch {
+            return [listingId, null] as const;
+          }
+        })
+      );
+      const syncMap: Record<string, { status: string; price: number | null }> =
+        {};
+      for (const [listingId, row] of syncEntries) {
+        if (row) syncMap[listingId] = row;
+      }
+      setLastSyncByListing(syncMap);
     } catch (e) {
       setError(String(e));
     }
@@ -190,6 +224,7 @@ export function ChannelsPage() {
               <th>{t("shopName")}</th>
               <th>{t("batchStatus")}</th>
               <th>{t("shopSellerId")}</th>
+              <th>{t("channelLastListingSyncCol")}</th>
               <th>{t("shopActions")}</th>
             </tr>
           </thead>
@@ -204,6 +239,23 @@ export function ChannelsPage() {
                   </span>
                 </td>
                 <td>{shop.external_seller_id ?? "—"}</td>
+                <td>
+                  {SHOP_LISTING_ID[shop.id] &&
+                    lastSyncByListing[SHOP_LISTING_ID[shop.id]] && (
+                      <span
+                        className="hint"
+                        data-testid={`channel-last-sync-${shop.id}`}
+                      >
+                        {t("channelLastListingSync", {
+                          status:
+                            lastSyncByListing[SHOP_LISTING_ID[shop.id]].status,
+                          price:
+                            lastSyncByListing[SHOP_LISTING_ID[shop.id]].price ??
+                            "—",
+                        })}
+                      </span>
+                    )}
+                </td>
                 <td className="shop-actions">
                   {shop.auth_status !== "connected" ? (
                     <button type="button" onClick={() => void connect(shop)}>

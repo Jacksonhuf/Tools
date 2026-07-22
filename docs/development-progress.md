@@ -840,6 +840,34 @@
 | **实现** | 上次执行时间、强制同步、作业表 |
 | **测试** | `loop-90-93.test.ts` |
 
+### Loop 94 — Listing 同步运维状态（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /ops/listing-sync/status`；`listing-sync-ops-status.ts` |
+| **测试** | `loop-94-97.test.ts` |
+
+### Loop 95 — 同步作业 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /ops/listing-sync/jobs/export`；`POST /exports` → `listing_sync_jobs_csv` |
+| **测试** | `loop-94-97.test.ts` |
+
+### Loop 96 — 对账告警导出对象存储（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /exports` → `reconciliation_alerts_csv` |
+| **测试** | `loop-94-97.test.ts` |
+
+### Loop 97 — 通道/竞品/Ops Web（P1-E2 / P2-E3）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道页最近同步；竞品直链曲线；Ops 汇总与导出按钮 |
+| **测试** | `loop-94-97.test.ts` |
+
 ---
 
 ## 本地命令
@@ -907,3 +935,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.7 | 2026-07-22 | Loop 82–85 waterfall export store, sync schedule, competitor curve |
 | v5.8 | 2026-07-22 | Loop 86–89 sync run-due, curve/batch CSV exports, Ops Web |
 | v5.9 | 2026-07-22 | Loop 90–93 sync jobs feed, direct CSV, cron/force, Ops jobs UI |
+| v6.0 | 2026-07-22 | Loop 94–97 sync status, jobs/recon CSV exports, Channels Web |
