@@ -172,6 +172,7 @@ import {
   getListingSyncSchedule,
   upsertListingSyncSchedule,
 } from "./listing-sync-schedule.js";
+import { listingSyncScheduleToCsv } from "./listing-sync-schedule-csv.js";
 import { runDueListingChannelSyncs } from "./listing-sync-run-due.js";
 import { buildCompetitorCurve } from "./competitor-curve.js";
 import { competitorCurvePointsToCsv } from "./competitor-curve-csv.js";
@@ -194,10 +195,12 @@ import { buildListingIngestStatus } from "./listing-ingest-status.js";
 import { listingIngestStatusToCsv } from "./listing-ingest-status-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
+import { adjustmentApprovalPolicyToCsv } from "./adjustment-approval-policy-csv.js";
 import {
   getAsyncWorkerStatus,
   recordWorkerHeartbeat,
 } from "./worker-heartbeat.js";
+import { opsWorkersStatusSummaryToCsv } from "./ops-workers-status-summary-csv.js";
 import {
   buildPricingSnapshotRows,
   buildTenantPricingSnapshotRows,
@@ -271,6 +274,7 @@ import {
   getProductMilestoneStatus,
   getProductReadinessSummary,
 } from "./agent-milestones.js";
+import { agentMilestonesToCsv } from "./agent-milestones-csv.js";
 import { productReadinessToCsv } from "./product-readiness-csv.js";
 import {
   type AgentToolAuditRepository,
@@ -819,6 +823,20 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/adjustment-batches/approval-policy", async (c) => {
     return c.json(getAdjustmentApprovalPolicy());
+  });
+
+  app.get("/api/v1/adjustment-batches/approval-policy/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = adjustmentApprovalPolicyToCsv(
+      getAdjustmentApprovalPolicy(),
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="adjustment-approval-policy.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/adjustment-batches/preview", async (c) => {
@@ -1690,6 +1708,30 @@ export function createApp(options: CreateAppOptions = {}) {
         new Date().toISOString()
       );
       content_type = "text/csv";
+    } else if (kind === "listing_sync_schedule_csv") {
+      content = listingSyncScheduleToCsv(
+        getListingSyncSchedule(tenantId),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "agent_milestones_csv") {
+      content = agentMilestonesToCsv(
+        getProductMilestoneStatus(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "adjustment_approval_policy_csv") {
+      content = adjustmentApprovalPolicyToCsv(
+        getAdjustmentApprovalPolicy(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "ops_workers_status_summary_csv") {
+      content = opsWorkersStatusSummaryToCsv(
+        getAsyncWorkerStatus(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1725,6 +1767,18 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status", async (c) => {
     return c.json(getAsyncWorkerStatus());
+  });
+
+  app.get("/api/v1/ops/workers/status/summary/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const status = getAsyncWorkerStatus();
+    const csv = opsWorkersStatusSummaryToCsv(status, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="ops-workers-status-summary.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/ops/workers/status/export", async (c) => {
@@ -2926,6 +2980,21 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items });
   });
 
+  app.get("/api/v1/ops/listing-sync/schedule/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const csv = listingSyncScheduleToCsv(
+      getListingSyncSchedule(tenantId),
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-sync-schedule.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/ops/listing-sync/schedule", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json(getListingSyncSchedule(tenantId));
@@ -3151,6 +3220,17 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/agent/readiness", async (c) => {
     return c.json(evaluateAgentReadiness());
+  });
+
+  app.get("/api/v1/agent/milestones/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = agentMilestonesToCsv(getProductMilestoneStatus(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-milestones.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/milestones", async (c) => {

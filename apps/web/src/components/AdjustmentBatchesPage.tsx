@@ -8,6 +8,7 @@ import {
   fetchAdjustmentBatches,
   downloadAdjustmentBatchCsv,
   downloadAdjustmentBatchesIndexCsv,
+  downloadAdjustmentApprovalPolicyCsv,
   type AdjustmentBatch,
 } from "../api/client";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
@@ -115,6 +116,17 @@ export function AdjustmentBatchesPage() {
     <div className="page page-wide" data-testid="adjustment-batches-page">
       <h1>{t("adjustmentsTitle")}</h1>
       <div className="shop-actions">
+        <button
+          type="button"
+          data-testid="adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("adjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("adjustmentApprovalPolicyExportCsv")}
+        </button>
         <button
           type="button"
           data-testid="adjustment-batches-index-export"

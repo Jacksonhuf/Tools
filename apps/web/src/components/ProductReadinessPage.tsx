@@ -5,6 +5,7 @@ import {
   fetchProductReadiness,
   downloadFeatureFlagsCsv,
   downloadProductReadinessCsv,
+  downloadAgentMilestonesCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
 } from "../api/client";
@@ -52,6 +53,17 @@ export function ProductReadinessPage() {
               ? t("readinessAllAccepted")
               : t("readinessInProgress")}
           </p>
+          <button
+            type="button"
+            data-testid="readiness-milestones-export"
+            onClick={() =>
+              void downloadAgentMilestonesCsv(locale).then(() =>
+                setMessage(t("readinessMilestonesExportDone"))
+              )
+            }
+          >
+            {t("readinessMilestonesExportCsv")}
+          </button>
           <button
             type="button"
             data-testid="readiness-product-export"
