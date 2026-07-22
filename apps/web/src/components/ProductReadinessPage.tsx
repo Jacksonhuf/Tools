@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchFeatureFlags,
   fetchProductReadiness,
+  downloadFeatureFlagsCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
 } from "../api/client";
@@ -14,6 +15,7 @@ export function ProductReadinessPage() {
     null
   );
   const [flags, setFlags] = useState<FeatureFlagsSnapshot | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -39,6 +41,7 @@ export function ProductReadinessPage() {
       <h1>{t("readinessTitle")}</h1>
       <p className="hint">{t("readinessHint")}</p>
       {error && <p className="error">{error}</p>}
+      {message && <p className="hint">{message}</p>}
 
       {readiness && (
         <section className="card" data-testid="product-readiness">
@@ -78,6 +81,17 @@ export function ProductReadinessPage() {
       {flags && (
         <section className="card" data-testid="feature-flags-panel">
           <h2>{t("readinessFeatureFlags")}</h2>
+          <button
+            type="button"
+            data-testid="readiness-feature-flags-export"
+            onClick={() =>
+              void downloadFeatureFlagsCsv(locale).then(() =>
+                setMessage(t("readinessFeatureFlagsExportDone"))
+              )
+            }
+          >
+            {t("readinessFeatureFlagsExportCsv")}
+          </button>
           <dl className="adapter-status-dl">
             {Object.entries(flags)
               .filter(([k]) => k !== "generated_at")

@@ -11,6 +11,7 @@ import {
   downloadPriceHistoryCsv,
   downloadRepricingEventsCsv,
   downloadCompetitorOffersCsv,
+  downloadListingIngestStatusCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -201,6 +202,17 @@ export function CompetitorsPage() {
         )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-ingest-status-export"
+          onClick={() =>
+            void downloadListingIngestStatusCsv(locale, listingId).then(() =>
+              setMessage(t("listingIngestStatusExportDone"))
+            )
+          }
+        >
+          {t("listingIngestStatusExportCsv")}
         </button>
         <button
           type="button"

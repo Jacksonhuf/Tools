@@ -20,6 +20,7 @@ import {
   downloadReconciliationAlertsDirectCsv,
   downloadReconciliationAlertsExport,
   downloadRepricingBatchJobsCsv,
+  downloadRepricingBatchJobsSummaryCsv,
   downloadRepricingQueueCsv,
   downloadWorkerHeartbeatsCsv,
   downloadOpsMetricsCsv,
@@ -432,6 +433,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingBatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-summary-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+              setMessage(t("opsRepricingBatchSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchSummaryExportCsv")}
         </button>
         {syncJobs.length > 0 && (
           <table
