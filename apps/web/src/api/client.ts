@@ -555,6 +555,22 @@ export async function fetchChannelAdapterStatus(locale: string) {
   return res.json() as Promise<ChannelAdapterStatus>;
 }
 
+export async function downloadChannelAdapterStatusCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/channels/adapters/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`channel-adapters-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "channel-adapters-status.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchShops(locale: string) {
   const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);
@@ -1632,6 +1648,22 @@ export async function fetchRuleCompilerStatus(locale: string) {
   }>;
 }
 
+export async function downloadRuleCompilerStatusCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/rule-compiler/status/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`rule-compiler-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "rule-compiler-status.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchAgentTools(locale: string) {
   const res = await fetch(`/api/v1/agent/tools`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`agent tools ${res.status}`);
@@ -1859,6 +1891,22 @@ export async function downloadDigestQueuedJobsCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "digest-queued-jobs.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadDigestQueuedJobsSummaryCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/agent/digest/jobs/summary/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-jobs-summary-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-queued-jobs-summary.csv";
   a.click();
   URL.revokeObjectURL(url);
 }

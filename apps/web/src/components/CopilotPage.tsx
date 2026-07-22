@@ -18,7 +18,9 @@ import {
   downloadDigestDeadLetterCsv,
   fetchDigestQueuedJobsSummary,
   downloadDigestQueuedJobsCsv,
+  downloadDigestQueuedJobsSummaryCsv,
   downloadDigestDispatchesCsv,
+  downloadRuleCompilerStatusCsv,
   downloadAgentToolsCsv,
   downloadAgentReadinessCsv,
   updateDigestSchedule,
@@ -308,6 +310,19 @@ export function CopilotPage() {
           {t("copilotCompilerStatus")}: {compilerLabel}
         </p>
       )}
+      <p>
+        <button
+          type="button"
+          data-testid="copilot-rule-compiler-export"
+          onClick={() =>
+            void downloadRuleCompilerStatusCsv(locale).then(() =>
+              setMessage(t("copilotRuleCompilerExportDone"))
+            )
+          }
+        >
+          {t("copilotRuleCompilerExportCsv")}
+        </button>
+      </p>
       <section className="card" data-testid="copilot-digest-schedule">
         <h2>{t("copilotDigestScheduleTitle")}</h2>
         <label>
@@ -403,6 +418,17 @@ export function CopilotPage() {
             onClick={() => void downloadDigestDispatchesCsv(locale)}
           >
             {t("copilotDigestDispatchesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-jobs-summary-export"
+            onClick={() =>
+              void downloadDigestQueuedJobsSummaryCsv(locale).then(() =>
+                setMessage(t("copilotDigestJobsSummaryExportDone"))
+              )
+            }
+          >
+            {t("copilotDigestJobsSummaryExportCsv")}
           </button>
           <button
             type="button"

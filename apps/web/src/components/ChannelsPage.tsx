@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   fetchChannelAdapterStatus,
+  downloadChannelAdapterStatusCsv,
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
   downloadShopsCsv,
@@ -240,6 +241,17 @@ export function ChannelsPage() {
               </dd>
             </div>
           </dl>
+          <button
+            type="button"
+            data-testid="channel-adapter-export"
+            onClick={() =>
+              void downloadChannelAdapterStatusCsv(locale).then(() =>
+                setMessage(t("channelAdapterExportDone"))
+              )
+            }
+          >
+            {t("channelAdapterExportCsv")}
+          </button>
         </section>
       )}
 

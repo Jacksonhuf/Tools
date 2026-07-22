@@ -1176,6 +1176,34 @@
 | **实现** | Agent 就绪、竞品锚点、产品里程碑 CSV 导出按钮 |
 | **测试** | `loop-138-141.test.ts` |
 
+### Loop 142 — Digest 队列汇总 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-queued-jobs-summary-csv.ts`；`GET /agent/digest/jobs/summary/export`；`digest_queued_jobs_summary_csv` |
+| **测试** | `loop-142-145.test.ts` |
+
+### Loop 143 — 渠道适配器状态 CSV（P1-E2 / P3-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `channel-adapters-status-csv.ts`；`GET /channels/adapters/status/export`；`channel_adapters_status_csv` |
+| **测试** | `loop-142-145.test.ts` |
+
+### Loop 144 — 规则编译器状态 CSV（P4-E1-06）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `rule-compiler-status-csv.ts`；`GET /rule-compiler/status/export`；`rule_compiler_status_csv` |
+| **测试** | `loop-142-145.test.ts` |
+
+### Loop 145 — Copilot/通道 Web（P4/P1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Digest 队列汇总、规则编译器、渠道适配器状态 CSV 导出按钮 |
+| **测试** | `loop-142-145.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1255,3 +1283,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.9 | 2026-07-22 | Loop 130–133 reconciliation/sync status/listing sync/agent tools CSV + Web |
 | v7.0 | 2026-07-22 | Loop 134–137 repricing batch summary, ingest status, feature flags CSV + Web |
 | v7.1 | 2026-07-22 | Loop 138–141 agent/product readiness and competitor anchor CSV + Web |
+| v7.2 | 2026-07-22 | Loop 142–145 digest summary, channel adapters, rule compiler CSV + Web |
