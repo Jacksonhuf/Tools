@@ -7,6 +7,7 @@ import {
   downloadVersionBackup,
   fetchOpsMetrics,
   fetchWorkerStatus,
+  importCostSheetsCsv,
   importLandedCostCsv,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
@@ -38,6 +39,9 @@ export function OpsCenterPage() {
   const [metrics, setMetrics] = useState<OpsMetricsSnapshot | null>(null);
   const [importCsv, setImportCsv] = useState(
     "sku_id,landed_cost_mxn\ndemo-sku-001,1050"
+  );
+  const [costSheetImportCsv, setCostSheetImportCsv] = useState(
+    "sku_id,batch_no,cogs_amount,cogs_currency,freight_alloc_mxn\ndemo-sku-001,BATCH-CSV,1000,MXN,0\n"
   );
   const [adjustmentCsv, setAdjustmentCsv] = useState(
     "listing_id,explicit_price_mxn\nlisting-ml-001,1600\n"
@@ -258,6 +262,26 @@ export function OpsCenterPage() {
             {t("opsWorkersLive", { count: workerCount })}
           </p>
         )}
+      </section>
+
+      <section className="card" data-testid="ops-cost-sheet-import">
+        <h2>{t("opsCostSheetImport")}</h2>
+        <textarea
+          rows={3}
+          value={costSheetImportCsv}
+          onChange={(e) => setCostSheetImportCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void importCostSheetsCsv(locale, costSheetImportCsv).then((r) =>
+              setMessage(t("opsCostSheetImportDone", { count: r.created.length }))
+            )
+          }
+        >
+          {t("opsCostSheetImportRun")}
+        </button>
       </section>
 
       <section className="card" data-testid="ops-tariff-hs">

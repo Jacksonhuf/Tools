@@ -575,6 +575,72 @@ export async function fetchPriceHistory(
   }>;
 }
 
+export async function fetchCompetitorCurve(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+) {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/competitors/curve?range=${range}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-curve ${res.status}`);
+  return res.json() as Promise<{
+    points: Array<{ date: string; avg_effective_mxn: number }>;
+  }>;
+}
+
+export async function downloadWaterfallExportCsv(
+  locale: string,
+  body: {
+    channel: Channel;
+    pricing_mode: string;
+    target_margin_pct?: number;
+    competitor_price_mxn?: number;
+  }
+): Promise<void> {
+  const post = await fetch(`/api/v1/exports`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ kind: "waterfall_csv", ...body }),
+  });
+  if (!post.ok) throw new Error(`waterfall-export ${post.status}`);
+  const meta = (await post.json()) as { download_path: string };
+  const dl = await fetch(meta.download_path, { headers: headers(locale) });
+  if (!dl.ok) throw new Error(`waterfall-download ${dl.status}`);
+  const blob = await dl.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "waterfall-export.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchListingSyncSchedule(locale: string) {
+  const res = await fetch(`/api/v1/ops/listing-sync/schedule`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-schedule ${res.status}`);
+  return res.json() as Promise<{
+    enabled: boolean;
+    cron_expression: string;
+  }>;
+}
+
+export async function updateListingSyncSchedule(
+  locale: string,
+  body: { enabled?: boolean; cron_expression?: string }
+) {
+  const res = await fetch(`/api/v1/ops/listing-sync/schedule`, {
+    method: "PUT",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`listing-sync-schedule-update ${res.status}`);
+  return res.json();
+}
+
 export async function fetchIngestStatus(locale: string, listingId: string) {
   const res = await fetch(`/api/v1/listings/${listingId}/ingest/status`, {
     headers: headers(locale),

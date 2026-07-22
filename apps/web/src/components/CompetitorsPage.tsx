@@ -5,6 +5,7 @@ import {
   createCompetitorOffer,
   fetchCompetitorOffers,
   fetchPriceHistory,
+  fetchCompetitorCurve,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -28,6 +29,7 @@ export function CompetitorsPage() {
   const [anchorMedian, setAnchorMedian] = useState<number | null>(null);
   const [buyBoxMxn, setBuyBoxMxn] = useState<number | null>(null);
   const [historyCount, setHistoryCount] = useState(0);
+  const [curveDays, setCurveDays] = useState(0);
   const [ref, setRef] = useState("MLM-COMP-001");
   const [label, setLabel] = useState("");
   const [selectedOffer, setSelectedOffer] = useState<string | null>(null);
@@ -56,6 +58,8 @@ export function CompetitorsPage() {
       );
       const hist = await fetchPriceHistory(locale, listingId, "7d");
       setHistoryCount(hist.observations.length);
+      const curve = await fetchCompetitorCurve(locale, listingId, "7d");
+      setCurveDays(curve.points.length);
       const ingest = await fetchIngestStatus(locale, listingId);
       setIngestTier(ingest.tier);
       setIngestFailed(Boolean(ingest.ingest_failed));
@@ -170,6 +174,7 @@ export function CompetitorsPage() {
             {buyBoxMxn != null ? `${buyBoxMxn} MXN` : "—"}
           </span>{" "}
           · {t("historyPoints", { count: historyCount })} ({listingLabel}) ·{" "}
+          {t("curveDays", { count: curveDays })}{" "}
           {t("ingestTier")}: {ingestTier}
           {staleFrozen && (
             <span className="status status-expired"> {t("staleFrozen")}</span>
