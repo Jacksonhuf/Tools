@@ -13,6 +13,9 @@ describe("auth oidc_jwt", () => {
     delete process.env.OIDC_JWT_HS256_SECRET;
     delete process.env.OIDC_JWKS_JSON;
     delete process.env.OIDC_JWKS_URL;
+    delete process.env.OIDC_JWT_ISSUER;
+    delete process.env.OIDC_ISSUER_URL;
+    delete process.env.OIDC_JWT_AUDIENCE;
     resetJwksCacheForTests();
   });
 
@@ -84,5 +87,47 @@ describe("auth oidc_jwt", () => {
     expect(json.jwks_json_configured).toBe(true);
     expect(json.jwt_rs256_configured).toBe(true);
     expect(json.ready).toBe(true);
+  });
+
+  it("TC-API-AUTH-005 enforces iss and aud when configured", async () => {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+    process.env.OIDC_JWT_HS256_SECRET = SECRET;
+    process.env.OIDC_JWT_ISSUER = "https://idp.mx-pricing.test";
+    process.env.OIDC_JWT_AUDIENCE = "mx-pricing-bff";
+    const good = signHs256Jwt(
+      {
+        sub: "claims-ok",
+        iss: "https://idp.mx-pricing.test",
+        aud: "mx-pricing-bff",
+      },
+      SECRET
+    );
+    const { app } = createTestApp();
+    expect(
+      (
+        await app.request("/api/v1/ops/metrics", {
+          headers: { Authorization: `Bearer ${good}`, ...TENANT },
+        })
+      ).status
+    ).toBe(200);
+
+    const badIss = signHs256Jwt({ sub: "bad-iss", aud: "mx-pricing-bff" }, SECRET);
+    expect(
+      (
+        await app.request("/api/v1/ops/metrics", {
+          headers: { Authorization: `Bearer ${badIss}`, ...TENANT },
+        })
+      ).status
+    ).toBe(401);
+
+    const status = await app.request("/api/v1/auth/status", {
+      headers: { Authorization: `Bearer ${good}`, ...TENANT },
+    });
+    const json = (await status.json()) as {
+      jwt_issuer_enforced: boolean;
+      jwt_audience_enforced: boolean;
+    };
+    expect(json.jwt_issuer_enforced).toBe(true);
+    expect(json.jwt_audience_enforced).toBe(true);
   });
 });

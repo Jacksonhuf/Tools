@@ -23,5 +23,6 @@ JWKS 文档需包含 RSA 公钥（`kty: RSA`，`n`/`e`），建议带 `kid` 与 
 
 ## 未实现
 
-- `iss` / `aud` 强校验
 - JWKS 轮换与 TTL 刷新策略
+
+`iss` / `aud` 见 [auth-jwt-claims.md](./auth-jwt-claims.md)。

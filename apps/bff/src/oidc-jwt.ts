@@ -36,20 +36,36 @@ export function decodeJwtSegments(token: string): {
   return { headerSeg, payloadSeg, sigSeg };
 }
 
-function readJwtPayload(payloadSeg: string): { sub: string } | null {
+import {
+  resolveJwtClaimExpectations,
+  validateStandardClaims,
+} from "./jwt-claims.js";
+
+function readJwtPayload(
+  payloadSeg: string,
+  claimExpectations = resolveJwtClaimExpectations()
+): { sub: string } | null {
   const payload = base64UrlDecodeJson(payloadSeg) as {
     sub?: string;
     exp?: number;
+    iss?: string;
+    aud?: string | string[];
   };
   if (!payload.sub || typeof payload.sub !== "string") return null;
   if (payload.exp != null && payload.exp < Math.floor(Date.now() / 1000)) {
     return null;
   }
+  if (!validateStandardClaims(payload, claimExpectations)) return null;
   return { sub: payload.sub };
 }
 
 export function signHs256Jwt(
-  payload: { sub: string; exp?: number },
+  payload: {
+    sub: string;
+    exp?: number;
+    iss?: string;
+    aud?: string | string[];
+  },
   secret: string
 ): string {
   const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
@@ -93,7 +109,12 @@ export function verifyHs256Jwt(
 }
 
 export function signRs256Jwt(
-  payload: { sub: string; exp?: number },
+  payload: {
+    sub: string;
+    exp?: number;
+    iss?: string;
+    aud?: string | string[];
+  },
   privateKey: KeyObject,
   kid = "default"
 ): string {

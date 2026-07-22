@@ -538,6 +538,15 @@
 | **测试** | `auth-jwt.test.ts` TC-API-AUTH-004 |
 | **下一步** | 合并 supersede PR #5；`iss`/`aud` 校验；持久化 repricing job 队列 |
 
+### Loop 47 — JWT `iss` / `aud`（TC-API-AUTH-005）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `jwt-claims.ts`；`OIDC_JWT_ISSUER` / `OIDC_JWT_AUDIENCE`；`auth/status` 标志位 |
+| **文档** | `docs/auth-jwt-claims.md` |
+| **测试** | `jwt-claims.test.ts`、`auth-jwt.test.ts` TC-API-AUTH-005 |
+| **下一步** | 持久化 repricing job 队列；JWKS 缓存 TTL |
+
 ---
 
 ## 本地命令
@@ -596,3 +605,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v4.8 | 2026-07-21 | Loop 44 P5-05 repricing batch shards |
 | v4.9 | 2026-07-21 | Loop 45 repricing batch worker + recompute-all |
 | v5.0 | 2026-07-21 | Loop 43+46 JWT HS256 and JWKS RS256 |
+| v5.1 | 2026-07-22 | Loop 47 JWT iss/aud claims |
