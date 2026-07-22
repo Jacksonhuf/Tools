@@ -174,6 +174,9 @@ import { runDueListingChannelSyncs } from "./listing-sync-run-due.js";
 import { buildCompetitorCurve } from "./competitor-curve.js";
 import { competitorCurvePointsToCsv } from "./competitor-curve-csv.js";
 import { adjustmentBatchToCsv } from "./adjustment-batch-csv.js";
+import { adjustmentBatchesIndexToCsv } from "./adjustment-batches-index-csv.js";
+import { priceHistoryToCsv } from "./price-history-csv.js";
+import { repricingEventsToCsv } from "./repricing-events-csv.js";
 import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
@@ -736,6 +739,19 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/adjustment-batches", async (c) => {
     const items = await adjustments.listBatches(c.get("tenantId"));
     return c.json({ items });
+  });
+
+  app.get("/api/v1/adjustment-batches/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const items = await adjustments.listBatches(tenantId, 100);
+    const csv = adjustmentBatchesIndexToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="adjustment-batches-index.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/adjustment-batches/approval-policy", async (c) => {
@@ -1380,6 +1396,35 @@ export function createApp(options: CreateAppOptions = {}) {
       const status = getAsyncWorkerStatus();
       content = workerHeartbeatsToCsv(status.workers, new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "price_history_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const range = body.range ?? "7d";
+      const days = range === "30d" ? 30 : 7;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const observations = await competitors.listObservations(listingId, since);
+      content = priceHistoryToCsv(
+        listingId,
+        observations,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "repricing_events_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const items = await repricing.listEvents(tenantId, listingId, 200);
+      content = repricingEventsToCsv(items, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "adjustment_batches_index_csv") {
+      const items = await adjustments.listBatches(tenantId, 100);
+      content = adjustmentBatchesIndexToCsv(items, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1722,6 +1767,27 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(observation, 201);
   });
 
+  app.get("/api/v1/listings/:listingId/price-history/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const range = c.req.query("range") ?? "7d";
+    const days = range === "30d" ? 30 : 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const observations = await competitors.listObservations(listingId, since);
+    const exportedAt = new Date().toISOString();
+    const csv = priceHistoryToCsv(listingId, observations, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="price-history-${listingId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/price-history", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
@@ -1837,6 +1903,28 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const event = await flushListingDebounce(repricing, tenantId, listingId);
     return c.json({ event });
+  });
+
+  app.get("/api/v1/listings/:listingId/repricing-events/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const limit = Math.min(
+      200,
+      Math.max(1, Number(c.req.query("limit") ?? "100") || 100)
+    );
+    const items = await repricing.listEvents(tenantId, listingId, limit);
+    const exportedAt = new Date().toISOString();
+    const csv = repricingEventsToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-events-${listingId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/listings/:listingId/repricing-events", async (c) => {
