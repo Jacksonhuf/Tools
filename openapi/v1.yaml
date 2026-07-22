@@ -482,6 +482,9 @@ paths:
       summary: Listing channel sync cron config (P1-E2-04 stub)
     put:
       summary: Update listing sync schedule
+  /api/v1/ops/listing-sync/schedule/export:
+    get:
+      summary: Download listing sync schedule as CSV
   /api/v1/ops/listing-sync/run-due:
     post:
       summary: Run scheduled listing sync for all demo listings when enabled (P1-E2-04)
@@ -515,6 +518,9 @@ paths:
   /api/v1/adjustment-batches/approval-policy:
     get:
       summary: Adjustment approval thresholds (P0-E5-02)
+  /api/v1/adjustment-batches/approval-policy/export:
+    get:
+      summary: Download adjustment approval policy as CSV
   /api/v1/ops/version-backup/validate:
     post:
       summary: Validate version backup JSON (X-05 drill)
@@ -527,6 +533,9 @@ paths:
   /api/v1/ops/workers/status/export:
     get:
       summary: Download worker heartbeats as CSV
+  /api/v1/ops/workers/status/summary/export:
+    get:
+      summary: Download worker status summary as CSV
   /api/v1/ops/workers/heartbeat:
     post:
       summary: Worker liveness heartbeat
@@ -539,6 +548,9 @@ paths:
   /api/v1/agent/milestones:
     get:
       summary: P3/P4 milestone status (P4 accepted when readiness passes)
+  /api/v1/agent/milestones/export:
+    get:
+      summary: Download P3/P4/P5 milestone catalog as CSV
   /api/v1/agent/readiness:
     get:
       summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)

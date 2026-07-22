@@ -432,6 +432,22 @@ export async function fetchAdjustmentBatches(locale: string) {
   return res.json() as Promise<{ items: AdjustmentBatch[] }>;
 }
 
+export async function downloadAdjustmentApprovalPolicyCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/adjustment-batches/approval-policy/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`adjustment-approval-policy-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "adjustment-approval-policy.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function createAdjustmentBatch(
   locale: string,
   body: {
@@ -847,6 +863,22 @@ export async function fetchListingSyncSchedule(locale: string) {
     cron_expression: string;
     last_run_at: string | null;
   }>;
+}
+
+export async function downloadListingSyncScheduleCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/ops/listing-sync/schedule/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-schedule-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "listing-sync-schedule.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function updateListingSyncSchedule(
@@ -1763,6 +1795,20 @@ export async function downloadProductReadinessCsv(locale: string): Promise<void>
   URL.revokeObjectURL(url);
 }
 
+export async function downloadAgentMilestonesCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/milestones/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`agent-milestones-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agent-milestones.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchAgentToolAudit(locale: string, limit = 20) {
   const res = await fetch(`/api/v1/agent/tool-audit?limit=${limit}`, {
     headers: headers(locale),
@@ -1982,6 +2028,22 @@ export async function downloadWorkerHeartbeatsCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "worker-heartbeats.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadOpsWorkersStatusSummaryCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/ops/workers/status/summary/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`workers-summary-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ops-workers-status-summary.csv";
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -17,12 +17,14 @@ import {
   fetchListingSyncOpsStatus,
   downloadListingSyncJobsCsv,
   downloadListingSyncOpsStatusCsv,
+  downloadListingSyncScheduleCsv,
   downloadReconciliationAlertsDirectCsv,
   downloadReconciliationAlertsExport,
   downloadRepricingBatchJobsCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadRepricingQueueCsv,
   downloadWorkerHeartbeatsCsv,
+  downloadOpsWorkersStatusSummaryCsv,
   downloadOpsMetricsCsv,
   fetchRepricingBatchJobsSummary,
   type ListingSyncJobRow,
@@ -395,6 +397,17 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-listing-sync-schedule-export"
+          onClick={() =>
+            void downloadListingSyncScheduleCsv(locale).then(() =>
+              setMessage(t("opsListingSyncScheduleExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-listing-sync-export"
           onClick={() =>
             void downloadListingSyncJobsCsv(locale).then(() =>
@@ -516,6 +529,17 @@ export function OpsCenterPage() {
             {t("opsWorkersLive", { count: workerCount })}
           </p>
         )}
+        <button
+          type="button"
+          data-testid="ops-workers-summary-export"
+          onClick={() =>
+            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+              setMessage(t("opsWorkersSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsWorkersSummaryExportCsv")}
+        </button>
         <button
           type="button"
           data-testid="ops-workers-export"

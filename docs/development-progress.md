@@ -1232,6 +1232,34 @@
 | **实现** | 认证状态、沙箱状态、死信汇总 CSV 导出按钮 |
 | **测试** | `loop-146-149.test.ts` |
 
+### Loop 150 — Listing 同步计划 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `listing-sync-schedule-csv.ts`；`GET /ops/listing-sync/schedule/export`；`listing_sync_schedule_csv` |
+| **测试** | `loop-150-153.test.ts` |
+
+### Loop 151 — 产品里程碑目录 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `agent-milestones-csv.ts`；`GET /agent/milestones/export`；`agent_milestones_csv` |
+| **测试** | `loop-150-153.test.ts` |
+
+### Loop 152 — 调价审批策略 CSV（P0-E5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `adjustment-approval-policy-csv.ts`；`GET /adjustment-batches/approval-policy/export`；`adjustment_approval_policy_csv` |
+| **测试** | `loop-150-153.test.ts` |
+
+### Loop 153 — Worker 状态汇总 CSV + Web（P5/P1/P0）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `ops-workers-status-summary-csv.ts`；`GET /ops/workers/status/summary/export`；`ops_workers_status_summary_csv`；同步计划/审批策略/里程碑/Worker 汇总导出按钮 |
+| **测试** | `loop-150-153.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1313,3 +1341,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.1 | 2026-07-22 | Loop 138–141 agent/product readiness and competitor anchor CSV + Web |
 | v7.2 | 2026-07-22 | Loop 142–145 digest summary, channel adapters, rule compiler CSV + Web |
 | v7.3 | 2026-07-22 | Loop 146–149 auth, sandbox status, digest DLQ summary CSV + Web |
+| v7.4 | 2026-07-22 | Loop 150–153 listing sync schedule, milestones, approval policy, workers summary CSV + Web |
