@@ -450,6 +450,9 @@ paths:
   /api/v1/listings/{listingId}/sync/jobs:
     get:
       summary: Recent listing sync jobs for listing
+  /api/v1/listings/{listingId}/sync/jobs/export:
+    get:
+      summary: Download listing sync jobs for listing as CSV
   /api/v1/ops/listing-sync/schedule:
     get:
       summary: Listing channel sync cron config (P1-E2-04 stub)
