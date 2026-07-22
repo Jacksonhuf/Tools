@@ -33,6 +33,9 @@ export function getChannelAdapterStatus() {
     driver,
     publish_http_url_configured: Boolean(publishUrl),
     listing_pull_http_url_configured: Boolean(pullUrl),
+    channel_live_acknowledged:
+      process.env.CHANNEL_LIVE_ACKNOWLEDGED === "1" ||
+      process.env.CHANNEL_LIVE_ACKNOWLEDGED === "true",
     ready:
       driver === "mock" ||
       (driver === "http_stub" && httpConfigured) ||

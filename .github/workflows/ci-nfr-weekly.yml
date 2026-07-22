@@ -18,6 +18,8 @@ jobs:
       - run: npm run build
       - name: Vitest baseline (TC-NFR-PERF-002 scaffold)
         run: npm test
+      - name: NFR timing scaffold
+        run: npm test -- tests/nfr/pricing-timing.test.ts
       - name: Record placeholder metrics
         run: |
           echo "repricing_lag_seconds=0" >> "$GITHUB_STEP_SUMMARY"

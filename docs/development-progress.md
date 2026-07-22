@@ -565,6 +565,20 @@
 | **测试** | `postgres-repricing-batch-job-store.test.ts`；队列 API 仍用 memory |
 | **下一步** | JWKS 缓存 TTL；跨进程 job 租约 |
 
+### Loop 50–56 — Backlog 收官（见 `development-backlog-closure.md`）
+
+| Loop | 主题 |
+|------|------|
+| 50 | JWKS `OIDC_JWKS_CACHE_TTL_SEC` |
+| 51 | PG job lease + `X-Repricing-Worker-Id` |
+| 52 | P5-02 品类规则模板 |
+| 53 | X-01 `ops/metrics.nfr` |
+| 54 | P5-04 shared fee templates |
+| 55 | NFR timing test + ci-nfr-weekly |
+| 56 | `CHANNEL_LIVE_ACKNOWLEDGED` |
+
+| **测试** | **145+** Vitest（含 `jwks-cache`、`category-rule-template`、`pricing-timing`） |
+
 ---
 
 ## 本地命令

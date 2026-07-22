@@ -62,7 +62,8 @@ export class MemoryRepricingBatchJobStore implements RepricingBatchJobStore {
 
   async claimQueued(
     tenantId: string,
-    limit: number
+    limit: number,
+    _options?: { worker_id?: string; lease_sec?: number }
   ): Promise<RepricingBatchQueuedJob[]> {
     const claimed: RepricingBatchQueuedJob[] = [];
     for (const job of queue) {

@@ -7,6 +7,28 @@ export interface JwksDocument {
 
 let cachedUrl: string | null = null;
 let cachedKeys: Map<string, KeyObject> | null = null;
+let cachedAtMs: number | null = null;
+
+export function resolveJwksCacheTtlSec(): number {
+  const raw = process.env.OIDC_JWKS_CACHE_TTL_SEC?.trim();
+  const n = raw ? Number.parseInt(raw, 10) : 300;
+  if (!Number.isFinite(n) || n < 0) return 300;
+  return n;
+}
+
+export function getJwksCacheStatus() {
+  const ttl = resolveJwksCacheTtlSec();
+  const url = process.env.OIDC_JWKS_URL?.trim() || null;
+  const fresh =
+    cachedAtMs != null && Date.now() - cachedAtMs < ttl * 1000;
+  return {
+    jwks_cache_ttl_sec: ttl,
+    jwks_cache_active: Boolean(url && cachedKeys && fresh),
+    jwks_cache_fetched_at: cachedAtMs
+      ? new Date(cachedAtMs).toISOString()
+      : null,
+  };
+}
 
 export function parseJwksDocument(json: string): Map<string, KeyObject> {
   const doc = JSON.parse(json) as JwksDocument;
@@ -31,7 +53,13 @@ export function getStaticJwksKeys(): Map<string, KeyObject> | null {
 }
 
 export async function fetchJwksKeys(url: string): Promise<Map<string, KeyObject>> {
-  if (cachedUrl === url && cachedKeys) {
+  const ttlMs = resolveJwksCacheTtlSec() * 1000;
+  if (
+    cachedUrl === url &&
+    cachedKeys &&
+    cachedAtMs != null &&
+    Date.now() - cachedAtMs < ttlMs
+  ) {
     return cachedKeys;
   }
   const res = await fetch(url);
@@ -42,12 +70,14 @@ export async function fetchJwksKeys(url: string): Promise<Map<string, KeyObject>
   const keys = parseJwksDocument(text);
   cachedUrl = url;
   cachedKeys = keys;
+  cachedAtMs = Date.now();
   return keys;
 }
 
 export function resetJwksCacheForTests() {
   cachedUrl = null;
   cachedKeys = null;
+  cachedAtMs = null;
 }
 
 export async function resolveJwksKey(

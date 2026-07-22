@@ -7,7 +7,8 @@
 | 变量 | 说明 |
 |------|------|
 | `OIDC_JWKS_JSON` | 内联 JWKS 文档（CI / 本地，优先于 URL） |
-| `OIDC_JWKS_URL` | 远程 JWKS 端点（内存缓存，首次请求拉取） |
+| `OIDC_JWKS_URL` | 远程 JWKS 端点（内存缓存，TTL 可配） |
+| `OIDC_JWKS_CACHE_TTL_SEC` | URL 缓存 TTL（默认 300） |
 
 JWKS 文档需包含 RSA 公钥（`kty: RSA`，`n`/`e`），建议带 `kid` 与 JWT header 一致。
 
@@ -23,6 +24,6 @@ JWKS 文档需包含 RSA 公钥（`kty: RSA`，`n`/`e`），建议带 `kid` 与 
 
 ## 未实现
 
-- JWKS 轮换与 TTL 刷新策略
+- JWKS 轮换策略（TTL 已实现，见 `OIDC_JWKS_CACHE_TTL_SEC`）
 
 `iss` / `aud` 见 [auth-jwt-claims.md](./auth-jwt-claims.md)。

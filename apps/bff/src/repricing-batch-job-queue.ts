@@ -11,6 +11,7 @@ import {
   runRepricingBatchForTenant,
 } from "./repricing-batch-shard.js";
 import { getRepricingBatchJobStore } from "./repricing-batch-job-store-index.js";
+import { recordRepricingProcessed } from "./pricing-nfr-metrics.js";
 import type {
   RepricingBatchJobScope,
   RepricingBatchQueuedJob,
@@ -87,10 +88,11 @@ async function runJob(
 export async function processRepricingBatchQueue(
   deps: RepricingBatchQueueDeps,
   tenantId: string,
-  limit = 5
+  limit = 5,
+  options?: { worker_id?: string; lease_sec?: number }
 ): Promise<{ processed: RepricingBatchQueuedJob[] }> {
   const store = getRepricingBatchJobStore();
-  const batch = await store.claimQueued(tenantId, limit);
+  const batch = await store.claimQueued(tenantId, limit, options);
   const processed: RepricingBatchQueuedJob[] = [];
 
   for (const job of batch) {
@@ -106,6 +108,7 @@ export async function processRepricingBatchQueue(
     }
     working.updated_at = new Date().toISOString();
     await store.save(working);
+    recordRepricingProcessed();
     processed.push(working);
   }
   return { processed };

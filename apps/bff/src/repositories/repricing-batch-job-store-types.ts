@@ -19,7 +19,8 @@ export interface RepricingBatchJobStore {
   ): Promise<RepricingBatchQueuedJob | undefined>;
   claimQueued(
     tenantId: string,
-    limit: number
+    limit: number,
+    options?: { worker_id?: string; lease_sec?: number }
   ): Promise<RepricingBatchQueuedJob[]>;
   save(job: RepricingBatchQueuedJob): Promise<void>;
   summary(tenantId: string): Promise<{

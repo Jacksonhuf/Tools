@@ -5,6 +5,7 @@ export interface SkuRecord {
   tenant_id: string;
   sku_code: string;
   name: string;
+  category_id?: string;
   landed_cost_mxn: number;
   policy: {
     pricing_mode: "cost" | "competitive" | "competitive_with_floor";
@@ -22,6 +23,7 @@ export const DEMO_SKU: SkuRecord = {
   tenant_id: "tenant-demo",
   sku_code: "MX-DEMO-001",
   name: "Demo Cross-Border SKU",
+  category_id: "cat-electronics-mx",
   landed_cost_mxn: 1000,
   policy: {
     pricing_mode: "competitive_with_floor",
