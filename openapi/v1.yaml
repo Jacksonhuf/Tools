@@ -349,6 +349,14 @@ paths:
   /api/v1/imports/adjustment-prices:
     post:
       summary: Parse adjustment CSV and return batch preview
+  /api/v1/skus/{skuId}/cost-sheets:
+    get:
+      summary: List cost sheets for SKU (P0-E2-02)
+    post:
+      summary: Create cost sheet batch row
+  /api/v1/skus/{skuId}/landed-cost/from-cost-sheet:
+    post:
+      summary: Landed cost from cost sheet + FX/HS (P0-E2-05)
   /api/v1/exports:
     post:
       summary: Create signed export artifact (P0-E1-06)

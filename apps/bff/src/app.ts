@@ -142,6 +142,11 @@ import {
   ADJUSTMENT_IMPORT_TEMPLATE_CSV,
   parseAdjustmentPriceCsv,
 } from "./adjustment-price-import.js";
+import {
+  createCostSheet,
+  listCostSheets,
+} from "./cost-sheet-store.js";
+import { computeLandedFromCostSheet } from "./landed-cost-from-sheet.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
   getAsyncWorkerStatus,
@@ -480,6 +485,52 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/skus/:skuId/cost-sheets", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    return c.json({ items: listCostSheets(tenantId, skuId) });
+  });
+
+  app.post("/api/v1/skus/:skuId/cost-sheets", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      batch_no?: string;
+      cogs_amount?: number;
+      cogs_currency?: string;
+      freight_alloc_mxn?: number;
+      freight_alloc_rule?: "PER_UNIT" | "WEIGHT_BASED";
+      effective_from?: string;
+      source?: string;
+    };
+    try {
+      const sheet = createCostSheet(tenantId, skuId, {
+        batch_no: body.batch_no ?? "",
+        cogs_amount: body.cogs_amount ?? 0,
+        cogs_currency: body.cogs_currency,
+        freight_alloc_mxn: body.freight_alloc_mxn,
+        freight_alloc_rule: body.freight_alloc_rule,
+        effective_from: body.effective_from,
+        source: body.source,
+      });
+      return c.json(sheet, 201);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("BATCH_NO_REQUIRED") || msg.includes("COGS_AMOUNT_INVALID")) {
+        throw new HTTPException(400, { message: msg.split(":")[0] });
+      }
+      throw e;
+    }
+  });
+
   app.post("/api/v1/skus/:skuId/pricing/simulate", async (c) => {
     const tenantId = c.get("tenantId");
     const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
@@ -777,13 +828,19 @@ export function createApp(options: CreateAppOptions = {}) {
     const contentType = c.req.header("content-type") ?? "";
     let csvText: string;
     let reason_code: string | undefined;
+    let apply = false;
     if (contentType.includes("application/json")) {
-      const body = (await c.req.json()) as { csv?: string; reason_code?: string };
+      const body = (await c.req.json()) as {
+        csv?: string;
+        reason_code?: string;
+        apply?: boolean;
+      };
       if (!body.csv?.trim()) {
         throw new HTTPException(400, { message: "CSV_REQUIRED" });
       }
       csvText = body.csv;
       reason_code = body.reason_code;
+      apply = body.apply === true;
     } else {
       csvText = await c.req.text();
     }
@@ -796,7 +853,36 @@ export function createApp(options: CreateAppOptions = {}) {
         reason_code,
         items: parsed.rows,
       });
-      return c.json({ parse_errors: parsed.errors, preview });
+      if (!apply) {
+        return c.json({ parse_errors: parsed.errors, preview });
+      }
+      const built = await buildAdjustmentBatchInput(catalog, tenantId, {
+        reason_code,
+        items: parsed.rows,
+      });
+      const batch = await adjustments.createBatch({
+        tenant_id: tenantId,
+        reason_code: built.reason_code,
+        status: built.status,
+        items: built.prepared.map((p) => ({
+          listing_id: p.listing_id,
+          explicit_price_mxn: p.explicit_price_mxn,
+          from_price_mxn: p.from_price_mxn,
+          guard_result: p.guard_result,
+        })),
+      });
+      return c.json(
+        {
+          parse_errors: parsed.errors,
+          preview,
+          batch: {
+            ...batch,
+            approval_triggers: built.approval_triggers,
+            max_drop_pct: built.maxDrop,
+          },
+        },
+        201
+      );
     } catch (e) {
       const msg = String(e);
       if (msg.includes("GUARD_REJECTED")) {
@@ -807,6 +893,58 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       if (msg.includes("LISTING_NOT_FOUND")) {
         throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/skus/:skuId/landed-cost/from-cost-sheet", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      cost_sheet_id: string;
+      hs_code?: string;
+      apply?: boolean;
+    };
+    if (!body.cost_sheet_id?.trim()) {
+      throw new HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
+    }
+    try {
+      const result = await computeLandedFromCostSheet(
+        catalog,
+        tenantId,
+        skuId,
+        body.cost_sheet_id,
+        { hs_code: body.hs_code }
+      );
+      const landed_mxn = result.computed.landed_cost_mxn;
+      let sku_record = sku;
+      if (body.apply === true) {
+        const updated = await catalog.updateSkuLandedCost(
+          tenantId,
+          skuId,
+          landed_mxn
+        );
+        if (updated) sku_record = updated;
+      }
+      return c.json({
+        ...result,
+        sku: { id: sku_record.id, landed_cost_mxn: sku_record.landed_cost_mxn },
+      });
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("COST_SHEET_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+      }
+      if (msg.includes("HS_CODE_NOT_FOUND") || msg.includes("HS_CODE_REQUIRED")) {
+        throw new HTTPException(400, { message: msg.split(":")[0] });
+      }
+      if (msg.includes("FX_RATE_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
       }
       throw e;
     }

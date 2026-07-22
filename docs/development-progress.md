@@ -700,6 +700,34 @@
 | **实现** | 指挥中心 HS 试算、关税表只读、调价 CSV 预览；`POST /exports` `pricing_snapshot_csv` |
 | **测试** | `loop-70-73.test.ts` |
 
+### Loop 74 — Cost Sheet 批次（P0-E2-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET/POST /skus/:id/cost-sheets`；`freight_alloc_rule` 枚举 |
+| **测试** | `loop-74-77.test.ts` |
+
+### Loop 75 — 从 Cost Sheet 计算 Landed（P0-E2-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /skus/:id/landed-cost/from-cost-sheet`（MXN+HS / USD+FX） |
+| **测试** | `loop-74-77.test.ts`、`landed-cost-from-sheet.test.ts` |
+
+### Loop 76 — 调价 CSV 落库（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /imports/adjustment-prices` 支持 `apply: true` 创建批次 |
+| **测试** | `loop-74-77.test.ts` |
+
+### Loop 77 — 成本批次与调价 CSV Web（P0-E6-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价页 Cost Sheet 面板；调价页 CSV 创建批次 |
+| **测试** | `loop-74-77.test.ts`（API）；Web `data-testid` 可扩展 E2E |
+
 ---
 
 ## 本地命令
@@ -762,3 +790,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.2 | 2026-07-22 | Loop 48 repricing batch job queue |
 | v5.3 | 2026-07-22 | Loop 49 PG repricing batch job store |
 | v5.4 | 2026-07-22 | Loop 70–73 HS tariff, adjustment preview/import, Ops UI |
+| v5.5 | 2026-07-22 | Loop 74–77 cost sheets, landed from sheet, CSV batch apply |

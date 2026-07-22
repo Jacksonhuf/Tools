@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  applyAdjustmentPricesCsv,
   approveAdjustmentBatch,
   applyAdjustmentBatch,
   createAdjustmentBatch,
@@ -20,6 +21,9 @@ export function AdjustmentBatchesPage() {
   const [includeAmz, setIncludeAmz] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [importCsv, setImportCsv] = useState(
+    "listing_id,explicit_price_mxn\nlisting-ml-001,1600\n"
+  );
 
   const fmt = (n: number) =>
     new Intl.NumberFormat(
@@ -159,6 +163,35 @@ export function AdjustmentBatchesPage() {
           onClick={() => void createBatch()}
         >
           {t("submitBatch")}
+        </button>
+      </section>
+
+      <section className="card" data-testid="adjustment-csv-import">
+        <h2>{t("adjustmentCsvImport")}</h2>
+        <p className="hint">{t("adjustmentCsvImportHint")}</p>
+        <textarea
+          rows={3}
+          value={importCsv}
+          onChange={(e) => setImportCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          data-testid="adjustment-csv-apply"
+          onClick={() => {
+            setError(null);
+            void applyAdjustmentPricesCsv(locale, importCsv, reason)
+              .then((r) => {
+                setMessage(
+                  `${t("batchCreatedMsg")}: ${r.batch.id} (${r.batch.status})`
+                );
+                setSelectedId(r.batch.id);
+                return load();
+              })
+              .catch((e) => setError(String(e)));
+          }}
+        >
+          {t("adjustmentCsvImportRun")}
         </button>
       </section>
 
