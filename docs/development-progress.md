@@ -1064,6 +1064,34 @@
 | **实现** | SKU 目录、店铺、类目模板 CSV 导出按钮 |
 | **测试** | `loop-122-125.test.ts` |
 
+### Loop 126 — 竞品 Offer CSV（P2-E1-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `competitor-offers-csv.ts`；`GET /listings/:id/competitors/export`；`competitor_offers_csv` |
+| **测试** | `loop-126-129.test.ts` |
+
+### Loop 127 — 共享费用模板 CSV（P5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `shared-fee-templates-csv.ts`；`GET /shared-fee-templates/export`；`shared_fee_templates_csv` |
+| **测试** | `loop-126-129.test.ts` |
+
+### Loop 128 — Ops 指标快照 CSV（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `ops-metrics-csv.ts`；`GET /ops/metrics/export`；`ops_metrics_csv` |
+| **测试** | `loop-126-129.test.ts` |
+
+### Loop 129 — 竞品/策略/Ops Web（P2/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 竞品 Offer、共享费用模板、运维指标 CSV 导出 |
+| **测试** | `loop-126-129.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1139,3 +1167,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.5 | 2026-07-22 | Loop 114–117 repricing/digest queue/dispatches/workers CSV + Web |
 | v6.6 | 2026-07-22 | Loop 118–121 price history/repricing events/adjustment index CSV + Web |
 | v6.7 | 2026-07-22 | Loop 122–125 SKU/shops/category templates CSV + Web |
+| v6.8 | 2026-07-22 | Loop 126–129 competitor offers/fee templates/ops metrics CSV + Web |

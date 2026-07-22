@@ -10,6 +10,7 @@ import {
   downloadCompetitorCurveDirect,
   downloadPriceHistoryCsv,
   downloadRepricingEventsCsv,
+  downloadCompetitorOffersCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -200,6 +201,17 @@ export function CompetitorsPage() {
         )}
         <button type="button" className="primary" onClick={() => void runPipeline()}>
           {t("runIngestPipeline")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-offers-export"
+          onClick={() =>
+            void downloadCompetitorOffersCsv(locale, listingId).then(() =>
+              setMessage(t("competitorOffersExportDone"))
+            )
+          }
+        >
+          {t("competitorOffersExportCsv")}
         </button>
         <button
           type="button"

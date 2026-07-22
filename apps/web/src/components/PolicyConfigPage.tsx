@@ -9,6 +9,7 @@ import {
   batchPatchSkuPolicies,
   fetchCategoryRuleTemplates,
   downloadCategoryRuleTemplatesCsv,
+  downloadSharedFeeTemplatesCsv,
 } from "../api/client";
 
 export function PolicyConfigPage() {
@@ -131,6 +132,17 @@ export function PolicyConfigPage() {
 
       <section className="card">
         <h2>{t("sharedFeeTemplates")}</h2>
+        <button
+          type="button"
+          data-testid="policy-shared-fee-export"
+          onClick={() =>
+            void downloadSharedFeeTemplatesCsv(locale).then(() =>
+              setMessage(t("sharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("sharedFeeTemplatesExportCsv")}
+        </button>
         <ul>
           {templates.map((tpl) => (
             <li key={tpl.id}>

@@ -178,6 +178,9 @@ import { adjustmentBatchesIndexToCsv } from "./adjustment-batches-index-csv.js";
 import { priceHistoryToCsv } from "./price-history-csv.js";
 import { repricingEventsToCsv } from "./repricing-events-csv.js";
 import { categoryRuleTemplatesToCsv } from "./category-rule-templates-csv.js";
+import { competitorOffersToCsv } from "./competitor-offers-csv.js";
+import { opsMetricsToCsv } from "./ops-metrics-csv.js";
+import { sharedFeeTemplatesToCsv } from "./shared-fee-templates-csv.js";
 import { shopsToCsv } from "./shops-csv.js";
 import { skusCatalogToCsv } from "./skus-catalog-csv.js";
 import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
@@ -942,6 +945,19 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(await buildOpsMetricsSnapshot(catalog, tenantId));
   });
 
+  app.get("/api/v1/ops/metrics/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const snapshot = await buildOpsMetricsSnapshot(catalog, tenantId);
+    const csv = opsMetricsToCsv(snapshot, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="ops-metrics.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/ops/version-backup", async (c) => {
     const tenantId = c.get("tenantId");
     const format = (c.req.query("format") ?? "json").toLowerCase();
@@ -1482,6 +1498,26 @@ export function createApp(options: CreateAppOptions = {}) {
       const templates = listCategoryRuleTemplates(tenantId);
       content = categoryRuleTemplatesToCsv(templates, new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "competitor_offers_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const offers = await mapOffersWithLatestObservations(
+        competitors,
+        listingId
+      );
+      content = competitorOffersToCsv(listingId, offers, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "shared_fee_templates_csv") {
+      const templates = listSharedFeeTemplates(tenantId);
+      content = sharedFeeTemplatesToCsv(templates, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "ops_metrics_csv") {
+      const snapshot = await buildOpsMetricsSnapshot(catalog, tenantId);
+      content = opsMetricsToCsv(snapshot, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1719,6 +1755,24 @@ export function createApp(options: CreateAppOptions = {}) {
       }
     }
     return c.json({ shop_id: shopId, snapshot });
+  });
+
+  app.get("/api/v1/listings/:listingId/competitors/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const offers = await mapOffersWithLatestObservations(competitors, listingId);
+    const exportedAt = new Date().toISOString();
+    const csv = competitorOffersToCsv(listingId, offers, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="competitor-offers-${listingId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/listings/:listingId/competitors", async (c) => {
@@ -2574,6 +2628,19 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(403, { message: "TENANT_MISMATCH" });
     }
     return c.json({ items: listSharedFeeTemplates(tenantId) });
+  });
+
+  app.get("/api/v1/shared-fee-templates/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const templates = listSharedFeeTemplates(tenantId);
+    const csv = sharedFeeTemplatesToCsv(templates, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="shared-fee-templates.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/skus/:skuId/apply-shared-fee-template", async (c) => {
