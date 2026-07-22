@@ -154,6 +154,7 @@ import {
 } from "./cost-sheet-import.js";
 import {
   listListingSyncJobs,
+  listListingSyncJobsForTenant,
   runListingChannelSync,
 } from "./listing-sync-service.js";
 import {
@@ -724,6 +725,22 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/adjustment-batches/:batchId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const batchId = c.req.param("batchId");
+    const batch = await adjustments.getBatch(tenantId, batchId);
+    if (!batch) {
+      throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+    }
+    const csv = adjustmentBatchToCsv(batch);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="adjustment-${batchId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/adjustment-batches/:batchId", async (c) => {
@@ -1511,6 +1528,32 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ listing_id: listingId, range, points });
   });
 
+  app.get("/api/v1/listings/:listingId/competitors/curve/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const range = c.req.query("range") ?? "7d";
+    const days = range === "30d" ? 30 : 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const observations = await competitors.listObservations(listingId, since);
+    const points = buildCompetitorCurve(
+      observations.map((o) => ({
+        observed_at: o.observed_at,
+        effective_price: o.effective_price,
+      }))
+    );
+    const csv = competitorCurvePointsToCsv(points);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="competitor-curve-${listingId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/ingest/status", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
@@ -2156,16 +2199,34 @@ export function createApp(options: CreateAppOptions = {}) {
       enabled?: boolean;
       cron_expression?: string;
     };
-    return c.json(upsertListingSyncSchedule(tenantId, body));
+    try {
+      return c.json(upsertListingSyncSchedule(tenantId, body));
+    } catch (e) {
+      if (String(e).includes("INVALID_CRON_EXPRESSION")) {
+        throw new HTTPException(400, { message: "INVALID_CRON_EXPRESSION" });
+      }
+      throw e;
+    }
+  });
+
+  app.get("/api/v1/ops/listing-sync/jobs", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
+    );
+    return c.json({ items: listListingSyncJobsForTenant(tenantId, limit) });
   });
 
   app.post("/api/v1/ops/listing-sync/run-due", async (c) => {
     const tenantId = c.get("tenantId");
+    const force = c.req.query("force") === "true";
     const result = await runDueListingChannelSyncs(
       catalog,
       shops,
       listingAdapter,
-      tenantId
+      tenantId,
+      { force }
     );
     if (result.skipped) {
       throw new HTTPException(409, { message: "SCHEDULE_DISABLED" });

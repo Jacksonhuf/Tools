@@ -41,6 +41,13 @@ export function listListingSyncJobs(
     .slice(0, limit);
 }
 
+export function listListingSyncJobsForTenant(
+  tenantId: string,
+  limit = 20
+): ListingSyncJob[] {
+  return jobs.filter((j) => j.tenant_id === tenantId).slice(0, limit);
+}
+
 export function resetListingSyncJobsForTests(): void {
   jobs.length = 0;
   seq = 1;

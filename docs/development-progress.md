@@ -812,6 +812,34 @@
 | **实现** | Ops 同步计划与 run-due；竞品曲线 CSV；调价单 CSV 下载 |
 | **测试** | `loop-86-89.test.ts` |
 
+### Loop 90 — Listing 同步作业总览（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /ops/listing-sync/jobs` |
+| **测试** | `loop-90-93.test.ts` |
+
+### Loop 91 — 竞品曲线直链 CSV（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /listings/:id/competitors/curve/export` |
+| **测试** | `loop-90-93.test.ts` |
+
+### Loop 92 — 调价直链导出与 Cron 校验（P0-E5-04 / P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /adjustment-batches/:id/export`；cron 校验；`run-due?force=true` |
+| **测试** | `loop-90-93.test.ts` |
+
+### Loop 93 — Ops 同步作业 Web（P2-E3-06 续）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 上次执行时间、强制同步、作业表 |
+| **测试** | `loop-90-93.test.ts` |
+
 ---
 
 ## 本地命令
@@ -878,3 +906,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.6 | 2026-07-22 | Loop 78–81 waterfall export, policy patch, listing sync jobs |
 | v5.7 | 2026-07-22 | Loop 82–85 waterfall export store, sync schedule, competitor curve |
 | v5.8 | 2026-07-22 | Loop 86–89 sync run-due, curve/batch CSV exports, Ops Web |
+| v5.9 | 2026-07-22 | Loop 90–93 sync jobs feed, direct CSV, cron/force, Ops jobs UI |

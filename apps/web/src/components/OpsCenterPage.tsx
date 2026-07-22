@@ -12,6 +12,8 @@ import {
   fetchListingSyncSchedule,
   updateListingSyncSchedule,
   runListingSyncDue,
+  fetchListingSyncJobs,
+  type ListingSyncJobRow,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
   fetchTariffHsRates,
@@ -53,11 +55,13 @@ export function OpsCenterPage() {
   const [workerCount, setWorkerCount] = useState(0);
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [syncCron, setSyncCron] = useState("0 */6 * * *");
+  const [syncLastRun, setSyncLastRun] = useState<string | null>(null);
+  const [syncJobs, setSyncJobs] = useState<ListingSyncJobRow[]>([]);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers, tariffs, syncSchedule] =
+      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed] =
         await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
@@ -65,6 +69,7 @@ export function OpsCenterPage() {
         fetchWorkerStatus(locale),
         fetchTariffHsRates(locale),
         fetchListingSyncSchedule(locale),
+        fetchListingSyncJobs(locale, 8),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
@@ -73,6 +78,8 @@ export function OpsCenterPage() {
       setWorkerCount(workers.workers.filter((w) => !w.stale).length);
       setSyncEnabled(syncSchedule.enabled);
       setSyncCron(syncSchedule.cron_expression);
+      setSyncLastRun(syncSchedule.last_run_at);
+      setSyncJobs(syncJobFeed.items);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -264,6 +271,10 @@ export function OpsCenterPage() {
             style={{ width: "100%", fontFamily: "monospace" }}
           />
         </label>
+        <p className="hint" data-testid="ops-listing-sync-last-run">
+          {t("opsListingSyncLastRun")}:{" "}
+          {syncLastRun ? new Date(syncLastRun).toLocaleString(locale) : "—"}
+        </p>
         <button
           type="button"
           onClick={() =>
@@ -274,6 +285,22 @@ export function OpsCenterPage() {
           }
         >
           {t("opsListingSyncSave")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-run-force"
+          onClick={() =>
+            void runListingSyncDue(locale, true)
+              .then((r) => {
+                setMessage(
+                  t("opsListingSyncRunDone", { count: r.runs.length })
+                );
+                return load();
+              })
+              .catch((e) => setError(String(e)))
+          }
+        >
+          {t("opsListingSyncRunForce")}
         </button>
         <button
           type="button"
@@ -290,6 +317,35 @@ export function OpsCenterPage() {
         >
           {t("opsListingSyncRunDue")}
         </button>
+        {syncJobs.length > 0 && (
+          <table
+            className="batch-table"
+            data-testid="ops-listing-sync-jobs"
+          >
+            <thead>
+              <tr>
+                <th>{t("opsListingSyncJobListing")}</th>
+                <th>{t("batchStatus")}</th>
+                <th>{t("opsListingSyncJobPrice")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {syncJobs.map((j) => (
+                <tr key={j.id}>
+                  <td>
+                    <code>{j.listing_id}</code>
+                  </td>
+                  <td>{j.status}</td>
+                  <td>
+                    {j.channel_price_mxn != null
+                      ? `${j.channel_price_mxn} MXN`
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
 
       <section className="card" data-testid="ops-landed-cost-import">

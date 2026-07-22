@@ -625,6 +625,7 @@ export async function fetchListingSyncSchedule(locale: string) {
   return res.json() as Promise<{
     enabled: boolean;
     cron_expression: string;
+    last_run_at: string | null;
   }>;
 }
 
@@ -641,8 +642,9 @@ export async function updateListingSyncSchedule(
   return res.json();
 }
 
-export async function runListingSyncDue(locale: string) {
-  const res = await fetch(`/api/v1/ops/listing-sync/run-due`, {
+export async function runListingSyncDue(locale: string, force = false) {
+  const qs = force ? "?force=true" : "";
+  const res = await fetch(`/api/v1/ops/listing-sync/run-due${qs}`, {
     method: "POST",
     headers: headers(locale),
   });
@@ -650,6 +652,22 @@ export async function runListingSyncDue(locale: string) {
   return res.json() as Promise<{
     runs: Array<{ listing_id: string; job: { status: string } }>;
   }>;
+}
+
+export type ListingSyncJobRow = {
+  id: string;
+  listing_id: string;
+  status: string;
+  channel_price_mxn: number | null;
+  finished_at: string;
+};
+
+export async function fetchListingSyncJobs(locale: string, limit = 10) {
+  const res = await fetch(`/api/v1/ops/listing-sync/jobs?limit=${limit}`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`listing-sync-jobs ${res.status}`);
+  return res.json() as Promise<{ items: ListingSyncJobRow[] }>;
 }
 
 async function downloadExportCsv(

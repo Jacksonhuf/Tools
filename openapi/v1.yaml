@@ -383,6 +383,15 @@ paths:
   /api/v1/ops/listing-sync/run-due:
     post:
       summary: Run scheduled listing sync for all demo listings when enabled (P1-E2-04)
+  /api/v1/ops/listing-sync/jobs:
+    get:
+      summary: Recent listing sync jobs for tenant (P1-E2-04)
+  /api/v1/listings/{listingId}/competitors/curve/export:
+    get:
+      summary: Download competitor price curve as CSV (P2-E1-03)
+  /api/v1/adjustment-batches/{batchId}/export:
+    get:
+      summary: Download adjustment batch as CSV (P0-E5-04)
   /api/v1/listings/{listingId}/competitors/curve:
     get:
       summary: Daily competitor effective price curve (P2-E1-03)

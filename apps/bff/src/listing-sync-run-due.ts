@@ -24,10 +24,11 @@ export async function runDueListingChannelSyncs(
   catalog: CatalogRepository,
   shops: ShopRepository,
   listingAdapter: ListingPullAdapter,
-  tenantId: string
-): Promise<{ skipped: false; runs: ListingSyncDueRun[] } | { skipped: true }> {
+  tenantId: string,
+  options?: { force?: boolean }
+): Promise<{ skipped: true } | { skipped: false; runs: ListingSyncDueRun[] }> {
   const schedule = getListingSyncSchedule(tenantId);
-  if (!schedule.enabled) {
+  if (!schedule.enabled && !options?.force) {
     return { skipped: true };
   }
   const runs: ListingSyncDueRun[] = [];
