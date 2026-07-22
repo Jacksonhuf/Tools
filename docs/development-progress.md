@@ -1260,6 +1260,34 @@
 | **实现** | `ops-workers-status-summary-csv.ts`；`GET /ops/workers/status/summary/export`；`ops_workers_status_summary_csv`；同步计划/审批策略/里程碑/Worker 汇总导出按钮 |
 | **测试** | `loop-150-153.test.ts` |
 
+### Loop 154 — 定价快照专用导出路径（P0/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reports/pricing-snapshot/export`；Web `downloadPricingSnapshotCsv` 指向专用路径 |
+| **测试** | `loop-154-157.test.ts` |
+
+### Loop 155 — 跨渠道 Guard CSV（P5-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `cross-channel-guard-csv.ts`；`GET /skus/:skuId/cross-channel-guard/export`；`cross_channel_guard_csv` |
+| **测试** | `loop-154-157.test.ts` |
+
+### Loop 156 — Digest 计划 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `digest-schedule-csv.ts`；`GET /agent/digest/schedule/export`；`digest_schedule_csv` |
+| **测试** | `loop-154-157.test.ts` |
+
+### Loop 157 — 动态调价规则 CSV + Web（P2-E3-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `dynamic-repricing-rule-view.ts` + `dynamic-repricing-rule-csv.ts`；`GET /listings/:id/dynamic-repricing-rule/export`；`dynamic_repricing_rule_csv`；定价/Copilot/竞品页导出按钮 |
+| **测试** | `loop-154-157.test.ts`、`loop-154-157-csv.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1342,3 +1370,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.2 | 2026-07-22 | Loop 142–145 digest summary, channel adapters, rule compiler CSV + Web |
 | v7.3 | 2026-07-22 | Loop 146–149 auth, sandbox status, digest DLQ summary CSV + Web |
 | v7.4 | 2026-07-22 | Loop 150–153 listing sync schedule, milestones, approval policy, workers summary CSV + Web |
+| v7.5 | 2026-07-22 | Loop 154–157 pricing snapshot export path, cross-channel guard, digest schedule, dynamic rule CSV + Web |

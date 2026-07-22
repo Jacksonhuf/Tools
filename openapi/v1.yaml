@@ -164,9 +164,15 @@ paths:
   /api/v1/skus/{skuId}/cross-channel-guard:
     get:
       summary: Cross-channel active price spread guard (P5-01)
+  /api/v1/skus/{skuId}/cross-channel-guard/export:
+    get:
+      summary: Download cross-channel guard snapshot as CSV
   /api/v1/reports/pricing-snapshot:
     get:
       summary: Pricing snapshot export (JSON or CSV)
+  /api/v1/reports/pricing-snapshot/export:
+    get:
+      summary: Download pricing snapshot as CSV for one SKU
   /api/v1/reports/pricing-snapshots/export:
     get:
       summary: Download all SKU pricing snapshot rows for tenant as CSV
@@ -269,6 +275,9 @@ paths:
       summary: Get dynamic repricing rule (SDD §10.5)
     put:
       summary: Upsert dynamic repricing rule
+  /api/v1/listings/{listingId}/dynamic-repricing-rule/export:
+    get:
+      summary: Download dynamic repricing rule as CSV
   /api/v1/listings/{listingId}/dynamic-repricing-rule/unfreeze:
     post:
       summary: Unfreeze rule after publish failure (TC-API-GUARD-005)
@@ -382,6 +391,9 @@ paths:
       summary: Digest cron schedule config (stub)
     put:
       summary: Update digest schedule (stub)
+  /api/v1/agent/digest/schedule/export:
+    get:
+      summary: Download digest schedule config as CSV
   /api/v1/agent/digest/daily/dispatch:
     post:
       summary: Run digest and email_stub delivery (P4-E1-07)

@@ -6,6 +6,8 @@ import {
   createCostSheetRow,
   downloadCostSheetsCsv,
   downloadSkusCatalogCsv,
+  downloadCrossChannelGuardCsv,
+  downloadPricingSnapshotCsv,
   fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
@@ -196,6 +198,28 @@ export function PricingPage() {
           }
         >
           {t("skusCatalogExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, "demo-sku-001").then(() =>
+              setMessage(t("pricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("pricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale).then(() =>
+              setMessage(t("crossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("crossChannelGuardExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

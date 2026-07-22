@@ -323,6 +323,24 @@ export async function fetchCrossChannelGuard(locale: string) {
   return res.json() as Promise<CrossChannelGuardResponse>;
 }
 
+export async function downloadCrossChannelGuardCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/cross-channel-guard/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`cross-channel-guard-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cross-channel-guard-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function simulatePricing(
   locale: string,
   body: Record<string, unknown>
@@ -1131,6 +1149,24 @@ export async function fetchDynamicRule(locale: string, listingId: string) {
   }>;
 }
 
+export async function downloadDynamicRepricingRuleCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${encodeURIComponent(listingId)}/dynamic-repricing-rule/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`dynamic-repricing-rule-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `dynamic-repricing-rule-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function updateDynamicRule(
   locale: string,
   listingId: string,
@@ -1603,10 +1639,10 @@ export async function downloadPricingSnapshotCsv(
   skuId = DEMO_SKU
 ): Promise<void> {
   const res = await fetch(
-    `/api/v1/reports/pricing-snapshot?format=csv&sku_id=${encodeURIComponent(skuId)}`,
+    `/api/v1/reports/pricing-snapshot/export?sku_id=${encodeURIComponent(skuId)}`,
     { headers: headers(locale) }
   );
-  if (!res.ok) throw new Error(`pricing-snapshot ${res.status}`);
+  if (!res.ok) throw new Error(`pricing-snapshot-export ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1850,6 +1886,20 @@ export async function fetchDigestSchedule(locale: string) {
     email_to: string;
     last_dispatch_at: string | null;
   }>;
+}
+
+export async function downloadDigestScheduleCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/digest/schedule/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-schedule-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "digest-schedule.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function updateDigestSchedule(

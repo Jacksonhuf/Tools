@@ -22,6 +22,7 @@ import {
   downloadDigestQueuedJobsSummaryCsv,
   downloadDigestDispatchesCsv,
   downloadRuleCompilerStatusCsv,
+  downloadDigestScheduleCsv,
   downloadAgentToolsCsv,
   downloadAgentReadinessCsv,
   updateDigestSchedule,
@@ -347,6 +348,17 @@ export function CopilotPage() {
           {t("copilotDigestLastDispatch")}:{" "}
           {digestLastRun ? new Date(digestLastRun).toLocaleString(locale) : "—"}
         </p>
+        <button
+          type="button"
+          data-testid="copilot-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("copilotDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("copilotDigestScheduleExportCsv")}
+        </button>
         <div className="shop-actions">
           <button
             type="button"
