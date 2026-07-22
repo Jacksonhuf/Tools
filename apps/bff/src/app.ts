@@ -532,7 +532,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/metrics", async (c) => {
     const tenantId = c.get("tenantId");
-    return c.json(buildOpsMetricsSnapshot(catalog, tenantId));
+    return c.json(await buildOpsMetricsSnapshot(catalog, tenantId));
   });
 
   app.get("/api/v1/reports/pricing-snapshot", async (c) => {
@@ -1312,7 +1312,7 @@ export function createApp(options: CreateAppOptions = {}) {
       }
     }
     try {
-      const job = enqueueRepricingBatchJob({
+      const job = await enqueueRepricingBatchJob({
         tenant_id: tenantId,
         scope,
         sku_id: body.sku_id,
@@ -1332,12 +1332,12 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
-    return c.json({ items: listRepricingBatchJobs(tenantId, limit) });
+    return c.json({ items: await listRepricingBatchJobs(tenantId, limit) });
   });
 
   app.get("/api/v1/repricing-batch/jobs/:jobId", async (c) => {
     const tenantId = c.get("tenantId");
-    const job = getRepricingBatchJob(tenantId, c.req.param("jobId"));
+    const job = await getRepricingBatchJob(tenantId, c.req.param("jobId"));
     if (!job) {
       throw new HTTPException(404, { message: "JOB_NOT_FOUND" });
     }

@@ -60,18 +60,22 @@ describe("TC-API-REPR-BATCH-004 repricing batch job queue", () => {
   });
 
   it("ops metrics includes repricing_batch_queue", async () => {
+    resetRepricingBatchJobQueueForTests();
+    const tenant = { "X-Tenant-Id": "tenant-repr-queue-metrics" };
+    const headers = { ...AUTH, ...tenant, "Content-Type": "application/json" };
     const { app } = createTestApp();
     await app.request("/api/v1/repricing-batch/jobs/enqueue", {
       method: "POST",
-      headers: JSON_HEADERS,
+      headers,
       body: JSON.stringify({ scope: "tenant", shard_total: 2 }),
     });
     const metrics = await app.request("/api/v1/ops/metrics", {
-      headers: { ...AUTH, ...TENANT },
+      headers: { ...AUTH, ...tenant },
     });
     const json = (await metrics.json()) as {
-      repricing_batch_queue: { total: number; queued: number };
+      repricing_batch_queue: { total: number; queued: number; driver: string };
     };
+    expect(json.repricing_batch_queue.driver).toBe("memory");
     expect(json.repricing_batch_queue.total).toBe(1);
     expect(json.repricing_batch_queue.queued).toBe(1);
   });

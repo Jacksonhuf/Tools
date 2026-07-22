@@ -556,6 +556,15 @@
 | **测试** | `repricing-batch-job-queue.test.ts` |
 | **下一步** | PG 持久化队列；JWKS TTL |
 
+### Loop 49 — Repricing batch 队列 PostgreSQL（TC-INT-REPR-BATCH-PG）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 迁移 `010_repricing_batch_jobs.sql`；`PostgresRepricingBatchJobStore`；`REPRICING_BATCH_QUEUE_DRIVER=postgres` |
+| **文档** | `docs/repricing-batch-queue.md` |
+| **测试** | `postgres-repricing-batch-job-store.test.ts`；队列 API 仍用 memory |
+| **下一步** | JWKS 缓存 TTL；跨进程 job 租约 |
+
 ---
 
 ## 本地命令
@@ -616,3 +625,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.0 | 2026-07-21 | Loop 43+46 JWT HS256 and JWKS RS256 |
 | v5.1 | 2026-07-22 | Loop 47 JWT iss/aud claims |
 | v5.2 | 2026-07-22 | Loop 48 repricing batch job queue |
+| v5.3 | 2026-07-22 | Loop 49 PG repricing batch job store |

@@ -7,7 +7,7 @@ import { listDigestQueuedJobs } from "./digest-job-queue.js";
 import { repricingBatchQueueSummary } from "./repricing-batch-job-queue.js";
 import type { CatalogRepository } from "./repositories/types.js";
 
-export function buildOpsMetricsSnapshot(
+export async function buildOpsMetricsSnapshot(
   catalog: CatalogRepository,
   tenantId: string
 ) {
@@ -16,7 +16,7 @@ export function buildOpsMetricsSnapshot(
   const digestJobs = listDigestQueuedJobs(tenantId);
   const digestQueued = digestJobs.filter((j) => j.status === "queued").length;
   const digestFailed = digestJobs.filter((j) => j.status === "failed").length;
-  const repricingBatch = repricingBatchQueueSummary(tenantId);
+  const repricingBatch = await repricingBatchQueueSummary(tenantId);
 
   return {
     tenant_id: tenantId,
