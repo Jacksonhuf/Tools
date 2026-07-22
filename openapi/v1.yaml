@@ -179,6 +179,9 @@ paths:
   /api/v1/reports/reconciliation-alerts:
     get:
       summary: Reconciliation alerts export (JSON or CSV)
+  /api/v1/reports/reconciliation-alerts/export:
+    get:
+      summary: Download reconciliation alerts report as CSV
   /api/v1/auth/status:
     get:
       summary: Auth driver status (dev / oidc_stub)
@@ -302,9 +305,15 @@ paths:
   /api/v1/repricing-queue/export:
     get:
       summary: Download tenant repricing queue (suggested/pending) as CSV
+  /api/v1/skus/{skuId}/repricing-queue/export:
+    get:
+      summary: Download repricing queue for one SKU as CSV
   /api/v1/skus/{skuId}/repricing-batch/shard-plan:
     get:
       summary: Plan repricing batch shards per SKU listing (P5-05)
+  /api/v1/skus/{skuId}/repricing-batch/shard-plan/export:
+    get:
+      summary: Download repricing batch shard plan as CSV
   /api/v1/skus/{skuId}/repricing-batch/recompute:
     post:
       summary: Process pending repricing events for one shard (P5-05)
@@ -338,6 +347,9 @@ paths:
   /api/v1/skus/{skuId}/category-rule-template:
     get:
       summary: Resolve category template for SKU
+  /api/v1/skus/{skuId}/category-rule-template/export:
+    get:
+      summary: Download SKU category rule template as CSV
   /api/v1/tenants/{tenantId}/shared-fee-templates:
     get:
       summary: Shared fee templates per tenant (P5-04)

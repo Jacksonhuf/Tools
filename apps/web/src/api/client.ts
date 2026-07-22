@@ -1253,6 +1253,77 @@ export async function downloadRepricingQueueCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadSkuRepricingQueueCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/repricing-queue/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-queue-sku-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `repricing-queue-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadRepricingBatchShardPlanCsv(
+  locale: string,
+  skuId = DEMO_SKU,
+  shardTotal = 2
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/repricing-batch/shard-plan/export?shard_total=${shardTotal}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-batch-shard-plan-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `repricing-batch-shard-plan-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadSkuCategoryRuleTemplateCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/category-rule-template/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`sku-category-rule-template-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sku-category-rule-template-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadReconciliationAlertsReportCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/reports/reconciliation-alerts/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`reconciliation-alerts-report-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "reconciliation-alerts.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function promoteRepricingToPending(
   locale: string,
   versionIds: string[]
