@@ -46,8 +46,9 @@ REPRICING_WORKER_MODE=queue npm run repricing-batch:worker
 `tests/api/repricing-batch-job-queue.test.ts` — TC-API-REPR-BATCH-004
 
 | `REPRICING_BATCH_QUEUE_DRIVER` | `memory`（默认）或 `postgres`（需 `DATABASE_URL` + 迁移 `010`） |
+| `X-Repricing-Worker-Id` | `POST .../jobs/process` 租约持有者（PG，迁移 `011`） |
 
 ## Limits
 
 - `postgres` 驱动在 BFF 重启后任务仍保留；`memory` 仅进程内。
-- No cross-process lease / idempotency keys yet.
+- 租约过期后可被其他 worker 重新 claim（PG）。

@@ -20,6 +20,10 @@ function mapRow(row: Record<string, unknown>): RepricingBatchQueuedJob {
     updated_at: new Date(row.updated_at as string).toISOString(),
     error: (row.error as string) ?? null,
     result: row.result_json ?? null,
+    lease_holder: (row.lease_holder as string) ?? null,
+    lease_expires_at: row.lease_expires_at
+      ? new Date(row.lease_expires_at as string).toISOString()
+      : null,
   };
 }
 
@@ -88,13 +92,17 @@ export class PostgresRepricingBatchJobStore implements RepricingBatchJobStore {
 
   async claimQueued(
     tenantId: string,
-    limit: number
+    limit: number,
+    options?: { worker_id?: string; lease_sec?: number }
   ): Promise<RepricingBatchQueuedJob[]> {
+    const leaseSec = options?.lease_sec ?? 300;
+    const workerId = options?.worker_id ?? "bff-worker";
     const sel = await this.pool.query(
-      `SELECT job_id, tenant_id, scope, sku_id, shard_total, sku_ids_json,
-              status, error, result_json, created_at, updated_at
-       FROM repricing_batch_jobs
-       WHERE tenant_id = $1 AND status = 'queued'
+      `SELECT job_id FROM repricing_batch_jobs
+       WHERE tenant_id = $1 AND (
+         status = 'queued'
+         OR (status = 'processing' AND lease_expires_at IS NOT NULL AND lease_expires_at < NOW())
+       )
        ORDER BY created_at ASC
        LIMIT $2`,
       [tenantId, limit]
@@ -103,11 +111,15 @@ export class PostgresRepricingBatchJobStore implements RepricingBatchJobStore {
     for (const row of sel.rows) {
       const upd = await this.pool.query(
         `UPDATE repricing_batch_jobs
-         SET status = 'processing', updated_at = NOW()
-         WHERE job_id = $1 AND tenant_id = $2 AND status = 'queued'
+         SET status = 'processing',
+             updated_at = NOW(),
+             lease_holder = $3,
+             lease_expires_at = NOW() + ($4::text || ' seconds')::interval
+         WHERE job_id = $1 AND tenant_id = $2
          RETURNING job_id, tenant_id, scope, sku_id, shard_total, sku_ids_json,
-                   status, error, result_json, created_at, updated_at`,
-        [row.job_id, tenantId]
+                   status, error, result_json, created_at, updated_at,
+                   lease_holder, lease_expires_at`,
+        [row.job_id, tenantId, workerId, String(leaseSec)]
       );
       if (upd.rowCount) {
         claimed.push(mapRow(upd.rows[0]));
@@ -119,7 +131,8 @@ export class PostgresRepricingBatchJobStore implements RepricingBatchJobStore {
   async save(job: RepricingBatchQueuedJob): Promise<void> {
     await this.pool.query(
       `UPDATE repricing_batch_jobs
-       SET status = $3, error = $4, result_json = $5, updated_at = NOW()
+       SET status = $3, error = $4, result_json = $5,
+           lease_holder = NULL, lease_expires_at = NULL, updated_at = NOW()
        WHERE job_id = $1 AND tenant_id = $2`,
       [
         job.job_id,

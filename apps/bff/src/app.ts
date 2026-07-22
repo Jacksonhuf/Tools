@@ -106,6 +106,13 @@ import {
   createChannelPublishAdapter,
 } from "./channel-adapter-factory.js";
 import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
+import { recordPricingSimulate } from "./pricing-nfr-metrics.js";
+import {
+  applyCategoryDefaults,
+  getCategoryRuleTemplate,
+  listCategoryRuleTemplates,
+} from "./category-rule-template.js";
+import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import {
   buildPricingSnapshotRows,
@@ -422,7 +429,9 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
+    const t0 = performance.now();
     const result = runSimulate(sku, body, c.get("locale"));
+    recordPricingSimulate(performance.now() - t0);
     return c.json(result);
   });
 
@@ -902,8 +911,14 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!rule) {
       rule = await dynamicRules.upsertRule(listingId, {});
     }
+    const sku = await catalog.getSku(tenantId, listing.sku.id);
+    const categoryId = sku?.category_id;
+    const template = categoryId
+      ? getCategoryRuleTemplate(tenantId, categoryId)
+      : undefined;
+    const effective = applyCategoryDefaults(rule, template);
     const stale = await listingHealth.getStale(listingId);
-    return c.json({ rule, stale });
+    return c.json({ rule: effective, stale, category_template: template ?? null });
   });
 
   app.put("/api/v1/listings/:listingId/dynamic-repricing-rule", async (c) => {
@@ -1359,9 +1374,52 @@ export function createApp(options: CreateAppOptions = {}) {
         repricingActivity,
       },
       tenantId,
-      limit
+      limit,
+      {
+        worker_id:
+          c.req.header("X-Repricing-Worker-Id")?.trim() || "bff-inline",
+      }
     );
     return c.json(out);
+  });
+
+  app.get("/api/v1/category-rule-templates", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json({ items: listCategoryRuleTemplates(tenantId) });
+  });
+
+  app.get("/api/v1/category-rule-templates/:categoryId", async (c) => {
+    const tenantId = c.get("tenantId");
+    const tpl = getCategoryRuleTemplate(tenantId, c.req.param("categoryId"));
+    if (!tpl) {
+      throw new HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+    }
+    return c.json(tpl);
+  });
+
+  app.get("/api/v1/tenants/:tenantId/shared-fee-templates", async (c) => {
+    const tenantId = c.req.param("tenantId");
+    const headerTenant = c.get("tenantId");
+    if (tenantId !== headerTenant) {
+      throw new HTTPException(403, { message: "TENANT_MISMATCH" });
+    }
+    return c.json({ items: listSharedFeeTemplates(tenantId) });
+  });
+
+  app.get("/api/v1/skus/:skuId/category-rule-template", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    if (!sku.category_id) {
+      return c.json({ template: null });
+    }
+    const template = getCategoryRuleTemplate(tenantId, sku.category_id);
+    if (!template) {
+      return c.json({ template: null, category_id: sku.category_id });
+    }
+    return c.json({ category_id: sku.category_id, template });
   });
 
   app.get("/api/v1/reconciliation-alerts", async (c) => {

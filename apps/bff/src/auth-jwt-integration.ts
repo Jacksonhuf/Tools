@@ -6,6 +6,7 @@ import {
 } from "./oidc-jwt.js";
 import { getStaticJwksKeys, resolveJwksKey } from "./oidc-jwks.js";
 import { resolveJwtClaimExpectations } from "./jwt-claims.js";
+import { getJwksCacheStatus } from "./oidc-jwks.js";
 
 export { signHs256Jwt, signRs256Jwt, verifyHs256Jwt, verifyRs256Jwt } from "./oidc-jwt.js";
 
@@ -86,6 +87,7 @@ export function jwtAuthStatusExtras() {
     jwt_rs256_configured: rs256,
     jwt_issuer_enforced: cfg.jwt_issuer_enforced,
     jwt_audience_enforced: cfg.jwt_audience_enforced,
+    ...getJwksCacheStatus(),
     ready,
     note: ready
       ? cfg.hs256_secret_configured

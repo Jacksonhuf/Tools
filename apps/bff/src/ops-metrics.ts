@@ -5,6 +5,7 @@ import {
 } from "./channel-sandbox-ledger.js";
 import { listDigestQueuedJobs } from "./digest-job-queue.js";
 import { repricingBatchQueueSummary } from "./repricing-batch-job-queue.js";
+import { getPricingNfrMetrics } from "./pricing-nfr-metrics.js";
 import type { CatalogRepository } from "./repositories/types.js";
 
 export async function buildOpsMetricsSnapshot(
@@ -39,6 +40,7 @@ export async function buildOpsMetricsSnapshot(
       failed: digestFailed,
     },
     repricing_batch_queue: repricingBatch,
+    nfr: getPricingNfrMetrics(),
     generated_at: new Date().toISOString(),
   };
 }

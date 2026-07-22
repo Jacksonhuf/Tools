@@ -18,4 +18,6 @@ export interface RepricingBatchQueuedJob {
   updated_at: string;
   error: string | null;
   result: unknown | null;
+  lease_holder?: string | null;
+  lease_expires_at?: string | null;
 }
