@@ -24,6 +24,7 @@ import {
   fetchTariffHsRates,
   previewAdjustmentPricesCsv,
   previewLandedCostFromHs,
+  downloadTariffHsRatesCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -495,6 +496,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsHsLandedPreview")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-tariff-export"
+          onClick={() =>
+            void downloadTariffHsRatesCsv(locale).then(() =>
+              setMessage(t("opsTariffExportDone"))
+            )
+          }
+        >
+          {t("opsTariffExportCsv")}
         </button>
       </section>
 

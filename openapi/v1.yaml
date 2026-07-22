@@ -305,6 +305,9 @@ paths:
   /api/v1/agent/digest/daily:
     get:
       summary: Daily Agent digest placeholder (P4-E1-07)
+  /api/v1/agent/digest/daily/export:
+    get:
+      summary: Download daily agent digest as CSV (P4-E1-07)
   /api/v1/agent/digest/schedule:
     get:
       summary: Digest cron schedule config (stub)
@@ -319,6 +322,18 @@ paths:
   /api/v1/cross-channel/dashboard:
     get:
       summary: Cross-channel spread dashboard per SKU (P3-E3-04)
+  /api/v1/cross-channel/dashboard/export:
+    get:
+      summary: Download cross-channel dashboard as CSV
+  /api/v1/skus/{skuId}/cost-sheets/export:
+    get:
+      summary: Download cost sheet rows for SKU as CSV
+  /api/v1/repricing-batch/jobs/summary:
+    get:
+      summary: Repricing batch job queue summary by status
+  /api/v1/repricing-batch/jobs/export:
+    get:
+      summary: Download repricing batch jobs as CSV
   /api/v1/imports/landed-cost:
     post:
       summary: Import SKU landed costs from CSV (P0-E5-03)
@@ -334,6 +349,9 @@ paths:
   /api/v1/tariff-hs-rates:
     get:
       summary: Tenant HS tariff table (P0-E2-04)
+  /api/v1/tariff-hs-rates/export:
+    get:
+      summary: Download HS tariff table as CSV
   /api/v1/tariff-hs-rates/{hsCode}:
     put:
       summary: Upsert HS tariff row
@@ -360,6 +378,9 @@ paths:
   /api/v1/skus/{skuId}/policy:
     patch:
       summary: Update SKU pricing policy margins (P0-E6-08)
+  /api/v1/skus/policy/batch:
+    post:
+      summary: Batch update SKU pricing policies (P0-E6-08)
   /api/v1/skus/{skuId}/waterfall/export:
     get:
       summary: Export pricing waterfall as CSV (P0-E5-03)

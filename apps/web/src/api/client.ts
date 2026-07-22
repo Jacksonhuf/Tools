@@ -71,6 +71,27 @@ export async function patchSkuPolicy(
   }>;
 }
 
+export async function batchPatchSkuPolicies(
+  locale: string,
+  items: Array<{
+    sku_id: string;
+    target_margin_pct?: number;
+    min_margin_pct?: number;
+    pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
+  }>
+) {
+  const res = await fetch(`/api/v1/skus/policy/batch`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ items }),
+  });
+  if (!res.ok) throw new Error(`sku-policy-batch ${res.status}`);
+  return res.json() as Promise<{
+    updated: Array<{ sku_id: string }>;
+    errors: Array<{ sku_id: string; error: string }>;
+  }>;
+}
+
 export async function fetchSharedFeeTemplates(locale: string) {
   const res = await fetch(`/api/v1/tenants/tenant-demo/shared-fee-templates`, {
     headers: headers(locale),
@@ -1122,6 +1143,20 @@ export async function fetchTariffHsRates(locale: string) {
   return res.json() as Promise<{ items: TariffHsRow[] }>;
 }
 
+export async function downloadTariffHsRatesCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/tariff-hs-rates/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`tariff-hs-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tariff-hs-rates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function previewLandedCostFromHs(
   locale: string,
   skuId: string,
@@ -1398,6 +1433,24 @@ export async function fetchDailyAgentDigest(locale: string, date?: string) {
       publish_price: string;
     }>;
   }>;
+}
+
+export async function downloadAgentDigestCsv(
+  locale: string,
+  date?: string
+): Promise<void> {
+  const q = date ? `?date=${encodeURIComponent(date)}` : "";
+  const res = await fetch(`/api/v1/agent/digest/daily/export${q}`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`agent-digest-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agent-digest.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchAgentReadiness(locale: string) {

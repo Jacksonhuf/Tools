@@ -896,6 +896,34 @@
 | **实现** | 跨渠道导出；定价页 Cost Sheet 导出；Ops 批处理摘要与导出 |
 | **测试** | `loop-98-101.test.ts` |
 
+### Loop 102 — Agent Digest CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/digest/daily/export`；`POST /exports` → `agent_digest_csv` |
+| **测试** | `loop-102-105.test.ts` |
+
+### Loop 103 — HS 关税表 CSV（P0-E2-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /tariff-hs-rates/export`；`tariff_hs_csv` |
+| **测试** | `loop-102-105.test.ts` |
+
+### Loop 104 — SKU 策略批量 PATCH（P0-E6-08）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /skus/policy/batch`；`sku-policy-batch.ts` |
+| **测试** | `loop-102-105.test.ts` |
+
+### Loop 105 — Copilot/Ops/策略 Web（P4/P0-E6）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Digest CSV；关税导出；策略批量保存按钮 |
+| **测试** | `loop-102-105.test.ts` |
+
 ---
 
 ## 本地命令
@@ -965,3 +993,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.9 | 2026-07-22 | Loop 90–93 sync jobs feed, direct CSV, cron/force, Ops jobs UI |
 | v6.0 | 2026-07-22 | Loop 94–97 sync status, jobs/recon CSV exports, Channels Web |
 | v6.1 | 2026-07-22 | Loop 98–101 cross-channel/cost sheet/repricing batch CSV + Web |
+| v6.2 | 2026-07-22 | Loop 102–105 digest/tariff CSV, SKU policy batch, Web |

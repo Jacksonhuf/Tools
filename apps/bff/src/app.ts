@@ -211,6 +211,9 @@ import {
   copilotWelcomeMessage,
 } from "./copilot-narrative.js";
 import { buildDailyAgentDigest } from "./agent-digest-service.js";
+import { agentDigestToCsv } from "./agent-digest-csv.js";
+import { tariffHsRatesToCsv } from "./tariff-hs-csv.js";
+import { batchPatchSkuPolicies } from "./sku-policy-batch.js";
 import {
   dispatchDailyDigest,
   getDigestSchedule,
@@ -580,6 +583,27 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ id: updated.id, policy: updated.policy });
   });
 
+  app.post("/api/v1/skus/policy/batch", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      items?: Array<{
+        sku_id: string;
+        target_margin_pct?: number;
+        min_margin_pct?: number;
+        pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
+      }>;
+    };
+    if (!body.items?.length) {
+      throw new HTTPException(400, { message: "ITEMS_REQUIRED" });
+    }
+    const result = await batchPatchSkuPolicies(
+      catalog,
+      tenantId,
+      body.items
+    );
+    return c.json(result);
+  });
+
   app.get("/api/v1/skus/:skuId/cost-sheets", async (c) => {
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
@@ -903,6 +927,18 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listTariffHsRates(tenantId) });
   });
 
+  app.get("/api/v1/tariff-hs-rates/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const csv = tariffHsRatesToCsv(listTariffHsRates(tenantId), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="tariff-hs-rates.csv"`,
+      },
+    });
+  });
+
   app.put("/api/v1/tariff-hs-rates/:hsCode", async (c) => {
     const tenantId = c.get("tenantId");
     const hsCode = decodeURIComponent(c.req.param("hsCode"));
@@ -1168,6 +1204,7 @@ export function createApp(options: CreateAppOptions = {}) {
       range?: string;
       batch_id?: string;
       limit?: number;
+      date?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1254,6 +1291,21 @@ export function createApp(options: CreateAppOptions = {}) {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
       const jobs = await listRepricingBatchJobs(tenantId, limit);
       content = repricingBatchJobsToCsv(jobs, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "agent_digest_csv") {
+      const digest = await buildDailyAgentDigest(
+        { catalog, reconciliationAlerts, agentAudit },
+        tenantId,
+        c.get("locale"),
+        body.date
+      );
+      content = agentDigestToCsv(digest);
+      content_type = "text/csv";
+    } else if (kind === "tariff_hs_csv") {
+      content = tariffHsRatesToCsv(
+        listTariffHsRates(tenantId),
+        new Date().toISOString()
+      );
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2517,6 +2569,25 @@ export function createApp(options: CreateAppOptions = {}) {
       created_at: updated.created_at,
       messages: updated.messages,
       context_bootstrapped: bootstrap,
+    });
+  });
+
+  app.get("/api/v1/agent/digest/daily/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const date = c.req.query("date");
+    const digest = await buildDailyAgentDigest(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      locale,
+      date
+    );
+    const csv = agentDigestToCsv(digest);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-digest-${digest.date}.csv"`,
+      },
     });
   });
 
