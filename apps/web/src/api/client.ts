@@ -140,6 +140,54 @@ export async function downloadCategoryRuleTemplatesCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadSharedFeeTemplatesCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/shared-fee-templates/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`shared-fee-templates-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "shared-fee-templates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadCompetitorOffersCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/competitors/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-offers-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `competitor-offers-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadOpsMetricsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/ops/metrics/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`ops-metrics-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ops-metrics.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function applySharedFeeTemplate(
   locale: string,
   skuId: string,

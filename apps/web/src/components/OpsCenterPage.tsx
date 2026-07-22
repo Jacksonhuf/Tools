@@ -20,6 +20,7 @@ import {
   downloadRepricingBatchJobsCsv,
   downloadRepricingQueueCsv,
   downloadWorkerHeartbeatsCsv,
+  downloadOpsMetricsCsv,
   fetchRepricingBatchJobsSummary,
   type ListingSyncJobRow,
   fetchReconciliationAlerts,
@@ -192,6 +193,17 @@ export function OpsCenterPage() {
       {metrics && (
         <section className="card" data-testid="ops-metrics">
           <h2>{t("opsMetricsTitle")}</h2>
+          <button
+            type="button"
+            data-testid="ops-metrics-export"
+            onClick={() =>
+              void downloadOpsMetricsCsv(locale).then(() =>
+                setMessage(t("opsMetricsExportDone"))
+              )
+            }
+          >
+            {t("opsMetricsExportCsv")}
+          </button>
           <dl className="adapter-status-dl">
             <div>
               <dt>{t("opsMetricsCatalog")}</dt>

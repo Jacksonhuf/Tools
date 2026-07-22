@@ -176,6 +176,9 @@ paths:
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)
+  /api/v1/ops/metrics/export:
+    get:
+      summary: Download ops metrics snapshot as CSV
   /api/v1/channels/sandbox/events:
     get:
       summary: Recent sandbox channel events for tenant
@@ -207,6 +210,9 @@ paths:
       summary: List competitor offers (SDD §10.6)
     post:
       summary: Bind competitor offer to listing
+  /api/v1/listings/{listingId}/competitors/export:
+    get:
+      summary: Download competitor offers with latest prices as CSV
   /api/v1/competitor-offers/{offerId}/observations:
     post:
       summary: Manual price observation (P2-E1-03)
@@ -308,6 +314,9 @@ paths:
   /api/v1/tenants/{tenantId}/shared-fee-templates:
     get:
       summary: Shared fee templates per tenant (P5-04)
+  /api/v1/shared-fee-templates/export:
+    get:
+      summary: Download shared fee templates for tenant as CSV
   /api/v1/skus/{skuId}/apply-shared-fee-template:
     post:
       summary: Apply shared fee template to SKU channel fees (P5-04)
