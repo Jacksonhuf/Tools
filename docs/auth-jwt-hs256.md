@@ -20,6 +20,10 @@
 
 见 [auth-jwks-rs256.md](./auth-jwks-rs256.md)（Loop 46）。
 
+## `iss` / `aud`
+
+见 [auth-jwt-claims.md](./auth-jwt-claims.md)（Loop 47）。
+
 ## API
 
 `GET /api/v1/auth/status` — `jwt_hs256_configured`、`jwks_*`、`jwt_rs256_configured`（`oidc_jwt` 时）。

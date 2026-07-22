@@ -5,6 +5,7 @@ import {
   base64UrlDecodeJson,
 } from "./oidc-jwt.js";
 import { getStaticJwksKeys, resolveJwksKey } from "./oidc-jwks.js";
+import { resolveJwtClaimExpectations } from "./jwt-claims.js";
 
 export { signHs256Jwt, signRs256Jwt, verifyHs256Jwt, verifyRs256Jwt } from "./oidc-jwt.js";
 
@@ -17,10 +18,15 @@ export function getJwtAuthConfig() {
   const secret = process.env.OIDC_JWT_HS256_SECRET?.trim() || null;
   const jwksUrl = process.env.OIDC_JWKS_URL?.trim() || null;
   const jwksJson = Boolean(process.env.OIDC_JWKS_JSON?.trim());
+  const claims = resolveJwtClaimExpectations();
   return {
     hs256_secret_configured: Boolean(secret),
     jwks_url: jwksUrl,
     jwks_json_configured: jwksJson,
+    jwt_issuer_enforced: Boolean(claims.issuer),
+    jwt_audience_enforced: Boolean(claims.audience),
+    jwt_expected_issuer: claims.issuer,
+    jwt_expected_audience: claims.audience,
   };
 }
 
@@ -78,6 +84,8 @@ export function jwtAuthStatusExtras() {
     jwks_url_configured: Boolean(cfg.jwks_url),
     jwks_json_configured: cfg.jwks_json_configured,
     jwt_rs256_configured: rs256,
+    jwt_issuer_enforced: cfg.jwt_issuer_enforced,
+    jwt_audience_enforced: cfg.jwt_audience_enforced,
     ready,
     note: ready
       ? cfg.hs256_secret_configured
