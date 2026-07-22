@@ -1,6 +1,9 @@
 {
   "name": "mx-pricing",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "packages/*",
     "apps/*"

@@ -13,8 +13,11 @@ name: deploy-vercel
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
+
+# Enable automatic deploy via Actions only after adding GitHub secrets:
+# VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+#  push:
+#    branches: [main]
 
 concurrency:
   group: vercel-production

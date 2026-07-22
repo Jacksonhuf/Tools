@@ -6,13 +6,17 @@
   "outputDirectory": "apps/web/dist",
   "framework": null,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api" }
+  ],
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "functions": {
     "api/index.ts": {
       "maxDuration": 30,
-      "memory": 1024
+      "memory": 1024,
+      "includeFiles": "{apps/bff/dist/**,packages/**/dist/**}"
     }
   }
 }
