@@ -6,6 +6,7 @@ import {
   fetchPricingContext,
   fetchSharedFeeTemplates,
   patchSkuPolicy,
+  batchPatchSkuPolicies,
 } from "../api/client";
 
 export function PolicyConfigPage() {
@@ -96,6 +97,28 @@ export function PolicyConfigPage() {
         </label>
         <button type="button" data-testid="policy-save" onClick={() => void savePolicy()}>
           {t("policySave")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-batch-apply"
+          onClick={() =>
+            void batchPatchSkuPolicies(locale, [
+              {
+                sku_id: DEMO_SKU,
+                target_margin_pct: targetMargin,
+                min_margin_pct: minMargin,
+              },
+            ]).then((r) =>
+              setMessage(
+                t("policyBatchDone", {
+                  updated: r.updated.length,
+                  errors: r.errors.length,
+                })
+              )
+            )
+          }
+        >
+          {t("policyBatchSave")}
         </button>
       </section>
 

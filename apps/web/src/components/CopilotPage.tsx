@@ -11,6 +11,7 @@ import {
   fetchAgentTools,
   dispatchDailyAgentDigest,
   fetchDailyAgentDigest,
+  downloadAgentDigestCsv,
   fetchRuleCompilerStatus,
   invokeAgentTool,
   LISTING_BY_CHANNEL,
@@ -292,6 +293,13 @@ export function CopilotPage() {
             </button>
             <button type="button" onClick={() => void runDigestQueue()}>
               {t("copilotDigestQueue")}
+            </button>
+            <button
+              type="button"
+              data-testid="copilot-digest-export"
+              onClick={() => void downloadAgentDigestCsv(locale)}
+            >
+              {t("copilotDigestExportCsv")}
             </button>
           </div>
         </section>
