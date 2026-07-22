@@ -1655,6 +1655,52 @@ export async function downloadAgentToolsCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadAgentReadinessCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/readiness/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`agent-readiness-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agent-readiness.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadCompetitorAnchorCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/competitors/anchor/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-anchor-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `competitor-anchor-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadProductReadinessCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/product/readiness/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`product-readiness-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "product-readiness.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchAgentToolAudit(locale: string, limit = 20) {
   const res = await fetch(`/api/v1/agent/tool-audit?limit=${limit}`, {
     headers: headers(locale),

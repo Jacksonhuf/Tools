@@ -1148,6 +1148,34 @@
 | **实现** | 重算批处理汇总、采集状态、特性开关 CSV 导出按钮 |
 | **测试** | `loop-134-137.test.ts` |
 
+### Loop 138 — P4 Agent 就绪 CSV（P4-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `agent-readiness-csv.ts`；`GET /agent/readiness/export`；`agent_readiness_csv` |
+| **测试** | `loop-138-141.test.ts` |
+
+### Loop 139 — 竞品锚点 CSV（P2-E1-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `competitor-anchor-csv.ts`；`GET /listings/:id/competitors/anchor/export`；`competitor_anchor_csv` |
+| **测试** | `loop-138-141.test.ts` |
+
+### Loop 140 — 产品里程碑就绪 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `product-readiness-csv.ts`；`GET /product/readiness/export`；`product_readiness_csv` |
+| **测试** | `loop-138-141.test.ts` |
+
+### Loop 141 — Copilot/竞品/就绪 Web（P4/P2/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Agent 就绪、竞品锚点、产品里程碑 CSV 导出按钮 |
+| **测试** | `loop-138-141.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1226,3 +1254,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.8 | 2026-07-22 | Loop 126–129 competitor offers/fee templates/ops metrics CSV + Web |
 | v6.9 | 2026-07-22 | Loop 130–133 reconciliation/sync status/listing sync/agent tools CSV + Web |
 | v7.0 | 2026-07-22 | Loop 134–137 repricing batch summary, ingest status, feature flags CSV + Web |
+| v7.1 | 2026-07-22 | Loop 138–141 agent/product readiness and competitor anchor CSV + Web |

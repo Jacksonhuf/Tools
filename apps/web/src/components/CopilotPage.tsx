@@ -20,6 +20,7 @@ import {
   downloadDigestQueuedJobsCsv,
   downloadDigestDispatchesCsv,
   downloadAgentToolsCsv,
+  downloadAgentReadinessCsv,
   updateDigestSchedule,
   runDigestRunDue,
   fetchRuleCompilerStatus,
@@ -356,6 +357,17 @@ export function CopilotPage() {
             }
           >
             {t("copilotDigestRunDue")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-readiness-export"
+            onClick={() =>
+              void downloadAgentReadinessCsv(locale).then(() =>
+                setMessage(t("copilotReadinessExportDone"))
+              )
+            }
+          >
+            {t("copilotReadinessExportCsv")}
           </button>
           <button
             type="button"

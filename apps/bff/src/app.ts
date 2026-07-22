@@ -180,7 +180,9 @@ import { priceHistoryToCsv } from "./price-history-csv.js";
 import { repricingEventsToCsv } from "./repricing-events-csv.js";
 import { categoryRuleTemplatesToCsv } from "./category-rule-templates-csv.js";
 import { competitorOffersToCsv } from "./competitor-offers-csv.js";
+import { competitorAnchorToCsv } from "./competitor-anchor-csv.js";
 import { agentToolsToCsv } from "./agent-tools-csv.js";
+import { agentReadinessToCsv } from "./agent-readiness-csv.js";
 import { listingSyncOpsStatusToCsv } from "./listing-sync-ops-status-csv.js";
 import { sharedFeeTemplatesToCsv } from "./shared-fee-templates-csv.js";
 import { shopsToCsv } from "./shops-csv.js";
@@ -264,6 +266,7 @@ import {
   getProductMilestoneStatus,
   getProductReadinessSummary,
 } from "./agent-milestones.js";
+import { productReadinessToCsv } from "./product-readiness-csv.js";
 import {
   type AgentToolAuditRepository,
   getAgentToolAuditRepository,
@@ -1576,6 +1579,35 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "feature_flags_csv") {
       content = featureFlagsToCsv(getFeatureFlags(), new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "agent_readiness_csv") {
+      content = agentReadinessToCsv(
+        evaluateAgentReadiness(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "competitor_anchor_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const withLatest = await mapOffersWithLatestObservations(
+        competitors,
+        listingId
+      );
+      const anchor = buildCompetitorAnchorSummary(withLatest);
+      content = competitorAnchorToCsv(
+        listingId,
+        anchor,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "product_readiness_csv") {
+      content = productReadinessToCsv(
+        getProductReadinessSummary(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1813,6 +1845,28 @@ export function createApp(options: CreateAppOptions = {}) {
       }
     }
     return c.json({ shop_id: shopId, snapshot });
+  });
+
+  app.get("/api/v1/listings/:listingId/competitors/anchor/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const withLatest = await mapOffersWithLatestObservations(
+      competitors,
+      listingId
+    );
+    const anchor = buildCompetitorAnchorSummary(withLatest);
+    const exportedAt = new Date().toISOString();
+    const csv = competitorAnchorToCsv(listingId, anchor, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="competitor-anchor-${listingId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/listings/:listingId/competitors/export", async (c) => {
@@ -3002,12 +3056,34 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listAgentTools() });
   });
 
+  app.get("/api/v1/agent/readiness/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = agentReadinessToCsv(evaluateAgentReadiness(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-readiness.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/agent/readiness", async (c) => {
     return c.json(evaluateAgentReadiness());
   });
 
   app.get("/api/v1/agent/milestones", async (c) => {
     return c.json(getProductMilestoneStatus());
+  });
+
+  app.get("/api/v1/product/readiness/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = productReadinessToCsv(getProductReadinessSummary(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="product-readiness.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/product/readiness", async (c) => {

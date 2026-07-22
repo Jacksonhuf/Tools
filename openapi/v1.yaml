@@ -216,6 +216,9 @@ paths:
   /api/v1/listings/{listingId}/competitors/export:
     get:
       summary: Download competitor offers with latest prices as CSV
+  /api/v1/listings/{listingId}/competitors/anchor/export:
+    get:
+      summary: Download competitor anchor summary as CSV
   /api/v1/competitor-offers/{offerId}/observations:
     post:
       summary: Manual price observation (P2-E1-03)
@@ -518,12 +521,18 @@ paths:
   /api/v1/product/readiness:
     get:
       summary: P3 + P4 + P5 readiness and milestone acceptance summary
+  /api/v1/product/readiness/export:
+    get:
+      summary: Download product milestone readiness as CSV
   /api/v1/agent/milestones:
     get:
       summary: P3/P4 milestone status (P4 accepted when readiness passes)
   /api/v1/agent/readiness:
     get:
       summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)
+  /api/v1/agent/readiness/export:
+    get:
+      summary: Download P4 agent readiness checks as CSV
   /api/v1/agent/digest/daily/enqueue:
     post:
       summary: Enqueue digest job for async worker
