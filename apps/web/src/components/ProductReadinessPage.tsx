@@ -4,6 +4,7 @@ import {
   fetchFeatureFlags,
   fetchProductReadiness,
   downloadFeatureFlagsCsv,
+  downloadProductReadinessCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
 } from "../api/client";
@@ -51,6 +52,17 @@ export function ProductReadinessPage() {
               ? t("readinessAllAccepted")
               : t("readinessInProgress")}
           </p>
+          <button
+            type="button"
+            data-testid="readiness-product-export"
+            onClick={() =>
+              void downloadProductReadinessCsv(locale).then(() =>
+                setMessage(t("readinessProductExportDone"))
+              )
+            }
+          >
+            {t("readinessProductExportCsv")}
+          </button>
           <table className="batch-table">
             <thead>
               <tr>
