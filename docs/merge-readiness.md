@@ -14,7 +14,7 @@ GitHub Actions：`ci-unit-engine`、`ci-vitest-full`、`ci-e2e-smoke`、`ci-post
 
 ## 里程碑 API
 
-- `GET /api/v1/product/readiness` — P3+P4 验收
+- `GET /api/v1/product/readiness` — P3+P4+P5 验收
 - `GET /api/v1/agent/milestones`
 - `GET /api/v1/channels/sandbox/status` + `.../events`
 - `GET /api/v1/channels/adapters/status`
