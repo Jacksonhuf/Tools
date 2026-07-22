@@ -67,4 +67,4 @@ export async function runListingChannelSync(
   }
 }
 
-export { listListingSyncJobs };
+export { listListingSyncJobs, listListingSyncJobsForTenant } from "./listing-sync-journal.js";
