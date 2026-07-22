@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "node -e \"console.error('\\n[Vercel] Root Directory must be the repository root (leave empty), NOT apps/bff.\\nSettings → Build and Deployment → Root Directory → clear the field → Save → Redeploy.\\n'); process.exit(1)\"",
+  "buildCommand": "exit 1"
+}
