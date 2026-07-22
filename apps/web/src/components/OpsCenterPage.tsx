@@ -25,6 +25,7 @@ import {
   previewAdjustmentPricesCsv,
   previewLandedCostFromHs,
   downloadTariffHsRatesCsv,
+  downloadFxRatesCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -507,6 +508,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsTariffExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-fx-export"
+          onClick={() =>
+            void downloadFxRatesCsv(locale).then(() =>
+              setMessage(t("opsFxExportDone"))
+            )
+          }
+        >
+          {t("opsFxExportCsv")}
         </button>
       </section>
 

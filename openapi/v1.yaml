@@ -299,6 +299,9 @@ paths:
   /api/v1/agent/tool-audit:
     get:
       summary: Recent agent tool invocations per tenant
+  /api/v1/agent/tool-audit/export:
+    get:
+      summary: Download agent tool audit log as CSV
   /api/v1/rule-compiler/status:
     get:
       summary: Rule compiler driver and LLM adapter readiness (P4)
@@ -308,6 +311,9 @@ paths:
   /api/v1/agent/digest/daily/export:
     get:
       summary: Download daily agent digest as CSV (P4-E1-07)
+  /api/v1/agent/digest/run-due:
+    post:
+      summary: Dispatch daily digest when schedule enabled (P4-E1-07)
   /api/v1/agent/digest/schedule:
     get:
       summary: Digest cron schedule config (stub)
@@ -340,6 +346,9 @@ paths:
   /api/v1/fx-rates:
     get:
       summary: Tenant FX rate table (P0-E2-03)
+  /api/v1/fx-rates/export:
+    get:
+      summary: Download FX rate table as CSV
   /api/v1/fx-rates/{base}/{quote}:
     put:
       summary: Upsert FX rate row

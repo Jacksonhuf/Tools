@@ -1362,6 +1362,78 @@ export async function fetchAgentToolAudit(locale: string, limit = 20) {
   };
 }
 
+export async function downloadAgentToolAuditCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/agent/tool-audit/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`tool-audit-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agent-tool-audit.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchDigestSchedule(locale: string) {
+  const res = await fetch(`/api/v1/agent/digest/schedule`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-schedule ${res.status}`);
+  return res.json() as Promise<{
+    enabled: boolean;
+    cron: string;
+    email_to: string;
+    last_dispatch_at: string | null;
+  }>;
+}
+
+export async function updateDigestSchedule(
+  locale: string,
+  body: {
+    enabled?: boolean;
+    cron?: string;
+    email_to?: string;
+    timezone?: string;
+  }
+) {
+  const res = await fetch(`/api/v1/agent/digest/schedule`, {
+    method: "PUT",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`digest-schedule-update ${res.status}`);
+  return res.json();
+}
+
+export async function runDigestRunDue(locale: string, force = false) {
+  const qs = force ? "?force=true" : "";
+  const res = await fetch(`/api/v1/agent/digest/run-due${qs}`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`digest-run-due ${res.status}`);
+  return res.json() as Promise<{
+    digest: { narrative: string };
+    schedule: { last_dispatch_at: string | null };
+  }>;
+}
+
+export async function downloadFxRatesCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/fx-rates/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`fx-rates-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "fx-rates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function confirmCompiledDynamicRule(
   locale: string,
   listingId: string,

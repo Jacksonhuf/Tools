@@ -12,6 +12,10 @@ import {
   dispatchDailyAgentDigest,
   fetchDailyAgentDigest,
   downloadAgentDigestCsv,
+  downloadAgentToolAuditCsv,
+  fetchDigestSchedule,
+  updateDigestSchedule,
+  runDigestRunDue,
   fetchRuleCompilerStatus,
   invokeAgentTool,
   LISTING_BY_CHANNEL,
@@ -50,6 +54,9 @@ export function CopilotPage() {
   const [chatInput, setChatInput] = useState("");
   const [digestNarrative, setDigestNarrative] = useState<string | null>(null);
   const [digestEmailStub, setDigestEmailStub] = useState<string | null>(null);
+  const [digestEnabled, setDigestEnabled] = useState(false);
+  const [digestCron, setDigestCron] = useState("0 8 * * *");
+  const [digestLastRun, setDigestLastRun] = useState<string | null>(null);
   const [p4Ready, setP4Ready] = useState<boolean | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
@@ -135,6 +142,10 @@ export function CopilotPage() {
         setP4Ready(readiness.ready);
         await refreshAudit();
         await loadDigest();
+        const sched = await fetchDigestSchedule(locale);
+        setDigestEnabled(sched.enabled);
+        setDigestCron(sched.cron);
+        setDigestLastRun(sched.last_dispatch_at);
       } catch {
         /* non-fatal on demo load */
       }
@@ -275,6 +286,65 @@ export function CopilotPage() {
           {t("copilotCompilerStatus")}: {compilerLabel}
         </p>
       )}
+      <section className="card" data-testid="copilot-digest-schedule">
+        <h2>{t("copilotDigestScheduleTitle")}</h2>
+        <label>
+          <input
+            type="checkbox"
+            checked={digestEnabled}
+            onChange={(e) => setDigestEnabled(e.target.checked)}
+          />
+          {t("copilotDigestScheduleEnabled")}
+        </label>
+        <label>
+          {t("copilotDigestScheduleCron")}
+          <input
+            type="text"
+            value={digestCron}
+            onChange={(e) => setDigestCron(e.target.value)}
+            style={{ width: "100%", fontFamily: "monospace" }}
+          />
+        </label>
+        <p className="hint">
+          {t("copilotDigestLastDispatch")}:{" "}
+          {digestLastRun ? new Date(digestLastRun).toLocaleString(locale) : "—"}
+        </p>
+        <div className="shop-actions">
+          <button
+            type="button"
+            onClick={() =>
+              void updateDigestSchedule(locale, {
+                enabled: digestEnabled,
+                cron: digestCron,
+              }).then(() => setMessage(t("policySaved")))
+            }
+          >
+            {t("copilotDigestScheduleSave")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-run-due"
+            onClick={() =>
+              void runDigestRunDue(locale)
+                .then((r) => {
+                  setDigestNarrative(r.digest.narrative);
+                  setDigestLastRun(r.schedule.last_dispatch_at);
+                  setMessage(t("copilotDigestRunDueDone"));
+                })
+                .catch(() => setError(t("copilotDigestScheduleDisabled")))
+            }
+          >
+            {t("copilotDigestRunDue")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-audit-export"
+            onClick={() => void downloadAgentToolAuditCsv(locale)}
+          >
+            {t("copilotAuditExportCsv")}
+          </button>
+        </div>
+      </section>
       {digestNarrative && (
         <section className="card" data-testid="copilot-digest">
           <h2>{t("copilotDigestTitle")}</h2>

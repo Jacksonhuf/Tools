@@ -924,6 +924,34 @@
 | **实现** | Digest CSV；关税导出；策略批量保存按钮 |
 | **测试** | `loop-102-105.test.ts` |
 
+### Loop 106 — FX 汇率 CSV（P0-E2-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /fx-rates/export`；`fx_rates_csv` |
+| **测试** | `loop-106-109.test.ts` |
+
+### Loop 107 — Agent 工具审计 CSV（P4-E1-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/tool-audit/export`；`agent_tool_audit_csv` |
+| **测试** | `loop-106-109.test.ts` |
+
+### Loop 108 — Digest 到期派发（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `POST /agent/digest/run-due`；cron 校验；`last_dispatch_at` |
+| **测试** | `loop-106-109.test.ts` |
+
+### Loop 109 — Copilot/Ops Web（P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Digest 计划与 run-due；审计/FX CSV 导出 |
+| **测试** | `loop-106-109.test.ts` |
+
 ---
 
 ## 本地命令
@@ -994,3 +1022,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.0 | 2026-07-22 | Loop 94–97 sync status, jobs/recon CSV exports, Channels Web |
 | v6.1 | 2026-07-22 | Loop 98–101 cross-channel/cost sheet/repricing batch CSV + Web |
 | v6.2 | 2026-07-22 | Loop 102–105 digest/tariff CSV, SKU policy batch, Web |
+| v6.3 | 2026-07-22 | Loop 106–109 FX/audit CSV, digest run-due, Copilot/Ops Web |
