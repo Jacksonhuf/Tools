@@ -155,6 +155,9 @@ paths:
   /api/v1/channels/adapters/status:
     get:
       summary: Channel publish/pull adapter driver (mock vs http_stub)
+  /api/v1/channels/adapters/status/export:
+    get:
+      summary: Download channel adapter status as CSV
   /api/v1/skus/{skuId}/cross-channel-guard:
     get:
       summary: Cross-channel active price spread guard (P5-01)
@@ -356,6 +359,9 @@ paths:
   /api/v1/rule-compiler/status:
     get:
       summary: Rule compiler driver and LLM adapter readiness (P4)
+  /api/v1/rule-compiler/status/export:
+    get:
+      summary: Download rule compiler status as CSV
   /api/v1/agent/digest/daily:
     get:
       summary: Daily Agent digest placeholder (P4-E1-07)
@@ -542,6 +548,9 @@ paths:
   /api/v1/agent/digest/jobs/summary:
     get:
       summary: Digest job queue summary with sampled jobs
+  /api/v1/agent/digest/jobs/summary/export:
+    get:
+      summary: Download digest job queue summary as CSV
   /api/v1/agent/digest/jobs/export:
     get:
       summary: Download digest queued jobs as CSV

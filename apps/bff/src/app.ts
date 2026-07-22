@@ -114,6 +114,7 @@ import {
   createChannelListingAdapter,
   createChannelPublishAdapter,
 } from "./channel-adapter-factory.js";
+import { channelAdapterStatusToCsv } from "./channel-adapters-status-csv.js";
 import { buildOpsMetricsSnapshot } from "./ops-metrics.js";
 import { opsMetricsToCsv } from "./ops-metrics-csv.js";
 import { recordPricingSimulate } from "./pricing-nfr-metrics.js";
@@ -211,6 +212,7 @@ import {
   digestQueuedJobsToCsv,
   buildDigestQueuedJobsSummary,
 } from "./digest-queued-jobs-csv.js";
+import { digestQueuedJobsSummaryToCsv } from "./digest-queued-jobs-summary-csv.js";
 import { digestDispatchesToCsv } from "./digest-dispatches-csv.js";
 import { workerHeartbeatsToCsv } from "./worker-heartbeats-csv.js";
 import {
@@ -227,6 +229,7 @@ import {
   compileRuleViaAdapter,
   getRuleCompilerStatus,
 } from "./rule-compiler-adapter.js";
+import { ruleCompilerStatusToCsv } from "./rule-compiler-status-csv.js";
 import {
   storeCompiledDraft,
   takeCompiledDraft,
@@ -959,6 +962,17 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(getChannelAdapterStatus());
   });
 
+  app.get("/api/v1/channels/adapters/status/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = channelAdapterStatusToCsv(getChannelAdapterStatus(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="channel-adapters-status.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/ops/metrics", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json(await buildOpsMetricsSnapshot(catalog, tenantId));
@@ -1605,6 +1619,27 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "product_readiness_csv") {
       content = productReadinessToCsv(
         getProductReadinessSummary(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "digest_queued_jobs_summary_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const jobs = listDigestQueuedJobs(tenantId, limit);
+      const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+      content = digestQueuedJobsSummaryToCsv(
+        summary,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "channel_adapters_status_csv") {
+      content = channelAdapterStatusToCsv(
+        getChannelAdapterStatus(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "rule_compiler_status_csv") {
+      content = ruleCompilerStatusToCsv(
+        getRuleCompilerStatus(),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -3090,6 +3125,17 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(getProductReadinessSummary());
   });
 
+  app.get("/api/v1/rule-compiler/status/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = ruleCompilerStatusToCsv(getRuleCompilerStatus(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="rule-compiler-status.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/rule-compiler/status", async (c) => {
     return c.json(getRuleCompilerStatus());
   });
@@ -3304,6 +3350,24 @@ export function createApp(options: CreateAppOptions = {}) {
       simulate_poison: body.simulate_poison,
     });
     return c.json({ job });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/summary/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
+    );
+    const exportedAt = new Date().toISOString();
+    const jobs = listDigestQueuedJobs(tenantId, limit);
+    const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+    const csv = digestQueuedJobsSummaryToCsv(summary, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-queued-jobs-summary.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/digest/jobs/summary", async (c) => {
