@@ -215,4 +215,22 @@ export class PostgresCatalogRepository implements CatalogRepository {
     if (r.rowCount === 0) return undefined;
     return rowToSku(r.rows[0]);
   }
+
+  async updateSkuPolicy(
+    tenantId: string,
+    skuId: string,
+    patch: Partial<import("../fixtures.js").SkuRecord["policy"]>
+  ) {
+    const sku = await this.getSku(tenantId, skuId);
+    if (!sku) return undefined;
+    const next = { ...sku.policy, ...patch };
+    const r = await this.pool.query(
+      `UPDATE skus SET policy_json = $3::jsonb
+       WHERE tenant_id = $1 AND id = $2
+       RETURNING *`,
+      [tenantId, skuId, JSON.stringify(next)]
+    );
+    if (r.rowCount === 0) return undefined;
+    return rowToSku(r.rows[0]);
+  }
 }

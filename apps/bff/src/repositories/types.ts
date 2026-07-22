@@ -47,6 +47,11 @@ export interface CatalogRepository {
     channel: "MERCADO_LIBRE" | "AMAZON_MX",
     fee: FeeTemplate
   ): Promise<SkuRecord | undefined>;
+  updateSkuPolicy(
+    tenantId: string,
+    skuId: string,
+    patch: Partial<SkuRecord["policy"]>
+  ): Promise<SkuRecord | undefined>;
   resetForTests?(): void;
 }
 

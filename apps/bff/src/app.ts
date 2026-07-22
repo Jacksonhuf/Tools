@@ -147,6 +147,16 @@ import {
   listCostSheets,
 } from "./cost-sheet-store.js";
 import { computeLandedFromCostSheet } from "./landed-cost-from-sheet.js";
+import {
+  applyCostSheetImport,
+  COST_SHEET_IMPORT_TEMPLATE_CSV,
+  parseCostSheetCsv,
+} from "./cost-sheet-import.js";
+import {
+  listListingSyncJobs,
+  runListingChannelSync,
+} from "./listing-sync-service.js";
+import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
   getAsyncWorkerStatus,
@@ -383,6 +393,37 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ parse_errors: parsed.errors, ...result });
   });
 
+  app.get("/api/v1/imports/cost-sheets/template", async () => {
+    return new Response(COST_SHEET_IMPORT_TEMPLATE_CSV, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="cost-sheets-template.csv"',
+      },
+    });
+  });
+
+  app.post("/api/v1/imports/cost-sheets", async (c) => {
+    const tenantId = c.get("tenantId");
+    const contentType = c.req.header("content-type") ?? "";
+    let csvText: string;
+    if (contentType.includes("application/json")) {
+      const body = (await c.req.json()) as { csv?: string };
+      if (!body.csv?.trim()) {
+        throw new HTTPException(400, { message: "CSV_REQUIRED" });
+      }
+      csvText = body.csv;
+    } else {
+      csvText = await c.req.text();
+    }
+    const parsed = parseCostSheetCsv(csvText);
+    if (parsed.rows.length === 0) {
+      throw new HTTPException(400, { message: "IMPORT_PARSE_FAILED" });
+    }
+    const result = await applyCostSheetImport(catalog, tenantId, parsed.rows);
+    return c.json({ parse_errors: parsed.errors, ...result });
+  });
+
   app.post("/api/v1/listings/:listingId/price-versions", async (c) => {
     const tenantId = c.get("tenantId");
     const listing = await catalog.getListing(tenantId, c.req.param("listingId"));
@@ -485,6 +526,33 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.patch("/api/v1/skus/:skuId/policy", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const body = (await c.req.json()) as {
+      target_margin_pct?: number;
+      min_margin_pct?: number;
+      pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
+    };
+    if (
+      body.target_margin_pct !== undefined &&
+      (body.target_margin_pct < 0 || body.target_margin_pct > 100)
+    ) {
+      throw new HTTPException(400, { message: "INVALID_TARGET_MARGIN" });
+    }
+    if (
+      body.min_margin_pct !== undefined &&
+      (body.min_margin_pct < 0 || body.min_margin_pct > 100)
+    ) {
+      throw new HTTPException(400, { message: "INVALID_MIN_MARGIN" });
+    }
+    const updated = await catalog.updateSkuPolicy(tenantId, skuId, body);
+    if (!updated) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    return c.json({ id: updated.id, policy: updated.policy });
+  });
+
   app.get("/api/v1/skus/:skuId/cost-sheets", async (c) => {
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
@@ -529,6 +597,41 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/skus/:skuId/waterfall/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const channel = (c.req.query("channel") ?? "MERCADO_LIBRE") as
+      | "MERCADO_LIBRE"
+      | "AMAZON_MX";
+    const pricing_mode = c.req.query("pricing_mode") ?? "cost";
+    const target_margin_pct = c.req.query("target_margin_pct")
+      ? Number(c.req.query("target_margin_pct"))
+      : undefined;
+    const competitor_price_mxn = c.req.query("competitor_price_mxn")
+      ? Number(c.req.query("competitor_price_mxn"))
+      : undefined;
+    const format = (c.req.query("format") ?? "csv").toLowerCase();
+    const csv = buildWaterfallExportCsv(
+      sku,
+      { channel, pricing_mode, target_margin_pct, competitor_price_mxn },
+      c.get("locale")
+    );
+    if (format === "json") {
+      return c.json({ csv });
+    }
+    return new Response(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="waterfall-${skuId}-${channel}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/skus/:skuId/pricing/simulate", async (c) => {
@@ -1956,6 +2059,53 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const items = await reconciliationAlerts.listAlerts(tenantId);
     return c.json({ items });
+  });
+
+  app.get("/api/v1/listings/:listingId/sync/jobs", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    return c.json({
+      items: listListingSyncJobs(tenantId, listingId),
+    });
+  });
+
+  app.post("/api/v1/listings/:listingId/sync", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const body = (await c.req.json()) as { external_ref?: string };
+    if (!body.external_ref?.trim()) {
+      throw new HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+    }
+    try {
+      const result = await runListingChannelSync(
+        catalog,
+        shops,
+        listingAdapter,
+        tenantId,
+        listingId,
+        body.external_ref.trim()
+      );
+      if (result.job.status === "failed") {
+        return c.json(
+          { job: result.job, error: result.error ?? "SYNC_FAILED" },
+          502
+        );
+      }
+      return c.json({ job: result.job, snapshot: result.snapshot });
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      if (msg.includes("AUTH_REQUIRED") || msg.includes("AUTH_EXPIRED")) {
+        return c.json({ error: msg.split(":")[0] }, 401);
+      }
+      throw e;
+    }
   });
 
   app.post("/api/v1/listings/:listingId/reconcile", async (c) => {

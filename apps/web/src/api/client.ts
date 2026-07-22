@@ -46,6 +46,89 @@ export async function patchSkuLandedCost(
   return res.json();
 }
 
+export async function patchSkuPolicy(
+  locale: string,
+  skuId: string,
+  body: {
+    target_margin_pct?: number;
+    min_margin_pct?: number;
+    pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
+  }
+) {
+  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/policy`, {
+    method: "PATCH",
+    headers: headers(locale),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`patch policy ${res.status}`);
+  return res.json() as Promise<{
+    id: string;
+    policy: {
+      target_margin_pct: number;
+      min_margin_pct: number;
+      pricing_mode: string;
+    };
+  }>;
+}
+
+export async function fetchSharedFeeTemplates(locale: string) {
+  const res = await fetch(`/api/v1/tenants/tenant-demo/shared-fee-templates`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`shared-fee-templates ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{ id: string; name: string; channel: string }>;
+  }>;
+}
+
+export async function applySharedFeeTemplate(
+  locale: string,
+  skuId: string,
+  templateId: string
+) {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/apply-shared-fee-template`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify({ template_id: templateId }),
+    }
+  );
+  if (!res.ok) throw new Error(`apply-fee-template ${res.status}`);
+  return res.json();
+}
+
+export async function syncListingChannel(
+  locale: string,
+  listingId: string,
+  external_ref: string
+) {
+  const res = await fetch(`/api/v1/listings/${listingId}/sync`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ external_ref }),
+  });
+  if (!res.ok) throw new Error(`listing-sync ${res.status}`);
+  return res.json() as Promise<{
+    job: { id: string; status: string };
+    snapshot: { price_mxn: number };
+  }>;
+}
+
+export async function importCostSheetsCsv(locale: string, csv: string) {
+  const res = await fetch(`/api/v1/imports/cost-sheets`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ csv }),
+  });
+  if (!res.ok) throw new Error(`cost-sheets-import ${res.status}`);
+  return res.json() as Promise<{
+    parse_errors: string[];
+    created: Array<{ sku_id: string; cost_sheet_id: string }>;
+    skipped: unknown[];
+  }>;
+}
+
 export interface CostSheetRow {
   id: string;
   batch_no: string;

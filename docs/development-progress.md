@@ -728,6 +728,34 @@
 | **实现** | 定价页 Cost Sheet 面板；调价页 CSV 创建批次 |
 | **测试** | `loop-74-77.test.ts`（API）；Web `data-testid` 可扩展 E2E |
 
+### Loop 78 — 瀑布 CSV 导出（P0-E5-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /skus/:id/waterfall/export`；`waterfall-export.ts` |
+| **测试** | `loop-78-81.test.ts`、`waterfall-export.test.ts` |
+
+### Loop 79 — Cost Sheet CSV 批量导入
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET/POST /imports/cost-sheets` |
+| **测试** | `loop-78-81.test.ts` |
+
+### Loop 80 — SKU Policy 配置 API（P0-E6-08）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `PATCH /skus/:id/policy`；catalog `updateSkuPolicy` |
+| **测试** | `loop-78-81.test.ts` |
+
+### Loop 81 — Policy/费用 Web + Listing 同步任务（P0-E6-08 / P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `PolicyConfigPage`；`POST/GET listings/:id/sync`；通道页同步按钮 |
+| **测试** | `loop-78-81.test.ts` |
+
 ---
 
 ## 本地命令
@@ -791,3 +819,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v5.3 | 2026-07-22 | Loop 49 PG repricing batch job store |
 | v5.4 | 2026-07-22 | Loop 70–73 HS tariff, adjustment preview/import, Ops UI |
 | v5.5 | 2026-07-22 | Loop 74–77 cost sheets, landed from sheet, CSV batch apply |
+| v5.6 | 2026-07-22 | Loop 78–81 waterfall export, policy patch, listing sync jobs |

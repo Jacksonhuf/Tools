@@ -9,6 +9,7 @@ import {
   publishShopChannelPrice,
   pullShopListing,
   startShopOAuth,
+  syncListingChannel,
   type ChannelAdapterStatus,
   type ChannelSandboxEvent,
   type ShopSummary,
@@ -98,6 +99,22 @@ export function ChannelsPage() {
         `${t("listingPulled")}: ${result.snapshot.external_item_id} → ${result.snapshot.price_mxn} MXN`
       );
       await load();
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+
+  const syncListingJob = async (shop: ShopSummary) => {
+    setError(null);
+    setMessage(null);
+    const listingId =
+      shop.channel === "MERCADO_LIBRE" ? "listing-ml-001" : "listing-amz-001";
+    const ref = DEMO_REFS[shop.channel] ?? "demo-ref";
+    try {
+      const result = await syncListingChannel(locale, listingId, ref);
+      setMessage(
+        `${t("listingSyncDone")}: ${result.job.id} → ${result.snapshot.price_mxn} MXN`
+      );
     } catch (e) {
       setError(String(e));
     }
@@ -196,6 +213,13 @@ export function ChannelsPage() {
                     <>
                       <button type="button" onClick={() => void pull(shop)}>
                         {t("pullListing")}
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="listing-sync-run"
+                        onClick={() => void syncListingJob(shop)}
+                      >
+                        {t("listingSyncRun")}
                       </button>
                       <button
                         type="button"
