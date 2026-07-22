@@ -20,6 +20,7 @@ import {
 import {
   applyAdjustmentBatch,
   buildAdjustmentBatchInput,
+  previewAdjustmentBatch,
 } from "./adjustment-service.js";
 import {
   completeOAuthMock,
@@ -132,6 +133,15 @@ import {
 } from "./export-file-store.js";
 import { listFxRates, upsertFxRate } from "./fx-rate-table.js";
 import { computeLandedFromFx } from "./landed-cost-fx.js";
+import { computeLandedFromHs } from "./landed-cost-hs.js";
+import {
+  listTariffHsRates,
+  upsertTariffHsRate,
+} from "./tariff-hs-table.js";
+import {
+  ADJUSTMENT_IMPORT_TEMPLATE_CSV,
+  parseAdjustmentPriceCsv,
+} from "./adjustment-price-import.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
   getAsyncWorkerStatus,
@@ -492,6 +502,30 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(getAdjustmentApprovalPolicy());
   });
 
+  app.post("/api/v1/adjustment-batches/preview", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json()) as {
+      reason_code?: string;
+      items: Array<{ listing_id: string; explicit_price_mxn: number }>;
+    };
+    if (!body.items?.length) {
+      throw new HTTPException(400, { message: "ITEMS_REQUIRED" });
+    }
+    try {
+      const preview = await previewAdjustmentBatch(catalog, tenantId, body);
+      return c.json(preview);
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("GUARD_REJECTED")) {
+        return c.json({ error: "GUARD_REJECTED", code: msg.split(":")[1] }, 422);
+      }
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
   app.post("/api/v1/adjustment-batches", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
@@ -650,6 +684,134 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items });
   });
 
+  app.get("/api/v1/tariff-hs-rates", async (c) => {
+    const tenantId = c.get("tenantId");
+    return c.json({ items: listTariffHsRates(tenantId) });
+  });
+
+  app.put("/api/v1/tariff-hs-rates/:hsCode", async (c) => {
+    const tenantId = c.get("tenantId");
+    const hsCode = decodeURIComponent(c.req.param("hsCode"));
+    const body = (await c.req.json()) as {
+      description?: string;
+      tariff_rate?: number;
+      customs_fee_mxn?: number;
+    };
+    if (body.tariff_rate === undefined || body.tariff_rate < 0) {
+      throw new HTTPException(400, { message: "TARIFF_RATE_REQUIRED" });
+    }
+    const existing = listTariffHsRates(tenantId).find((r) => r.hs_code === hsCode);
+    const items = upsertTariffHsRate(tenantId, {
+      hs_code: hsCode,
+      description: body.description ?? existing?.description ?? hsCode,
+      tariff_rate: body.tariff_rate,
+      customs_fee_mxn: body.customs_fee_mxn ?? existing?.customs_fee_mxn ?? 0,
+    });
+    return c.json({ items });
+  });
+
+  app.post("/api/v1/skus/:skuId/landed-cost/from-hs", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const body = (await c.req.json()) as {
+      cogs_amount: number;
+      cogs_currency?: string;
+      freight_alloc_mxn?: number;
+      hs_code?: string;
+      apply?: boolean;
+    };
+    const hsCode = body.hs_code ?? sku.hs_code;
+    if (!hsCode) {
+      throw new HTTPException(400, { message: "HS_CODE_REQUIRED" });
+    }
+    try {
+      const { tariff, computed } = computeLandedFromHs(tenantId, hsCode, {
+        cogs_amount: body.cogs_amount,
+        cogs_currency: body.cogs_currency,
+        freight_alloc_mxn: body.freight_alloc_mxn,
+      });
+      let sku_record = sku;
+      if (body.apply === true) {
+        const updated = await catalog.updateSkuLandedCost(
+          tenantId,
+          skuId,
+          computed.landed_cost_mxn
+        );
+        if (updated) sku_record = updated;
+      }
+      return c.json({
+        hs_code: hsCode,
+        tariff,
+        computed,
+        sku: { id: sku_record.id, landed_cost_mxn: sku_record.landed_cost_mxn },
+      });
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("HS_CODE_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "HS_CODE_NOT_FOUND" });
+      }
+      if (msg.includes("HS_LANDED_MXN_ONLY")) {
+        throw new HTTPException(400, { message: "HS_LANDED_MXN_ONLY" });
+      }
+      throw e;
+    }
+  });
+
+  app.get("/api/v1/imports/adjustment-prices/template", async (c) => {
+    return new Response(ADJUSTMENT_IMPORT_TEMPLATE_CSV, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition":
+          'attachment; filename="adjustment-prices-template.csv"',
+      },
+    });
+  });
+
+  app.post("/api/v1/imports/adjustment-prices", async (c) => {
+    const tenantId = c.get("tenantId");
+    const contentType = c.req.header("content-type") ?? "";
+    let csvText: string;
+    let reason_code: string | undefined;
+    if (contentType.includes("application/json")) {
+      const body = (await c.req.json()) as { csv?: string; reason_code?: string };
+      if (!body.csv?.trim()) {
+        throw new HTTPException(400, { message: "CSV_REQUIRED" });
+      }
+      csvText = body.csv;
+      reason_code = body.reason_code;
+    } else {
+      csvText = await c.req.text();
+    }
+    const parsed = parseAdjustmentPriceCsv(csvText);
+    if (parsed.rows.length === 0) {
+      return c.json({ parse_errors: parsed.errors, preview: null }, 400);
+    }
+    try {
+      const preview = await previewAdjustmentBatch(catalog, tenantId, {
+        reason_code,
+        items: parsed.rows,
+      });
+      return c.json({ parse_errors: parsed.errors, preview });
+    } catch (e) {
+      const msg = String(e);
+      if (msg.includes("GUARD_REJECTED")) {
+        return c.json(
+          { parse_errors: parsed.errors, error: "GUARD_REJECTED", code: msg.split(":")[1] },
+          422
+        );
+      }
+      if (msg.includes("LISTING_NOT_FOUND")) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      throw e;
+    }
+  });
+
   app.post("/api/v1/skus/:skuId/landed-cost/from-fx", async (c) => {
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
@@ -694,13 +856,18 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.post("/api/v1/exports", async (c) => {
     const tenantId = c.get("tenantId");
-    const body = (await c.req.json()) as { kind?: string };
+    const body = (await c.req.json()) as { kind?: string; sku_id?: string };
     const kind = body.kind ?? "version_backup";
     let content = "";
     let content_type = "application/json";
     if (kind === "version_backup") {
       const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
       content = JSON.stringify(snapshot, null, 2);
+    } else if (kind === "pricing_snapshot_csv") {
+      const skuId = (body as { sku_id?: string }).sku_id ?? "demo-sku-001";
+      const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
+      content = pricingSnapshotToCsv(rows, new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }

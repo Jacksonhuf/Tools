@@ -10,11 +10,15 @@ import {
   importLandedCostCsv,
   fetchReconciliationAlerts,
   fetchRepricingQueue,
+  fetchTariffHsRates,
+  previewAdjustmentPricesCsv,
+  previewLandedCostFromHs,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
   type ReconciliationAlert,
   type RepricingQueueItem,
+  type TariffHsRow,
 } from "../api/client";
 
 const DEMO_LISTINGS = ["listing-ml-001", "listing-amz-001"];
@@ -35,20 +39,26 @@ export function OpsCenterPage() {
   const [importCsv, setImportCsv] = useState(
     "sku_id,landed_cost_mxn\ndemo-sku-001,1050"
   );
+  const [adjustmentCsv, setAdjustmentCsv] = useState(
+    "listing_id,explicit_price_mxn\nlisting-ml-001,1600\n"
+  );
+  const [tariffRows, setTariffRows] = useState<TariffHsRow[]>([]);
   const [workerCount, setWorkerCount] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers] = await Promise.all([
+      const [data, alertData, ops, workers, tariffs] = await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
         fetchOpsMetrics(locale),
         fetchWorkerStatus(locale),
+        fetchTariffHsRates(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
       setMetrics(ops);
+      setTariffRows(tariffs.items);
       setWorkerCount(workers.workers.filter((w) => !w.stale).length);
       setSelected(
         new Set(
@@ -248,6 +258,70 @@ export function OpsCenterPage() {
             {t("opsWorkersLive", { count: workerCount })}
           </p>
         )}
+      </section>
+
+      <section className="card" data-testid="ops-tariff-hs">
+        <h2>{t("opsTariffHs")}</h2>
+        <table className="batch-table">
+          <thead>
+            <tr>
+              <th>HS</th>
+              <th>{t("opsTariffRate")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tariffRows.map((row) => (
+              <tr key={row.hs_code}>
+                <td>
+                  <code>{row.hs_code}</code>
+                </td>
+                <td>{(row.tariff_rate * 100).toFixed(1)}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button
+          type="button"
+          data-testid="ops-hs-landed-preview"
+          onClick={() =>
+            void previewLandedCostFromHs(locale, DEMO_SKU, 1000).then((r) =>
+              setMessage(
+                t("opsHsLandedPreviewDone", {
+                  hs: r.hs_code,
+                  landed: r.computed.landed_cost_mxn,
+                })
+              )
+            )
+          }
+        >
+          {t("opsHsLandedPreview")}
+        </button>
+      </section>
+
+      <section className="card" data-testid="ops-adjustment-preview">
+        <h2>{t("opsAdjustmentPreview")}</h2>
+        <p className="hint">{t("opsAdjustmentPreviewHint")}</p>
+        <textarea
+          rows={3}
+          value={adjustmentCsv}
+          onChange={(e) => setAdjustmentCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void previewAdjustmentPricesCsv(locale, adjustmentCsv).then((r) =>
+              setMessage(
+                t("opsAdjustmentPreviewDone", {
+                  status: r.preview.status,
+                  count: r.preview.items.length,
+                })
+              )
+            )
+          }
+        >
+          {t("opsAdjustmentPreviewRun")}
+        </button>
       </section>
 
       <section className="card">

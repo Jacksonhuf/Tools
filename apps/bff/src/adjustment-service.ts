@@ -101,12 +101,34 @@ export async function buildAdjustmentBatchInput(
   const status: AdjustmentStatus =
     approval_triggers.length > 0 ? "pending_approval" : "draft";
 
+  return { status, reason_code: body.reason_code, prepared, maxDrop, approval_triggers };
+}
+
+export async function previewAdjustmentBatch(
+  catalog: CatalogRepository,
+  tenantId: string,
+  body: {
+    reason_code?: string;
+    items: Array<{ listing_id: string; explicit_price_mxn: number }>;
+  }
+) {
+  const built = await buildAdjustmentBatchInput(catalog, tenantId, body);
   return {
-    status,
-    reason_code: body.reason_code,
-    prepared,
-    maxDrop,
-    approval_triggers,
+    status: built.status,
+    approval_triggers: built.approval_triggers,
+    max_drop_pct: built.maxDrop,
+    items: built.prepared.map((p) => ({
+      listing_id: p.listing_id,
+      channel: p.listing.channel,
+      sku_id: p.listing.sku.id,
+      from_price_mxn: p.from_price_mxn,
+      explicit_price_mxn: p.explicit_price_mxn,
+      drop_pct:
+        p.from_price_mxn != null
+          ? Math.round(computeDropPct(p.from_price_mxn, p.explicit_price_mxn) * 100) /
+            100
+          : 0,
+    })),
   };
 }
 
