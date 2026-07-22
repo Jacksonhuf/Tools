@@ -136,6 +136,9 @@ import {
   getStoredExport,
 } from "./export-file-store.js";
 import { listFxRates, upsertFxRate } from "./fx-rate-table.js";
+import { fxRatesToCsv } from "./fx-rates-csv.js";
+import { agentToolAuditToCsv } from "./agent-audit-csv.js";
+import { runDueDigestDispatch } from "./digest-run-due.js";
 import { computeLandedFromFx } from "./landed-cost-fx.js";
 import { computeLandedFromHs } from "./landed-cost-hs.js";
 import {
@@ -900,6 +903,18 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listFxRates(tenantId) });
   });
 
+  app.get("/api/v1/fx-rates/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const csv = fxRatesToCsv(listFxRates(tenantId), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="fx-rates.csv"`,
+      },
+    });
+  });
+
   app.put("/api/v1/fx-rates/:base/:quote", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
@@ -1306,6 +1321,17 @@ export function createApp(options: CreateAppOptions = {}) {
         listTariffHsRates(tenantId),
         new Date().toISOString()
       );
+      content_type = "text/csv";
+    } else if (kind === "fx_rates_csv") {
+      content = fxRatesToCsv(
+        listFxRates(tenantId),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "agent_tool_audit_csv") {
+      const limit = Math.min(200, Math.max(1, Number(body.limit ?? 100) || 100));
+      const items = await agentAudit.listInvocations(tenantId, limit);
+      content = agentToolAuditToCsv(items, new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -2617,8 +2643,43 @@ export function createApp(options: CreateAppOptions = {}) {
       email_to?: string;
       timezone?: string;
     };
-    const schedule = upsertDigestSchedule(tenantId, body);
-    return c.json(schedule);
+    try {
+      const schedule = upsertDigestSchedule(tenantId, body);
+      return c.json(schedule);
+    } catch (e) {
+      if (String(e).includes("INVALID_CRON_EXPRESSION")) {
+        throw new HTTPException(400, { message: "INVALID_CRON_EXPRESSION" });
+      }
+      throw e;
+    }
+  });
+
+  app.post("/api/v1/agent/digest/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const force = c.req.query("force") === "true";
+    const date = c.req.query("date");
+    const result = await runDueDigestDispatch(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      locale,
+      { force, date }
+    );
+    if (result.skipped) {
+      throw new HTTPException(409, { message: "DIGEST_SCHEDULE_DISABLED" });
+    }
+    await agentAudit.recordInvocation({
+      tenant_id: tenantId,
+      tool_name: "tool_digest_run_due",
+      session_id: null,
+      arguments_json: { job_id: result.record.job_id, force },
+      result_summary: `digest:${result.record.job_id}`,
+    });
+    return c.json({
+      job: result.record,
+      digest: result.digest,
+      schedule: result.schedule,
+    });
   });
 
   app.post("/api/v1/agent/digest/daily/dispatch", async (c) => {
@@ -2784,6 +2845,23 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/agent/tool-audit/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      200,
+      Math.max(1, Number(c.req.query("limit") ?? "100") || 100)
+    );
+    const exportedAt = new Date().toISOString();
+    const items = await agentAudit.listInvocations(tenantId, limit);
+    const csv = agentToolAuditToCsv(items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-tool-audit.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/tool-audit", async (c) => {

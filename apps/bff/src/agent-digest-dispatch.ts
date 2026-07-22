@@ -15,6 +15,7 @@ export interface DigestScheduleConfig {
   email_to: string;
   timezone: string;
   updated_at: string;
+  last_dispatch_at: string | null;
 }
 
 export interface DigestDispatchRecord {
@@ -39,6 +40,8 @@ let jobSeq = 0;
 
 const DEFAULT_CRON = "0 8 * * *";
 
+import { isValidCronExpression } from "./listing-sync-schedule.js";
+
 export function getDigestSchedule(tenantId: string): DigestScheduleConfig {
   const existing = schedules.get(tenantId);
   if (existing) return existing;
@@ -50,6 +53,7 @@ export function getDigestSchedule(tenantId: string): DigestScheduleConfig {
     email_to: "ops@tenant.local",
     timezone: "America/Mexico_City",
     updated_at: now,
+    last_dispatch_at: null,
   };
 }
 
@@ -60,11 +64,16 @@ export function upsertDigestSchedule(
   >
 ): DigestScheduleConfig {
   const base = getDigestSchedule(tenantId);
+  if (patch.cron !== undefined && !isValidCronExpression(patch.cron.trim())) {
+    throw new Error("INVALID_CRON_EXPRESSION");
+  }
   const next: DigestScheduleConfig = {
     ...base,
     ...patch,
     tenant_id: tenantId,
+    cron: patch.cron?.trim() ?? base.cron,
     updated_at: new Date().toISOString(),
+    last_dispatch_at: base.last_dispatch_at ?? null,
   };
   schedules.set(tenantId, next);
   return next;
@@ -109,12 +118,12 @@ export async function dispatchDailyDigest(
   };
   dispatches.push(record);
   const schedule = getDigestSchedule(tenantId);
-  if (schedules.has(tenantId)) {
-    schedules.set(tenantId, {
-      ...schedule,
-      updated_at: record.created_at,
-    });
-  }
+  const ranAt = record.created_at;
+  schedules.set(tenantId, {
+    ...schedule,
+    updated_at: ranAt,
+    last_dispatch_at: ranAt,
+  });
   return { record, digest: result.digest };
 }
 
