@@ -1120,6 +1120,34 @@
 | **实现** | 对账直链、同步状态、Listing 同步作业、Agent 工具目录导出 |
 | **测试** | `loop-130-133.test.ts` |
 
+### Loop 134 — 重算批处理汇总 CSV（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `repricing-batch-jobs-summary-csv.ts`；`GET /repricing-batch/jobs/summary/export`；`repricing_batch_jobs_summary_csv` |
+| **测试** | `loop-134-137.test.ts` |
+
+### Loop 135 — Listing 采集状态 CSV（P2-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `listing-ingest-status.ts` + `listing-ingest-status-csv.ts`；`GET /listings/:id/ingest/status/export`；`listing_ingest_status_csv` |
+| **测试** | `loop-134-137.test.ts` |
+
+### Loop 136 — 特性开关 CSV（P5 / X-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `feature-flags-csv.ts`；`GET /feature-flags/export`；`feature_flags_csv` |
+| **测试** | `loop-134-137.test.ts` |
+
+### Loop 137 — Ops/竞品/就绪 Web（P5/P2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 重算批处理汇总、采集状态、特性开关 CSV 导出按钮 |
+| **测试** | `loop-134-137.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1197,3 +1225,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v6.7 | 2026-07-22 | Loop 122–125 SKU/shops/category templates CSV + Web |
 | v6.8 | 2026-07-22 | Loop 126–129 competitor offers/fee templates/ops metrics CSV + Web |
 | v6.9 | 2026-07-22 | Loop 130–133 reconciliation/sync status/listing sync/agent tools CSV + Web |
+| v7.0 | 2026-07-22 | Loop 134–137 repricing batch summary, ingest status, feature flags CSV + Web |

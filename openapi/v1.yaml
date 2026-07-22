@@ -173,6 +173,9 @@ paths:
   /api/v1/feature-flags:
     get:
       summary: Environment feature flags (X-02)
+  /api/v1/feature-flags/export:
+    get:
+      summary: Download feature flags snapshot as CSV
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)
@@ -231,6 +234,9 @@ paths:
   /api/v1/listings/{listingId}/ingest/status:
     get:
       summary: Ingest tier schedule (SDD §8.1)
+  /api/v1/listings/{listingId}/ingest/status/export:
+    get:
+      summary: Download listing ingest status as CSV
   /api/v1/listings/{listingId}/ingest/run:
     post:
       summary: Run mock competitor ingest (P2-E2)
@@ -382,6 +388,9 @@ paths:
   /api/v1/repricing-batch/jobs/summary:
     get:
       summary: Repricing batch job queue summary by status
+  /api/v1/repricing-batch/jobs/summary/export:
+    get:
+      summary: Download repricing batch jobs summary as CSV
   /api/v1/repricing-batch/jobs/export:
     get:
       summary: Download repricing batch jobs as CSV

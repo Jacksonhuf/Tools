@@ -63,7 +63,6 @@ import {
   runMockIngest,
   IngestFailedError,
 } from "./repricing/runtime.js";
-import { tierIntervalMs } from "./repricing/tier.js";
 import {
   type DynamicRuleRepository,
   getDynamicRuleRepository,
@@ -98,6 +97,7 @@ import {
 } from "./repricing-batch-job-queue.js";
 import { repricingBatchJobsToCsv } from "./repricing-batch-jobs-csv.js";
 import { summarizeRepricingBatchJobs } from "./repricing-batch-jobs-summary.js";
+import { repricingBatchJobsSummaryToCsv } from "./repricing-batch-jobs-summary-csv.js";
 import {
   type RepricingActivityRepository,
   getRepricingActivityRepository,
@@ -187,6 +187,8 @@ import { shopsToCsv } from "./shops-csv.js";
 import { skusCatalogToCsv } from "./skus-catalog-csv.js";
 import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
+import { buildListingIngestStatus } from "./listing-ingest-status.js";
+import { listingIngestStatusToCsv } from "./listing-ingest-status-csv.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import {
@@ -269,6 +271,7 @@ import {
 } from "./repositories/agent-audit-index.js";
 import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
 import { getFeatureFlags } from "./feature-flags.js";
+import { featureFlagsToCsv } from "./feature-flags-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
@@ -354,6 +357,17 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/auth/status", (c) => c.json(getAuthStatus()));
 
   app.get("/api/v1/feature-flags", (c) => c.json(getFeatureFlags()));
+
+  app.get("/api/v1/feature-flags/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = featureFlagsToCsv(getFeatureFlags(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="feature-flags.csv"`,
+      },
+    });
+  });
 
   app.get("/api/v1/skus/:skuId/pricing-context", async (c) => {
     const tenantId = c.get("tenantId");
@@ -1539,6 +1553,29 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "agent_tools_csv") {
       content = agentToolsToCsv(listAgentTools(), new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "repricing_batch_jobs_summary_csv") {
+      const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
+      const summary = await summarizeRepricingBatchJobs(tenantId, limit);
+      content = repricingBatchJobsSummaryToCsv(
+        summary,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "listing_ingest_status_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const status = await buildListingIngestStatus(
+        { catalog, repricing, listingHealth },
+        tenantId,
+        listingId
+      );
+      if (!status) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      content = listingIngestStatusToCsv(status, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "feature_flags_csv") {
+      content = featureFlagsToCsv(getFeatureFlags(), new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -1984,21 +2021,39 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/listings/:listingId/ingest/status/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const status = await buildListingIngestStatus(
+      { catalog, repricing, listingHealth },
+      tenantId,
+      listingId
+    );
+    if (!status) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = listingIngestStatusToCsv(status, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-ingest-status-${listingId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/ingest/status", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
-    const listing = await catalog.getListing(tenantId, listingId);
-    if (!listing) {
+    const status = await buildListingIngestStatus(
+      { catalog, repricing, listingHealth },
+      tenantId,
+      listingId
+    );
+    if (!status) {
       throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
     }
-    const schedule = await ensureIngestSchedule(repricing, listingId);
-    return c.json({
-      listing_id: listingId,
-      tier: schedule.tier,
-      next_run_at: schedule.next_run_at,
-      interval_ms: tierIntervalMs(schedule.tier),
-      ...(await listingHealth.getIngestGuard(listingId)),
-    });
+    return c.json(status);
   });
 
   app.post("/api/v1/listings/:listingId/ingest/run", async (c) => {
@@ -2547,6 +2602,23 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/repricing-batch/jobs/summary/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const limit = Math.min(
+      100,
+      Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
+    );
+    const exportedAt = new Date().toISOString();
+    const summary = await summarizeRepricingBatchJobs(tenantId, limit);
+    const csv = repricingBatchJobsSummaryToCsv(summary, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-batch-jobs-summary.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/repricing-batch/jobs/summary", async (c) => {

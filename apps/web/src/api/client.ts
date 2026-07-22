@@ -1345,6 +1345,54 @@ export async function downloadRepricingBatchJobsCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadRepricingBatchJobsSummaryCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/repricing-batch/jobs/summary/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`repricing-batch-summary-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "repricing-batch-jobs-summary.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadListingIngestStatusCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${listingId}/ingest/status/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`listing-ingest-status-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `listing-ingest-status-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadFeatureFlagsCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/feature-flags/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`feature-flags-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "feature-flags.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function importLandedCostCsv(locale: string, csv: string) {
   const res = await fetch(`/api/v1/imports/landed-cost`, {
     method: "POST",
