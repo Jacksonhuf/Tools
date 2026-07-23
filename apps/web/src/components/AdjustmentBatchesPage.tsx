@@ -7,6 +7,7 @@ import {
   createAdjustmentBatch,
   fetchAdjustmentBatches,
   downloadAdjustmentBatchCsv,
+  downloadAdjustmentBatchIndexCsv,
   downloadAdjustmentBatchesIndexCsv,
   downloadAdjustmentApprovalPolicyCsv,
   type AdjustmentBatch,
@@ -260,6 +261,17 @@ export function AdjustmentBatchesPage() {
               }
             >
               {t("adjustmentBatchExportCsv")}
+            </button>
+            <button
+              type="button"
+              data-testid="adjustment-batch-index-export"
+              onClick={() =>
+                void downloadAdjustmentBatchIndexCsv(locale, selected.id).then(
+                  () => setMessage(t("adjustmentBatchIndexExportDone"))
+                )
+              }
+            >
+              {t("adjustmentBatchIndexExportCsv")}
             </button>
             {selected.status === "pending_approval" && (
               <button

@@ -1512,6 +1512,34 @@
 | **实现** | `GET /agent/tool-audit/:auditId/export`；`agent_tool_audit_csv`（`audit_id`）；Copilot 最近派发 / DLQ / 审计行；Channels 首条沙箱事件 |
 | **测试** | `loop-186-189.test.ts` |
 
+### Loop 190 — 单条价格观测 CSV（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getObservation`；`GET /price-observations/:observationId/export`；`price_observation_csv`（`observation_id`） |
+| **测试** | `loop-190-193.test.ts`、`loop-190-193-csv.test.ts` |
+
+### Loop 191 — 单条重算事件 CSV（P2-E3-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /repricing-events/:eventId/export`；`repricing_event_csv`（`repricing_event_id`） |
+| **测试** | `loop-190-193.test.ts` |
+
+### Loop 192 — 调价单索引行 CSV（P0-E5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /adjustment-batches/:batchId/index/export`；`adjustment_batch_index_csv`（`batch_id`） |
+| **测试** | `loop-190-193.test.ts` |
+
+### Loop 193 — 按日期 Digest CSV + Web（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/digest/daily/:date/export`；`agent_digest_date_csv`（`date`）；竞品/调价/Copilot 单行导出按钮 |
+| **测试** | `loop-190-193.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1603,3 +1631,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.11 | 2026-07-23 | Loop 178–181 cost sheet, competitor offer, reconciliation alert CSV + Web |
 | v7.12 | 2026-07-23 | Loop 182–185 listing sync job, digest queued job, worker heartbeat CSV + Web |
 | v7.13 | 2026-07-23 | Loop 186–189 digest dispatch, sandbox event, dead-letter job, tool audit row CSV + Web |
+| v7.14 | 2026-07-23 | Loop 190–193 price observation, repricing event, adjustment index row, digest date CSV + Web |

@@ -1029,6 +1029,23 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/adjustment-batches/:batchId/index/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const batchId = c.req.param("batchId");
+    const batch = await adjustments.getBatch(tenantId, batchId);
+    if (!batch) {
+      throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = adjustmentBatchesIndexToCsv([batch], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="adjustment-batch-index-${batchId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/adjustment-batches/:batchId", async (c) => {
     const batch = await adjustments.getBatch(
       c.get("tenantId"),
@@ -1577,6 +1594,8 @@ export function createApp(options: CreateAppOptions = {}) {
       sandbox_event_id?: string;
       audit_id?: string;
       worker_id?: string;
+      observation_id?: string;
+      repricing_event_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2280,6 +2299,64 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       content = agentToolAuditToCsv([row], new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "price_observation_csv") {
+      const observationId = body.observation_id;
+      if (!observationId?.trim()) {
+        throw new HTTPException(400, { message: "OBSERVATION_ID_REQUIRED" });
+      }
+      const obs = await competitors.getObservation(observationId.trim());
+      if (!obs) {
+        throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      }
+      const offer = await competitors.getOffer(obs.offer_id);
+      if (!offer) {
+        throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      }
+      const listing = await catalog.getListing(tenantId, offer.listing_id);
+      if (!listing) {
+        throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      }
+      content = priceHistoryToCsv(
+        offer.listing_id,
+        [obs],
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "repricing_event_csv") {
+      const eventId = body.repricing_event_id;
+      if (!eventId?.trim()) {
+        throw new HTTPException(400, { message: "REPRICING_EVENT_ID_REQUIRED" });
+      }
+      const event = await repricing.getEvent(eventId.trim());
+      if (!event || event.tenant_id !== tenantId) {
+        throw new HTTPException(404, { message: "REPRICING_EVENT_NOT_FOUND" });
+      }
+      content = repricingEventsToCsv([event], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "adjustment_batch_index_csv") {
+      const batchId = body.batch_id?.trim();
+      if (!batchId) {
+        throw new HTTPException(400, { message: "BATCH_ID_REQUIRED" });
+      }
+      const batch = await adjustments.getBatch(tenantId, batchId);
+      if (!batch) {
+        throw new HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      }
+      content = adjustmentBatchesIndexToCsv([batch], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "agent_digest_date_csv") {
+      const date = body.date?.trim();
+      if (!date) {
+        throw new HTTPException(400, { message: "DIGEST_DATE_REQUIRED" });
+      }
+      const digest = await buildDailyAgentDigest(
+        { catalog, reconciliationAlerts, agentAudit },
+        tenantId,
+        c.get("locale"),
+        date
+      );
+      content = agentDigestToCsv(digest);
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2796,6 +2873,31 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(observation, 201);
   });
 
+  app.get("/api/v1/price-observations/:observationId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const observationId = c.req.param("observationId");
+    const obs = await competitors.getObservation(observationId);
+    if (!obs) {
+      throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+    }
+    const offer = await competitors.getOffer(obs.offer_id);
+    if (!offer) {
+      throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+    }
+    const listing = await catalog.getListing(tenantId, offer.listing_id);
+    if (!listing) {
+      throw new HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = priceHistoryToCsv(offer.listing_id, [obs], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="price-observation-${observationId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/price-history/export", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
@@ -2983,6 +3085,23 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     const items = await repricing.listEvents(tenantId, listingId);
     return c.json({ items });
+  });
+
+  app.get("/api/v1/repricing-events/:eventId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const eventId = c.req.param("eventId");
+    const event = await repricing.getEvent(eventId);
+    if (!event || event.tenant_id !== tenantId) {
+      throw new HTTPException(404, { message: "REPRICING_EVENT_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = repricingEventsToCsv([event], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-event-${eventId}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/repricing-events/:eventId/process", async (c) => {
@@ -4228,6 +4347,25 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const locale = c.get("locale");
     const date = c.req.query("date");
+    const digest = await buildDailyAgentDigest(
+      { catalog, reconciliationAlerts, agentAudit },
+      tenantId,
+      locale,
+      date
+    );
+    const csv = agentDigestToCsv(digest);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-digest-${digest.date}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/agent/digest/daily/:date/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const date = c.req.param("date");
     const digest = await buildDailyAgentDigest(
       { catalog, reconciliationAlerts, agentAudit },
       tenantId,

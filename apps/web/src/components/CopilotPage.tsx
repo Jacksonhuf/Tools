@@ -12,6 +12,7 @@ import {
   dispatchDailyAgentDigest,
   fetchDailyAgentDigest,
   downloadAgentDigestCsv,
+  downloadAgentDigestDateCsv,
   downloadAgentToolAuditCsv,
   fetchDigestSchedule,
   fetchDigestDeadLetterSummary,
@@ -86,6 +87,7 @@ export function CopilotPage() {
   const [lastDispatchJobId, setLastDispatchJobId] = useState<string | null>(
     null
   );
+  const [digestDate, setDigestDate] = useState<string | null>(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -116,6 +118,7 @@ export function CopilotPage() {
     try {
       const d = await fetchDailyAgentDigest(locale);
       setDigestNarrative(d.narrative);
+      setDigestDate(d.date);
     } catch (e) {
       setError(String(e));
     }
@@ -595,6 +598,20 @@ export function CopilotPage() {
               onClick={() => void downloadAgentDigestCsv(locale)}
             >
               {t("copilotDigestExportCsv")}
+            </button>
+            <button
+              type="button"
+              data-testid="copilot-digest-date-export"
+              disabled={!digestDate}
+              onClick={() => {
+                const date = digestDate;
+                if (!date) return;
+                void downloadAgentDigestDateCsv(locale, date).then(() =>
+                  setMessage(t("copilotDigestDateExportDone"))
+                );
+              }}
+            >
+              {t("copilotDigestDateExportCsv")}
             </button>
           </div>
         </section>

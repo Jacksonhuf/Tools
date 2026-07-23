@@ -170,4 +170,16 @@ export class PostgresCompetitorRepository implements CompetitorRepository {
     );
     return res.rows.map(mapObs);
   }
+
+  async getObservation(
+    observationId: string
+  ): Promise<PriceObservationRecord | undefined> {
+    const res = await this.pool.query(
+      `SELECT id, offer_id, observed_at, list_price, sale_price, shipping_addon, effective_price, currency, raw_json
+       FROM price_observations WHERE id = $1`,
+      [observationId]
+    );
+    if (!res.rowCount) return undefined;
+    return mapObs(res.rows[0]);
+  }
 }
