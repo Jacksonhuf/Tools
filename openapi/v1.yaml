@@ -103,6 +103,9 @@ paths:
   /api/v1/price-versions/{versionId}:
     get:
       summary: Price version with audit fields (TC-INT-VER-003)
+  /api/v1/price-versions/{versionId}/export:
+    get:
+      summary: Download price version as CSV
   /api/v1/skus/{skuId}/pricing/simulate:
     post:
       summary: Price simulation without persistence (SDD §10.2)
@@ -220,6 +223,9 @@ paths:
   /api/v1/shops/export:
     get:
       summary: Download tenant shops as CSV
+  /api/v1/shops/{shopId}/export:
+    get:
+      summary: Download one shop as CSV
   /api/v1/shops/{shopId}/oauth/start:
     post:
       summary: Start OAuth placeholder (ML / Amazon LWA)
@@ -560,6 +566,9 @@ paths:
   /api/v1/ops/version-backup:
     get:
       summary: Tenant price version backup snapshot (X-05)
+  /api/v1/ops/version-backup/export:
+    get:
+      summary: Download tenant price versions backup as CSV rows
   /api/v1/ops/workers/status:
     get:
       summary: Async worker heartbeats (P0-E1-05)
@@ -578,6 +587,9 @@ paths:
   /api/v1/product/readiness/export:
     get:
       summary: Download product milestone readiness as CSV
+  /api/v1/product/readiness/p5/export:
+    get:
+      summary: Download P5 readiness checklist as CSV
   /api/v1/agent/milestones:
     get:
       summary: P3/P4 milestone status (P4 accepted when readiness passes)

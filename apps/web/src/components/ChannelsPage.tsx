@@ -7,6 +7,7 @@ import {
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
   downloadShopsCsv,
+  downloadShopCsv,
   downloadListingSyncJobsForListingCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -195,6 +196,17 @@ export function ChannelsPage() {
           }
         >
           {t("shopsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-shop-export"
+          onClick={() =>
+            void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+              setMessage(t("shopExportDone"))
+            )
+          }
+        >
+          {t("shopExportCsv")}
         </button>
         <button
           type="button"

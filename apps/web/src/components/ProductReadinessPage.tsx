@@ -5,6 +5,7 @@ import {
   fetchProductReadiness,
   downloadFeatureFlagsCsv,
   downloadProductReadinessCsv,
+  downloadP5ReadinessCsv,
   downloadAgentMilestonesCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
@@ -74,6 +75,17 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessProductExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-p5-export"
+            onClick={() =>
+              void downloadP5ReadinessCsv(locale).then(() =>
+                setMessage(t("readinessP5ExportDone"))
+              )
+            }
+          >
+            {t("readinessP5ExportCsv")}
           </button>
           <table className="batch-table">
             <thead>

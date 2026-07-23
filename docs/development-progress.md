@@ -1344,6 +1344,34 @@
 | **实现** | `copilot-session-csv.ts`；`GET /agent/copilot/sessions/:sessionId/export`；`copilot_session_csv`；定价/策略/指挥中心/Copilot 导出按钮 |
 | **测试** | `loop-162-165.test.ts`、`loop-162-165-csv.test.ts` |
 
+### Loop 166 — Price Version CSV（P0-E4-05 / TC-INT-VER-003）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `price-version-csv.ts`；`GET /price-versions/:versionId/export`；`price_version_csv` |
+| **测试** | `loop-166-169.test.ts`、`loop-166-169-csv.test.ts` |
+
+### Loop 167 — Version 备份行 CSV（X-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `version-backup-csv.ts`；`GET /ops/version-backup/export`；`version_backup_rows_csv` |
+| **测试** | `loop-166-169.test.ts`、`loop-166-169-csv.test.ts` |
+
+### Loop 168 — P5 就绪清单 CSV（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `p5-readiness-csv.ts`；`GET /product/readiness/p5/export`；`p5_readiness_csv` |
+| **测试** | `loop-166-169.test.ts`、`loop-166-169-csv.test.ts` |
+
+### Loop 169 — 单店铺 CSV + Web（P1-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /shops/:shopId/export`；`shop_csv`；指挥中心/通道/就绪页相关导出按钮 |
+| **测试** | `loop-166-169.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1429,3 +1457,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.5 | 2026-07-22 | Loop 154–157 pricing snapshot export path, cross-channel guard, digest schedule, dynamic rule CSV + Web |
 | v7.6 | 2026-07-22 | Loop 158–161 SKU repricing queue, shard plan, category template, reconciliation report export + Web |
 | v7.7 | 2026-07-23 | Loop 162–165 pricing context, repricing batch job, category template, copilot session CSV + Web |
+| v7.8 | 2026-07-23 | Loop 166–169 price version, version backup rows, P5 readiness, shop CSV + Web |
