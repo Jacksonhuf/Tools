@@ -33,6 +33,7 @@ import {
   downloadAgentToolsCsv,
   downloadAgentToolRowCsv,
   downloadAgentReadinessCsv,
+  downloadAgentReadinessCheckCsv,
   updateDigestSchedule,
   runDigestRunDue,
   fetchRuleCompilerStatus,
@@ -89,6 +90,9 @@ export function CopilotPage() {
     null
   );
   const [digestDate, setDigestDate] = useState<string | null>(null);
+  const [firstReadinessCheckId, setFirstReadinessCheckId] = useState<
+    string | null
+  >(null);
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -173,6 +177,7 @@ export function CopilotPage() {
         setTools(toolRes.items);
         setCompilerLabel(`${status.driver} — ${status.note}`);
         setP4Ready(readiness.ready);
+        setFirstReadinessCheckId(readiness.checks[0]?.id ?? null);
         await refreshAudit();
         await loadDigest();
         const sched = await fetchDigestSchedule(locale);
@@ -421,6 +426,20 @@ export function CopilotPage() {
             }
           >
             {t("copilotReadinessExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-readiness-check-export"
+            disabled={!firstReadinessCheckId}
+            onClick={() => {
+              const checkId = firstReadinessCheckId;
+              if (!checkId) return;
+              void downloadAgentReadinessCheckCsv(locale, checkId).then(() =>
+                setMessage(t("copilotReadinessCheckExportDone"))
+              );
+            }}
+          >
+            {t("copilotReadinessCheckExportCsv")}
           </button>
           <button
             type="button"

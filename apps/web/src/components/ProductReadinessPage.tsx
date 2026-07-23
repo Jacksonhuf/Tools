@@ -9,6 +9,9 @@ import {
   downloadP4ReadinessCsv,
   downloadP3ReadinessCsv,
   downloadAgentMilestonesCsv,
+  downloadAgentMilestoneCsv,
+  downloadProductReadinessCheckCsv,
+  downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
 } from "../api/client";
@@ -66,6 +69,34 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessMilestonesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-milestone-export"
+            disabled={!readiness.milestones[0]}
+            onClick={() => {
+              const milestoneId = readiness.milestones[0]?.id;
+              if (!milestoneId) return;
+              void downloadAgentMilestoneCsv(locale, milestoneId).then(() =>
+                setMessage(t("readinessMilestoneExportDone"))
+              );
+            }}
+          >
+            {t("readinessMilestoneExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-product-check-export"
+            disabled={!readiness.p3.checks[0]}
+            onClick={() => {
+              const checkId = readiness.p3.checks[0]?.id;
+              if (!checkId) return;
+              void downloadProductReadinessCheckCsv(locale, checkId).then(() =>
+                setMessage(t("readinessProductCheckExportDone"))
+              );
+            }}
+          >
+            {t("readinessProductCheckExportCsv")}
           </button>
           <button
             type="button"
@@ -151,6 +182,17 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessFeatureFlagsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-feature-flag-export"
+            onClick={() =>
+              void downloadFeatureFlagCsv(locale, "agent_copilot").then(() =>
+                setMessage(t("readinessFeatureFlagExportDone"))
+              )
+            }
+          >
+            {t("readinessFeatureFlagExportCsv")}
           </button>
           <dl className="adapter-status-dl">
             {Object.entries(flags)

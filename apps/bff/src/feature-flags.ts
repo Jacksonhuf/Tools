@@ -19,3 +19,29 @@ export function getFeatureFlags() {
     generated_at: new Date().toISOString(),
   };
 }
+
+export type FeatureFlagKey = Exclude<
+  keyof ReturnType<typeof getFeatureFlags>,
+  "generated_at"
+>;
+
+const FLAG_KEYS: FeatureFlagKey[] = [
+  "agent_copilot",
+  "channel_sandbox_ledger",
+  "repricing_auto_pending",
+  "digest_dispatch",
+  "buy_box_anchor",
+  "repricing_batch_worker",
+  "channel_live_publish",
+];
+
+export function getFeatureFlagValue(
+  flagKey: string
+): { key: FeatureFlagKey; enabled: boolean } | undefined {
+  if (!FLAG_KEYS.includes(flagKey as FeatureFlagKey)) {
+    return undefined;
+  }
+  const flags = getFeatureFlags();
+  const key = flagKey as FeatureFlagKey;
+  return { key, enabled: flags[key] };
+}
