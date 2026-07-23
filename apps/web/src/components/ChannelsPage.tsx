@@ -6,6 +6,7 @@ import {
   downloadChannelSandboxStatusCsv,
   fetchChannelSandboxEvents,
   downloadChannelSandboxEventsCsv,
+  downloadChannelSandboxEventCsv,
   downloadShopsCsv,
   downloadShopCsv,
   downloadListingCsv,
@@ -378,6 +379,20 @@ export function ChannelsPage() {
               }
             >
               {t("channelSandboxExportCsv")}
+            </button>
+            <button
+              type="button"
+              data-testid="channel-sandbox-event-export"
+              disabled={!sandboxEvents[0]}
+              onClick={() => {
+                const eventId = sandboxEvents[0]?.id;
+                if (!eventId) return;
+                void downloadChannelSandboxEventCsv(locale, eventId).then(() =>
+                  setMessage(t("channelSandboxEventExportDone"))
+                );
+              }}
+            >
+              {t("channelSandboxEventExportCsv")}
             </button>
           </div>
           {sandboxEvents.length === 0 ? (

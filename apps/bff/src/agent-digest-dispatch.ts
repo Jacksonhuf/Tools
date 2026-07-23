@@ -89,6 +89,16 @@ export function listDigestDispatches(
     .reverse();
 }
 
+export function getDigestDispatch(
+  tenantId: string,
+  jobId: string
+): DigestDispatchRecord | undefined {
+  const record = dispatches.find(
+    (d) => d.tenant_id === tenantId && d.job_id === jobId
+  );
+  return record;
+}
+
 export async function dispatchDailyDigest(
   deps: {
     catalog: CatalogRepository;

@@ -215,6 +215,9 @@ paths:
   /api/v1/channels/sandbox/events/export:
     get:
       summary: Download sandbox channel events as CSV
+  /api/v1/channels/sandbox/events/{eventId}/export:
+    get:
+      summary: Download one sandbox channel event as CSV
   /api/v1/shops:
     get:
       summary: List tenant shops (P1-E1)
@@ -416,6 +419,9 @@ paths:
   /api/v1/agent/tool-audit/export:
     get:
       summary: Download agent tool audit log as CSV
+  /api/v1/agent/tool-audit/{auditId}/export:
+    get:
+      summary: Download one agent tool audit row as CSV
   /api/v1/rule-compiler/status:
     get:
       summary: Rule compiler driver and LLM adapter readiness (P4)
@@ -448,6 +454,9 @@ paths:
   /api/v1/agent/digest/dispatches/export:
     get:
       summary: Download digest dispatch history as CSV
+  /api/v1/agent/digest/dispatches/{jobId}/export:
+    get:
+      summary: Download one digest dispatch job as CSV
   /api/v1/cross-channel/dashboard:
     get:
       summary: Cross-channel spread dashboard per SKU (P3-E3-04)
@@ -671,6 +680,9 @@ paths:
   /api/v1/agent/digest/jobs/dead-letter/export:
     get:
       summary: Download digest dead-letter jobs as CSV
+  /api/v1/agent/digest/jobs/dead-letter/{jobId}/export:
+    get:
+      summary: Download one digest dead-letter job as CSV
   /api/v1/agent/digest/jobs/dead-letter:
     get:
       summary: Digest jobs moved to dead-letter queue (TC-NFR-REL-004) (email_stub / webhook_queue)
