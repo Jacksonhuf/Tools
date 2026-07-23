@@ -1300,6 +1300,34 @@
 | **实现** | Digest 队列汇总、规则编译器、渠道适配器状态 CSV 导出按钮 |
 | **测试** | `loop-142-145.test.ts` |
 
+### Loop 218 — 补全 Loop 142：运维/竞品/就绪 Digest 队列汇总 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、竞品、就绪、通道页 `digest-jobs-summary-export` |
+| **测试** | `loop-142-145.test.ts`（`digest_queued_jobs_summary_csv` POST） |
+
+### Loop 219 — 补全 Loop 143：运维/竞品渠道适配器状态 CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、竞品页 `channel-adapter-export` |
+| **测试** | `loop-142-145.test.ts`（`channel_adapters_status_csv` POST） |
+
+### Loop 220 — 补全 Loop 144：通道/竞品/就绪规则编译器 CSV（P4-E1-06）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、运维 `rule-compiler-export` |
+| **测试** | 沿用 `loop-142-145.test.ts` |
+
+### Loop 221 — 补全 Loop 145：多页 Copilot/通道能力对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 上述 Web 按钮覆盖 Ops / Channels / Competitors / Readiness（Copilot 原有保留） |
+| **测试** | `loop-142-145.test.ts` 增至 6 条 |
+
 ### Loop 146 — 认证状态 CSV（P0-E1-03）
 
 | 项 | 内容 |
@@ -1818,3 +1846,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.18 | 2026-07-23 | Loop 206–209 补全 Loop 130–133 Channels/Ops Web 导出与 export POST 测 |
 | v7.19 | 2026-07-23 | Loop 210–213 补全 Loop 134–137 竞品/Ops/Copilot Web 导出与 export POST 测 |
 | v7.20 | 2026-07-23 | Loop 214–217 补全 Loop 138–141 就绪/锚点/产品就绪 Web 与 export POST 测 |
+| v7.21 | 2026-07-23 | Loop 218–221 补全 Loop 142–145 digest/adapter/compiler Web 与 export POST 测 |
