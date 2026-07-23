@@ -22,6 +22,9 @@ import {
   downloadDigestQueuedJobCsv,
   downloadDigestQueuedJobsSummaryCsv,
   downloadDigestDispatchesCsv,
+  downloadDigestDispatchCsv,
+  downloadDigestDeadLetterJobCsv,
+  downloadAgentToolAuditRowCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestScheduleCsv,
   downloadCopilotSessionCsv,
@@ -80,6 +83,9 @@ export function CopilotPage() {
     items: Array<{ job_id: string; status: string }>;
   } | null>(null);
   const [p4Ready, setP4Ready] = useState<boolean | null>(null);
+  const [lastDispatchJobId, setLastDispatchJobId] = useState<string | null>(
+    null
+  );
 
   const selected = LISTINGS.find((l) => l.id === listingId)!;
 
@@ -136,6 +142,7 @@ export function CopilotPage() {
     try {
       const out = await dispatchDailyAgentDigest(locale);
       setDigestNarrative(out.digest.narrative);
+      setLastDispatchJobId(out.job.job_id);
       const mail = out.job.deliveries[0];
       setDigestEmailStub(
         mail ? `${mail.to} — ${mail.subject}` : null
@@ -425,6 +432,20 @@ export function CopilotPage() {
           >
             {t("copilotAuditExportCsv")}
           </button>
+          <button
+            type="button"
+            data-testid="copilot-audit-row-export"
+            disabled={!audit[0]}
+            onClick={() => {
+              const auditId = audit[0]?.id;
+              if (!auditId) return;
+              void downloadAgentToolAuditRowCsv(locale, auditId).then(() =>
+                setMessage(t("copilotAuditRowExportDone"))
+              );
+            }}
+          >
+            {t("copilotAuditRowExportCsv")}
+          </button>
         </div>
       </section>
       <section className="card" data-testid="copilot-digest-jobs">
@@ -445,6 +466,20 @@ export function CopilotPage() {
             onClick={() => void downloadDigestDispatchesCsv(locale)}
           >
             {t("copilotDigestDispatchesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-dispatch-export"
+            disabled={!lastDispatchJobId}
+            onClick={() => {
+              const jobId = lastDispatchJobId;
+              if (!jobId) return;
+              void downloadDigestDispatchCsv(locale, jobId).then(() =>
+                setMessage(t("copilotDigestDispatchExportDone"))
+              );
+            }}
+          >
+            {t("copilotDigestDispatchExportCsv")}
           </button>
           <button
             type="button"
@@ -518,6 +553,20 @@ export function CopilotPage() {
             onClick={() => void downloadDigestDeadLetterCsv(locale)}
           >
             {t("copilotDigestDlqExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-dlq-job-export"
+            disabled={!digestDlq?.items[0]}
+            onClick={() => {
+              const jobId = digestDlq?.items[0]?.job_id;
+              if (!jobId) return;
+              void downloadDigestDeadLetterJobCsv(locale, jobId).then(() =>
+                setMessage(t("copilotDigestDlqJobExportDone"))
+              );
+            }}
+          >
+            {t("copilotDigestDlqJobExportCsv")}
           </button>
         </div>
       </section>

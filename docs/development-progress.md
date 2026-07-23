@@ -1484,6 +1484,34 @@
 | **实现** | 运维最新 sync job 与首个 worker 心跳；Copilot 最新 digest 排队作业导出按钮 |
 | **测试** | `loop-182-185.test.ts` |
 
+### Loop 186 — 单条 Digest 派发作业 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getDigestDispatch`；`GET /agent/digest/dispatches/:jobId/export`；`digest_dispatch_csv`（`dispatch_job_id`） |
+| **测试** | `loop-186-189.test.ts`、`loop-186-189-csv.test.ts` |
+
+### Loop 187 — 单条渠道沙箱事件 CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getChannelSandboxEvent`；`GET /channels/sandbox/events/:eventId/export`；`channel_sandbox_event_csv`（`sandbox_event_id`） |
+| **测试** | `loop-186-189.test.ts` |
+
+### Loop 188 — 单条 Digest 死信作业 CSV（TC-NFR-REL-004）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/digest/jobs/dead-letter/:jobId/export`；`digest_dead_letter_job_csv`（`digest_job_id`，须 `dead_letter`） |
+| **测试** | `loop-186-189.test.ts`（含 dead-letter summary 路由顺序） |
+
+### Loop 189 — 单条 Agent 工具审计 CSV + Web
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/tool-audit/:auditId/export`；`agent_tool_audit_csv`（`audit_id`）；Copilot 最近派发 / DLQ / 审计行；Channels 首条沙箱事件 |
+| **测试** | `loop-186-189.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1574,3 +1602,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.10 | 2026-07-23 | Loop 174–177 SKU row, listing, HS tariff row, FX rate row CSV + Web |
 | v7.11 | 2026-07-23 | Loop 178–181 cost sheet, competitor offer, reconciliation alert CSV + Web |
 | v7.12 | 2026-07-23 | Loop 182–185 listing sync job, digest queued job, worker heartbeat CSV + Web |
+| v7.13 | 2026-07-23 | Loop 186–189 digest dispatch, sandbox event, dead-letter job, tool audit row CSV + Web |

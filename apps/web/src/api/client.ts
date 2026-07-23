@@ -662,6 +662,24 @@ export async function downloadChannelSandboxEventsCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadChannelSandboxEventCsv(
+  locale: string,
+  eventId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/channels/sandbox/events/${encodeURIComponent(eventId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`sandbox-event-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `channel-sandbox-event-${eventId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export interface ChannelAdapterStatus {
   driver: string;
   publish_http_url_configured: boolean;
@@ -2283,6 +2301,24 @@ export async function downloadAgentToolAuditCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadAgentToolAuditRowCsv(
+  locale: string,
+  auditId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/tool-audit/${encodeURIComponent(auditId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`tool-audit-row-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `agent-tool-audit-${auditId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchDigestSchedule(locale: string) {
   const res = await fetch(`/api/v1/agent/digest/schedule`, {
     headers: headers(locale),
@@ -2428,6 +2464,24 @@ export async function downloadDigestDeadLetterCsv(locale: string): Promise<void>
   URL.revokeObjectURL(url);
 }
 
+export async function downloadDigestDeadLetterJobCsv(
+  locale: string,
+  jobId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/digest/jobs/dead-letter/${encodeURIComponent(jobId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-dlq-job-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `digest-dead-letter-job-${jobId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchDigestQueuedJobsSummary(locale: string, limit = 20) {
   const res = await fetch(
     `/api/v1/agent/digest/jobs/summary?limit=${encodeURIComponent(String(limit))}`,
@@ -2509,6 +2563,24 @@ export async function downloadDigestDispatchesCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "digest-dispatches.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadDigestDispatchCsv(
+  locale: string,
+  jobId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/digest/dispatches/${encodeURIComponent(jobId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-dispatch-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `digest-dispatch-${jobId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

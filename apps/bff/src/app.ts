@@ -241,6 +241,7 @@ import { workerHeartbeatsToCsv } from "./worker-heartbeats-csv.js";
 import {
   getChannelSandboxStatus,
   isChannelSandboxEnabled,
+  getChannelSandboxEvent,
   listChannelSandboxEvents,
   recordChannelSandboxEvent,
 } from "./channel-sandbox-ledger.js";
@@ -276,6 +277,7 @@ import { tariffHsRatesToCsv } from "./tariff-hs-csv.js";
 import { batchPatchSkuPolicies } from "./sku-policy-batch.js";
 import {
   dispatchDailyDigest,
+  getDigestDispatch,
   getDigestSchedule,
   listDigestDispatches,
   resetDigestDispatchForTests,
@@ -1571,6 +1573,9 @@ export function createApp(options: CreateAppOptions = {}) {
       alert_id?: string;
       sync_job_id?: string;
       digest_job_id?: string;
+      dispatch_job_id?: string;
+      sandbox_event_id?: string;
+      audit_id?: string;
       worker_id?: string;
     };
     const kind = body.kind ?? "version_backup";
@@ -2228,6 +2233,53 @@ export function createApp(options: CreateAppOptions = {}) {
         new Date().toISOString()
       );
       content_type = "text/csv";
+    } else if (kind === "digest_dispatch_csv") {
+      const jobId = body.dispatch_job_id;
+      if (!jobId?.trim()) {
+        throw new HTTPException(400, { message: "DISPATCH_JOB_ID_REQUIRED" });
+      }
+      const dispatch = getDigestDispatch(tenantId, jobId.trim());
+      if (!dispatch) {
+        throw new HTTPException(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
+      }
+      content = digestDispatchesToCsv([dispatch], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "channel_sandbox_event_csv") {
+      const eventId = body.sandbox_event_id;
+      if (!eventId?.trim()) {
+        throw new HTTPException(400, { message: "SANDBOX_EVENT_ID_REQUIRED" });
+      }
+      const ev = getChannelSandboxEvent(tenantId, eventId.trim());
+      if (!ev) {
+        throw new HTTPException(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
+      }
+      content = channelSandboxEventsToCsv([ev], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_dead_letter_job_csv") {
+      const jobId = body.digest_job_id;
+      if (!jobId?.trim()) {
+        throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
+      }
+      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      if (!job || job.status !== "dead_letter") {
+        throw new HTTPException(404, {
+          message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
+        });
+      }
+      content = digestDeadLetterJobsToCsv([job], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "agent_tool_audit_csv") {
+      const auditId = body.audit_id;
+      if (!auditId?.trim()) {
+        throw new HTTPException(400, { message: "AUDIT_ID_REQUIRED" });
+      }
+      const items = await agentAudit.listInvocations(tenantId, 200);
+      const row = items.find((a) => a.id === auditId.trim());
+      if (!row) {
+        throw new HTTPException(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
+      }
+      content = agentToolAuditToCsv([row], new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2430,6 +2482,23 @@ export function createApp(options: CreateAppOptions = {}) {
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(100, Math.max(1, Number(limitRaw))) : 30;
     return c.json({ items: listChannelSandboxEvents(tenantId, limit) });
+  });
+
+  app.get("/api/v1/channels/sandbox/events/:eventId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const eventId = c.req.param("eventId");
+    const ev = getChannelSandboxEvent(tenantId, eventId);
+    if (!ev) {
+      throw new HTTPException(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = channelSandboxEventsToCsv([ev], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="channel-sandbox-event-${eventId}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/shops", async (c) => {
@@ -4298,6 +4367,23 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: listDigestDispatches(tenantId, limit) });
   });
 
+  app.get("/api/v1/agent/digest/dispatches/:jobId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const jobId = c.req.param("jobId");
+    const dispatch = getDigestDispatch(tenantId, jobId);
+    if (!dispatch) {
+      throw new HTTPException(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = digestDispatchesToCsv([dispatch], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-dispatch-${jobId}.csv"`,
+      },
+    });
+  });
+
   app.post("/api/v1/agent/digest/daily/enqueue", async (c) => {
     const tenantId = c.get("tenantId");
     const locale = c.get("locale");
@@ -4415,6 +4501,25 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="digest-dead-letter.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/dead-letter/:jobId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const jobId = c.req.param("jobId");
+    const job = getDigestQueuedJob(tenantId, jobId);
+    if (!job || job.status !== "dead_letter") {
+      throw new HTTPException(404, {
+        message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
+      });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = digestDeadLetterJobsToCsv([job], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-dead-letter-job-${jobId}.csv"`,
       },
     });
   });
@@ -4586,6 +4691,24 @@ export function createApp(options: CreateAppOptions = {}) {
     const limit = limitRaw ? Math.min(100, Math.max(1, Number(limitRaw))) : 100;
     const items = await agentAudit.listInvocations(tenantId, limit);
     return c.json({ items });
+  });
+
+  app.get("/api/v1/agent/tool-audit/:auditId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const auditId = c.req.param("auditId");
+    const items = await agentAudit.listInvocations(tenantId, 200);
+    const row = items.find((a) => a.id === auditId);
+    if (!row) {
+      throw new HTTPException(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = agentToolAuditToCsv([row], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-tool-audit-${auditId}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/agent/tools/invoke", async (c) => {
