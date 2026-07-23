@@ -12,6 +12,8 @@ import {
   downloadCategoryRuleTemplateCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadSharedFeeTemplatesCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
 } from "../api/client";
 
 export function PolicyConfigPage() {
@@ -144,6 +146,29 @@ export function PolicyConfigPage() {
           }
         >
           {t("sharedFeeTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-shared-fee-template-export"
+          onClick={() =>
+            void downloadSharedFeeTemplateCsv(
+              locale,
+              "fee-tpl-ml-electronics"
+            ).then(() => setMessage(t("sharedFeeTemplateExportDone")))
+          }
+        >
+          {t("sharedFeeTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-tenant-shared-fee-export"
+          onClick={() =>
+            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+              () => setMessage(t("tenantSharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("tenantSharedFeeTemplatesExportCsv")}
         </button>
         <ul>
           {templates.map((tpl) => (

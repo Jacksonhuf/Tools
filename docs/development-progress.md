@@ -1372,6 +1372,34 @@
 | **实现** | `GET /shops/:shopId/export`；`shop_csv`；指挥中心/通道/就绪页相关导出按钮 |
 | **测试** | `loop-166-169.test.ts` |
 
+### Loop 170 — P3 就绪清单 CSV（P3）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `p3-readiness-csv.ts`；`GET /product/readiness/p3/export`；`p3_readiness_csv` |
+| **测试** | `loop-170-173.test.ts`、`loop-170-173-csv.test.ts` |
+
+### Loop 171 — P4 就绪清单 CSV（P4 / SEC-004）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `p4-readiness-csv.ts`；`GET /product/readiness/p4/export`；`p4_readiness_csv` |
+| **测试** | `loop-170-173.test.ts`、`loop-170-173-csv.test.ts` |
+
+### Loop 172 — 单条共享费用模板 CSV（P5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /shared-fee-templates/:templateId/export`；`shared_fee_template_csv`（`fee_template_id`） |
+| **测试** | `loop-170-173.test.ts` |
+
+### Loop 173 — 租户共享费用模板 CSV + Web（P5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /tenants/:tenantId/shared-fee-templates/export`；`tenant_shared_fee_templates_csv`；就绪/策略/Copilot 导出按钮 |
+| **测试** | `loop-170-173.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1458,3 +1486,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.6 | 2026-07-22 | Loop 158–161 SKU repricing queue, shard plan, category template, reconciliation report export + Web |
 | v7.7 | 2026-07-23 | Loop 162–165 pricing context, repricing batch job, category template, copilot session CSV + Web |
 | v7.8 | 2026-07-23 | Loop 166–169 price version, version backup rows, P5 readiness, shop CSV + Web |
+| v7.9 | 2026-07-23 | Loop 170–173 P3/P4 readiness, shared fee template and tenant fee templates CSV + Web |

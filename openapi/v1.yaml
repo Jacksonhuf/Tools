@@ -368,6 +368,12 @@ paths:
   /api/v1/tenants/{tenantId}/shared-fee-templates:
     get:
       summary: Shared fee templates per tenant (P5-04)
+  /api/v1/tenants/{tenantId}/shared-fee-templates/export:
+    get:
+      summary: Download tenant shared fee templates as CSV
+  /api/v1/shared-fee-templates/{templateId}/export:
+    get:
+      summary: Download one shared fee template as CSV
   /api/v1/shared-fee-templates/export:
     get:
       summary: Download shared fee templates for tenant as CSV
@@ -587,6 +593,12 @@ paths:
   /api/v1/product/readiness/export:
     get:
       summary: Download product milestone readiness as CSV
+  /api/v1/product/readiness/p3/export:
+    get:
+      summary: Download P3 readiness checklist as CSV
+  /api/v1/product/readiness/p4/export:
+    get:
+      summary: Download P4 agent readiness checklist as CSV
   /api/v1/product/readiness/p5/export:
     get:
       summary: Download P5 readiness checklist as CSV

@@ -2048,6 +2048,70 @@ export async function downloadP5ReadinessCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadP4ReadinessCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/product/readiness/p4/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`p4-readiness-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "p4-readiness.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadP3ReadinessCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/product/readiness/p3/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`p3-readiness-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "p3-readiness.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadSharedFeeTemplateCsv(
+  locale: string,
+  templateId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/shared-fee-templates/${encodeURIComponent(templateId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`shared-fee-template-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `shared-fee-template-${templateId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadTenantSharedFeeTemplatesCsv(
+  locale: string,
+  tenantId = "tenant-demo"
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/tenants/${encodeURIComponent(tenantId)}/shared-fee-templates/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`tenant-shared-fee-templates-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `shared-fee-templates-${tenantId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadAgentMilestonesCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/agent/milestones/export`, {
     headers: headers(locale),
