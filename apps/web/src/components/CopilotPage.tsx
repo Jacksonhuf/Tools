@@ -34,6 +34,9 @@ import {
   downloadAgentToolRowCsv,
   downloadAgentReadinessCsv,
   downloadAgentReadinessCheckCsv,
+  downloadRepricingBatchJobsSummaryCsv,
+  downloadFeatureFlagsCsv,
+  downloadListingIngestStatusCsv,
   updateDigestSchedule,
   runDigestRunDue,
   fetchRuleCompilerStatus,
@@ -447,6 +450,40 @@ export function CopilotPage() {
             onClick={() => void downloadAgentToolsCsv(locale)}
           >
             {t("copilotToolsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-batch-summary-export"
+            onClick={() =>
+              void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+                setMessage(t("copilotRepricingBatchSummaryExportDone"))
+              )
+            }
+          >
+            {t("copilotRepricingBatchSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-feature-flags-export"
+            onClick={() =>
+              void downloadFeatureFlagsCsv(locale).then(() =>
+                setMessage(t("copilotFeatureFlagsExportDone"))
+              )
+            }
+          >
+            {t("copilotFeatureFlagsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-ingest-status-export"
+            onClick={() =>
+              void downloadListingIngestStatusCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              ).then(() => setMessage(t("copilotListingIngestStatusExportDone")))
+            }
+          >
+            {t("copilotListingIngestStatusExportCsv")}
           </button>
           <button
             type="button"
