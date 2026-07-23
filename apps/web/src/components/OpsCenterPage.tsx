@@ -48,6 +48,8 @@ import {
   downloadFxRatesCsv,
   downloadFxRateCsv,
   downloadAuthStatusCsv,
+  downloadNotificationTemplatesCsv,
+  downloadNotificationTemplateCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -220,6 +222,29 @@ export function OpsCenterPage() {
           }
         >
           {t("opsAuthExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-notification-templates-export"
+          onClick={() =>
+            void downloadNotificationTemplatesCsv(locale).then(() =>
+              setMessage(t("opsNotificationTemplatesExportDone"))
+            )
+          }
+        >
+          {t("opsNotificationTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-notification-template-export"
+          onClick={() =>
+            void downloadNotificationTemplateCsv(
+              locale,
+              "repricing.competitor_price_changed"
+            ).then(() => setMessage(t("opsNotificationTemplateExportDone")))
+          }
+        >
+          {t("opsNotificationTemplateExportCsv")}
         </button>
       </div>
 

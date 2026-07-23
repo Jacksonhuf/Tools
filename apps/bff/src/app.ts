@@ -312,6 +312,19 @@ import { authStatusToCsv } from "./auth-status-csv.js";
 import { getFeatureFlags, getFeatureFlagValue } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
 import { featureFlagKeyToCsv } from "./feature-flag-key-csv.js";
+import { formatGlossaryForLocale, getGlossaryTerm } from "./i18n-glossary.js";
+import {
+  i18nGlossaryTermToCsv,
+  i18nGlossaryToCsv,
+} from "./i18n-glossary-csv.js";
+import {
+  formatNotificationTemplatesForLocale,
+  getNotificationTemplate,
+} from "./notification-templates.js";
+import {
+  notificationTemplateToCsv,
+  notificationTemplatesToCsv,
+} from "./notification-template-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
@@ -432,6 +445,80 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="feature-flag-${flag.key}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/i18n/glossary", (c) => {
+    const locale = c.get("locale");
+    return c.json({ locale, terms: formatGlossaryForLocale(locale) });
+  });
+
+  app.get("/api/v1/i18n/glossary/export", (c) => {
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const csv = i18nGlossaryToCsv(locale, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="i18n-glossary-${locale}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/i18n/glossary/terms/export", (c) => {
+    const termKey = c.req.query("term_key")?.trim();
+    if (!termKey) {
+      throw new HTTPException(400, { message: "TERM_KEY_REQUIRED" });
+    }
+    const term = getGlossaryTerm(termKey);
+    if (!term) {
+      throw new HTTPException(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
+    }
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const csv = i18nGlossaryTermToCsv(term, locale, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="i18n-glossary-term-${termKey}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/notifications/templates", (c) => {
+    const locale = c.get("locale");
+    return c.json({ locale, templates: formatNotificationTemplatesForLocale(locale) });
+  });
+
+  app.get("/api/v1/notifications/templates/export", (c) => {
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const csv = notificationTemplatesToCsv(locale, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="notification-templates-${locale}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/notifications/templates/row/export", (c) => {
+    const templateId = c.req.query("template_id")?.trim();
+    if (!templateId) {
+      throw new HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+    }
+    const template = getNotificationTemplate(templateId);
+    if (!template) {
+      throw new HTTPException(404, { message: "NOTIFICATION_TEMPLATE_NOT_FOUND" });
+    }
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const csv = notificationTemplateToCsv(template, locale, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="notification-template.csv"`,
       },
     });
   });
@@ -1647,6 +1734,8 @@ export function createApp(options: CreateAppOptions = {}) {
       check_id?: string;
       milestone_id?: string;
       flag_key?: string;
+      term_key?: string;
+      template_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2551,6 +2640,48 @@ export function createApp(options: CreateAppOptions = {}) {
       content = featureFlagKeyToCsv(
         flag.key,
         flag.enabled,
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "i18n_glossary_csv") {
+      const locale = c.get("locale");
+      content = i18nGlossaryToCsv(locale, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "i18n_glossary_term_csv") {
+      const termKey = body.term_key?.trim();
+      if (!termKey) {
+        throw new HTTPException(400, { message: "TERM_KEY_REQUIRED" });
+      }
+      const term = getGlossaryTerm(termKey);
+      if (!term) {
+        throw new HTTPException(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
+      }
+      content = i18nGlossaryTermToCsv(
+        term,
+        c.get("locale"),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "notification_templates_csv") {
+      content = notificationTemplatesToCsv(
+        c.get("locale"),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "notification_template_csv") {
+      const templateId = body.template_id?.trim();
+      if (!templateId) {
+        throw new HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+      }
+      const template = getNotificationTemplate(templateId);
+      if (!template) {
+        throw new HTTPException(404, {
+          message: "NOTIFICATION_TEMPLATE_NOT_FOUND",
+        });
+      }
+      content = notificationTemplateToCsv(
+        template,
+        c.get("locale"),
         new Date().toISOString()
       );
       content_type = "text/csv";

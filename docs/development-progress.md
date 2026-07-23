@@ -29,6 +29,18 @@
 | P4 Agent | 部分完成 | Loop 26：P4 accepted + Playwright |
 | P5 增强 | 脚手架 | Loop 33–36：sidecar、ops metrics、收官文档 |
 
+### PRD Story 完成度快照（v7.17，滚动估算）
+
+任务清单 [development-task-list.md](./development-task-list.md) 共 **113** 条 Story 级任务（含 DOC / P0–P5 / 横切 X）。
+
+| 状态 | 数量（约） | 说明 |
+|------|------------|------|
+| **MVP 已验收 / 闭环** | **~28** | 定价引擎黄金用例、核心 BFF/Web、P3/P4/P5 就绪 API、Loop 1–201 导出与门禁脚手架等 |
+| **部分完成** | **~78** | 有 mock/占位实现，未达 PRD「生产完成」（真实 OAuth、全量 PG、HA、X-03 等） |
+| **未开始（生产级）** | **~7** | 主要为生产渠道对接、多区域 HA、正式安全扫描与备份演练 |
+
+> 逐条 Story 状态请随 Epic PR 更新任务清单备注列；本表为 **Loop 202** 起的产品级汇总，避免与「Development Loop 编号」混淆。
+
 ---
 
 ## 任务完成快照（滚动更新）
@@ -1596,6 +1608,34 @@
 | **实现** | `getFeatureFlagValue`；`GET /feature-flags/:flagKey/export`；`feature_flag_csv`；Copilot / 产品就绪页按钮 |
 | **测试** | `loop-198-201.test.ts` |
 
+### Loop 202 — 瀑布/税务术语表 API + CSV（P0-E7-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /i18n/glossary`；`GET /i18n/glossary/export`；`i18n_glossary_csv` |
+| **测试** | `loop-202-205.test.ts` |
+
+### Loop 203 — 单条术语 CSV + 定价页瀑布标签（P0-E7-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /i18n/glossary/terms/export?term_key=`；`i18n_glossary_term_csv`；Web 术语提示与导出 |
+| **测试** | `loop-202-205.test.ts`、`loop-202-205-csv.test.ts` |
+
+### Loop 204 — 重算通知三语模板 API + CSV（P2-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /notifications/templates`；`GET /notifications/templates/export`；`notification_templates_csv` |
+| **测试** | `loop-202-205.test.ts` |
+
+### Loop 205 — 单条通知模板 CSV + 运维中心 Web（P2-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /notifications/templates/row/export?template_id=`；`notification_template_csv`；Ops 导出按钮 |
+| **测试** | `loop-202-205.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1690,3 +1730,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.14 | 2026-07-23 | Loop 190–193 price observation, repricing event, adjustment index row, digest date CSV + Web |
 | v7.15 | 2026-07-23 | Loop 194–197 pricing snapshot row, cross-channel row, curve point, agent tool row CSV + Web |
 | v7.16 | 2026-07-23 | Loop 198–201 readiness check, milestone, product check, feature flag row CSV + Web |
+| v7.17 | 2026-07-23 | Loop 202–205 i18n glossary, notification templates API/CSV + Web; Story 完成度快照 |
