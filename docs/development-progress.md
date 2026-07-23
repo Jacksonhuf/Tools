@@ -1244,6 +1244,34 @@
 | **实现** | Agent 就绪、竞品锚点、产品里程碑 CSV 导出按钮 |
 | **测试** | `loop-138-141.test.ts` |
 
+### Loop 214 — 补全 Loop 138：运维/竞品/就绪 Agent 就绪 CSV（P4-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维 `ops-agent-readiness-export`；竞品 `competitor-agent-readiness-export`；就绪页 `readiness-agent-readiness-export` |
+| **测试** | `loop-138-141.test.ts` |
+
+### Loop 215 — 补全 Loop 139：通道 Amazon 竞品锚点 CSV（P2-E1-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道页 `channels-competitor-anchor-amz-export`；就绪页 `readiness-competitor-anchor-export`（ML） |
+| **测试** | `loop-138-141.test.ts`（`competitor_anchor_csv` POST） |
+
+### Loop 216 — 补全 Loop 140：运维中心产品就绪 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维 `ops-product-readiness-export` |
+| **测试** | `loop-138-141.test.ts`（`product_readiness_csv` POST） |
+
+### Loop 217 — 补全 Loop 141：Copilot 产品就绪与竞品锚点 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Copilot `copilot-product-readiness-export`、`copilot-competitor-anchor-export` |
+| **测试** | `loop-138-141.test.ts`（`agent_milestones_csv` POST） |
+
 ### Loop 142 — Digest 队列汇总 CSV（P4-E1-07）
 
 | 项 | 内容 |
@@ -1789,3 +1817,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.17 | 2026-07-23 | Loop 202–205 i18n glossary, notification templates API/CSV + Web; Story 完成度快照 |
 | v7.18 | 2026-07-23 | Loop 206–209 补全 Loop 130–133 Channels/Ops Web 导出与 export POST 测 |
 | v7.19 | 2026-07-23 | Loop 210–213 补全 Loop 134–137 竞品/Ops/Copilot Web 导出与 export POST 测 |
+| v7.20 | 2026-07-23 | Loop 214–217 补全 Loop 138–141 就绪/锚点/产品就绪 Web 与 export POST 测 |

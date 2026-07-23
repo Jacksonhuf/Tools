@@ -51,6 +51,8 @@ import {
   downloadFxRateCsv,
   downloadAuthStatusCsv,
   downloadAgentToolsCsv,
+  downloadAgentReadinessCsv,
+  downloadProductReadinessCsv,
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
   promoteRepricingToPending,
@@ -259,6 +261,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsAgentToolsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-readiness-export"
+          onClick={() =>
+            void downloadAgentReadinessCsv(locale).then(() =>
+              setMessage(t("opsAgentReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsAgentReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-product-readiness-export"
+          onClick={() =>
+            void downloadProductReadinessCsv(locale).then(() =>
+              setMessage(t("opsProductReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsProductReadinessExportCsv")}
         </button>
       </div>
 
