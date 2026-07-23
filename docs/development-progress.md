@@ -1456,6 +1456,34 @@
 | **实现** | 定价页最新 cost sheet、竞品页所选 offer、运维中心首条告警 CSV 导出按钮 |
 | **测试** | `loop-178-181.test.ts` |
 
+### Loop 182 — 单条 Listing 同步作业 CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getListingSyncJob`；`GET /ops/listing-sync/jobs/:jobId/export`；`listing_sync_job_csv`（`sync_job_id`） |
+| **测试** | `loop-182-185.test.ts` |
+
+### Loop 183 — 单条 Digest 排队作业 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/digest/jobs/:jobId/export`；`digest_queued_job_csv`（`digest_job_id`） |
+| **测试** | `loop-182-185.test.ts`、`loop-182-185-csv.test.ts` |
+
+### Loop 184 — 单条 Worker 心跳 CSV（P0-E1-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getWorkerHeartbeat`；`GET /ops/workers/status/:workerId/export`；`worker_heartbeat_csv` |
+| **测试** | `loop-182-185.test.ts` |
+
+### Loop 185 — 同步 / Digest / Worker Web
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维最新 sync job 与首个 worker 心跳；Copilot 最新 digest 排队作业导出按钮 |
+| **测试** | `loop-182-185.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1545,3 +1573,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.9 | 2026-07-23 | Loop 170–173 P3/P4 readiness, shared fee template and tenant fee templates CSV + Web |
 | v7.10 | 2026-07-23 | Loop 174–177 SKU row, listing, HS tariff row, FX rate row CSV + Web |
 | v7.11 | 2026-07-23 | Loop 178–181 cost sheet, competitor offer, reconciliation alert CSV + Web |
+| v7.12 | 2026-07-23 | Loop 182–185 listing sync job, digest queued job, worker heartbeat CSV + Web |

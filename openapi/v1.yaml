@@ -560,6 +560,9 @@ paths:
   /api/v1/ops/listing-sync/jobs/export:
     get:
       summary: Download listing sync jobs as CSV (P1-E2-04)
+  /api/v1/ops/listing-sync/jobs/{jobId}/export:
+    get:
+      summary: Download one listing sync job as CSV
   /api/v1/ops/listing-sync/status:
     get:
       summary: Listing sync schedule plus recent job summary (P1-E2-04)
@@ -602,6 +605,9 @@ paths:
   /api/v1/ops/workers/status/export:
     get:
       summary: Download worker heartbeats as CSV
+  /api/v1/ops/workers/status/{workerId}/export:
+    get:
+      summary: Download one worker heartbeat as CSV
   /api/v1/ops/workers/status/summary/export:
     get:
       summary: Download worker status summary as CSV
@@ -650,6 +656,9 @@ paths:
   /api/v1/agent/digest/jobs/export:
     get:
       summary: Download digest queued jobs as CSV
+  /api/v1/agent/digest/jobs/{jobId}/export:
+    get:
+      summary: Download one digest queued job as CSV
   /api/v1/agent/digest/jobs/process:
     post:
       summary: Process queued digest jobs
