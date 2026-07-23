@@ -184,6 +184,7 @@ import {
   listListingSyncJobsForTenant,
   runListingChannelSync,
 } from "./listing-sync-service.js";
+import { getListingSyncJob } from "./listing-sync-journal.js";
 import {
   getListingSyncSchedule,
   upsertListingSyncSchedule,
@@ -215,6 +216,7 @@ import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import { adjustmentApprovalPolicyToCsv } from "./adjustment-approval-policy-csv.js";
 import {
   getAsyncWorkerStatus,
+  getWorkerHeartbeat,
   recordWorkerHeartbeat,
 } from "./worker-heartbeat.js";
 import { opsWorkersStatusSummaryToCsv } from "./ops-workers-status-summary-csv.js";
@@ -284,6 +286,7 @@ import { buildListingDynamicRepricingRuleView } from "./dynamic-repricing-rule-v
 import { dynamicRepricingRuleToCsv } from "./dynamic-repricing-rule-csv.js";
 import {
   enqueueDailyDigestJob,
+  getDigestQueuedJob,
   listDigestQueuedJobs,
   listDigestDeadLetterJobs,
   digestQueueSummary,
@@ -1566,6 +1569,9 @@ export function createApp(options: CreateAppOptions = {}) {
       cost_sheet_id?: string;
       offer_id?: string;
       alert_id?: string;
+      sync_job_id?: string;
+      digest_job_id?: string;
+      worker_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2186,6 +2192,42 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       content = reconciliationAlertsToCsv([alert], new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "listing_sync_job_csv") {
+      const jobId = body.sync_job_id;
+      if (!jobId?.trim()) {
+        throw new HTTPException(400, { message: "SYNC_JOB_ID_REQUIRED" });
+      }
+      const job = getListingSyncJob(tenantId, jobId.trim());
+      if (!job) {
+        throw new HTTPException(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
+      }
+      content = listingSyncJobsToCsv([job], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "digest_queued_job_csv") {
+      const jobId = body.digest_job_id;
+      if (!jobId?.trim()) {
+        throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
+      }
+      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      if (!job) {
+        throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
+      }
+      content = digestQueuedJobsToCsv([job], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "worker_heartbeat_csv") {
+      const workerId = body.worker_id ?? "repricing-batch-1";
+      const beat = getWorkerHeartbeat(workerId);
+      if (!beat) {
+        throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
+      }
+      const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");
+      const stale =
+        Date.now() - new Date(beat.reported_at).getTime() > staleSec * 1000;
+      content = workerHeartbeatsToCsv(
+        [{ ...beat, stale }],
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2243,6 +2285,25 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="worker-heartbeats.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/ops/workers/status/:workerId/export", async (c) => {
+    const workerId = c.req.param("workerId");
+    const beat = getWorkerHeartbeat(workerId);
+    if (!beat) {
+      throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");
+    const stale =
+      Date.now() - new Date(beat.reported_at).getTime() > staleSec * 1000;
+    const csv = workerHeartbeatsToCsv([{ ...beat, stale }], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="worker-heartbeat-${workerId}.csv"`,
       },
     });
   });
@@ -3773,6 +3834,23 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/ops/listing-sync/jobs/:jobId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const jobId = c.req.param("jobId");
+    const job = getListingSyncJob(tenantId, jobId);
+    if (!job) {
+      throw new HTTPException(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = listingSyncJobsToCsv([job], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-sync-job-${jobId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/ops/listing-sync/jobs", async (c) => {
     const tenantId = c.get("tenantId");
     const limit = Math.min(
@@ -4337,6 +4415,23 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="digest-dead-letter.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/agent/digest/jobs/:jobId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const jobId = c.req.param("jobId");
+    const job = getDigestQueuedJob(tenantId, jobId);
+    if (!job) {
+      throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = digestQueuedJobsToCsv([job], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="digest-queued-job-${jobId}.csv"`,
       },
     });
   });

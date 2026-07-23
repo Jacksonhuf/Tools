@@ -19,6 +19,7 @@ import {
   downloadDigestDeadLetterSummaryCsv,
   fetchDigestQueuedJobsSummary,
   downloadDigestQueuedJobsCsv,
+  downloadDigestQueuedJobCsv,
   downloadDigestQueuedJobsSummaryCsv,
   downloadDigestDispatchesCsv,
   downloadRuleCompilerStatusCsv,
@@ -462,6 +463,20 @@ export function CopilotPage() {
             onClick={() => void downloadDigestQueuedJobsCsv(locale)}
           >
             {t("copilotDigestJobsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-digest-job-export"
+            disabled={!digestJobs?.items[0]}
+            onClick={() => {
+              const jobId = digestJobs?.items[0]?.job_id;
+              if (!jobId) return;
+              void downloadDigestQueuedJobCsv(locale, jobId).then(() =>
+                setMessage(t("copilotDigestJobExportDone"))
+              );
+            }}
+          >
+            {t("copilotDigestJobExportCsv")}
           </button>
         </div>
       </section>

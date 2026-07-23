@@ -25,6 +25,12 @@ export function listWorkerHeartbeats(): WorkerHeartbeat[] {
   );
 }
 
+export function getWorkerHeartbeat(
+  workerId: string
+): WorkerHeartbeat | undefined {
+  return heartbeats.get(workerId);
+}
+
 export function getAsyncWorkerStatus() {
   const beats = listWorkerHeartbeats();
   const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");

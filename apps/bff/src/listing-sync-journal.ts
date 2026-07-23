@@ -48,6 +48,15 @@ export function listListingSyncJobsForTenant(
   return jobs.filter((j) => j.tenant_id === tenantId).slice(0, limit);
 }
 
+export function getListingSyncJob(
+  tenantId: string,
+  jobId: string
+): ListingSyncJob | undefined {
+  const job = jobs.find((j) => j.id === jobId);
+  if (!job || job.tenant_id !== tenantId) return undefined;
+  return job;
+}
+
 export function resetListingSyncJobsForTests(): void {
   jobs.length = 0;
   seq = 1;

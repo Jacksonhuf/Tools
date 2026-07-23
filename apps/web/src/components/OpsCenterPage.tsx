@@ -18,6 +18,7 @@ import {
   fetchListingSyncJobs,
   fetchListingSyncOpsStatus,
   downloadListingSyncJobsCsv,
+  downloadListingSyncJobCsv,
   downloadListingSyncOpsStatusCsv,
   downloadListingSyncScheduleCsv,
   downloadReconciliationAlertsDirectCsv,
@@ -31,6 +32,7 @@ import {
   downloadRepricingQueueCsv,
   downloadSkuRepricingQueueCsv,
   downloadWorkerHeartbeatsCsv,
+  downloadWorkerHeartbeatCsv,
   downloadOpsWorkersStatusSummaryCsv,
   downloadOpsMetricsCsv,
   fetchRepricingBatchJobsSummary,
@@ -79,6 +81,7 @@ export function OpsCenterPage() {
   );
   const [tariffRows, setTariffRows] = useState<TariffHsRow[]>([]);
   const [workerCount, setWorkerCount] = useState(0);
+  const [primaryWorkerId, setPrimaryWorkerId] = useState<string | null>(null);
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [syncCron, setSyncCron] = useState("0 */6 * * *");
   const [syncLastRun, setSyncLastRun] = useState<string | null>(null);
@@ -108,6 +111,7 @@ export function OpsCenterPage() {
       setMetrics(ops);
       setTariffRows(tariffs.items);
       setWorkerCount(workers.workers.filter((w) => !w.stale).length);
+      setPrimaryWorkerId(workers.workers[0]?.worker_id ?? null);
       setSyncEnabled(syncSchedule.enabled);
       setSyncCron(syncSchedule.cron_expression);
       setSyncLastRun(syncSchedule.last_run_at);
@@ -439,6 +443,20 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-listing-sync-job-export"
+          disabled={!syncJobs[0]}
+          onClick={() => {
+            const job = syncJobs[0];
+            if (!job) return;
+            void downloadListingSyncJobCsv(locale, job.id).then(() =>
+              setMessage(t("opsListingSyncJobExportDone"))
+            );
+          }}
+        >
+          {t("opsListingSyncJobExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-listing-sync-status-export"
           onClick={() =>
             void downloadListingSyncOpsStatusCsv(locale).then(() =>
@@ -617,6 +635,19 @@ export function OpsCenterPage() {
           }
         >
           {t("opsWorkersExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-worker-heartbeat-export"
+          disabled={!primaryWorkerId}
+          onClick={() => {
+            if (!primaryWorkerId) return;
+            void downloadWorkerHeartbeatCsv(locale, primaryWorkerId).then(() =>
+              setMessage(t("opsWorkerHeartbeatExportDone"))
+            );
+          }}
+        >
+          {t("opsWorkerHeartbeatExportCsv")}
         </button>
       </section>
 

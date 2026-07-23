@@ -1090,6 +1090,24 @@ export async function downloadListingSyncJobsCsv(locale: string): Promise<void> 
   URL.revokeObjectURL(url);
 }
 
+export async function downloadListingSyncJobCsv(
+  locale: string,
+  jobId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/ops/listing-sync/jobs/${encodeURIComponent(jobId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`listing-sync-job-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `listing-sync-job-${jobId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadListingSyncOpsStatusCsv(
   locale: string
 ): Promise<void> {
@@ -2447,6 +2465,24 @@ export async function downloadDigestQueuedJobsCsv(locale: string): Promise<void>
   URL.revokeObjectURL(url);
 }
 
+export async function downloadDigestQueuedJobCsv(
+  locale: string,
+  jobId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/digest/jobs/${encodeURIComponent(jobId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-queued-job-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `digest-queued-job-${jobId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadDigestQueuedJobsSummaryCsv(
   locale: string
 ): Promise<void> {
@@ -2487,6 +2523,24 @@ export async function downloadWorkerHeartbeatsCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "worker-heartbeats.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadWorkerHeartbeatCsv(
+  locale: string,
+  workerId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/ops/workers/status/${encodeURIComponent(workerId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`worker-heartbeat-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `worker-heartbeat-${workerId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
