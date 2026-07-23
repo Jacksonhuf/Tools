@@ -20,6 +20,7 @@ import {
   downloadDynamicRepricingRuleCsv,
   downloadListingIngestStatusCsv,
   downloadRepricingBatchJobsSummaryCsv,
+  downloadAgentReadinessCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -254,6 +255,17 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-readiness-export"
+          onClick={() =>
+            void downloadAgentReadinessCsv(locale).then(() =>
+              setMessage(t("competitorAgentReadinessExportDone"))
+            )
+          }
+        >
+          {t("competitorAgentReadinessExportCsv")}
         </button>
         <button
           type="button"

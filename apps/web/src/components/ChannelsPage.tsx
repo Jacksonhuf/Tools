@@ -13,6 +13,7 @@ import {
   downloadListingSyncJobsForListingCsv,
   downloadListingSyncOpsStatusCsv,
   downloadReconciliationAlertsDirectCsv,
+  downloadCompetitorAnchorCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -268,6 +269,17 @@ export function ChannelsPage() {
           }
         >
           {t("channelsReconciliationDirectExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-competitor-anchor-amz-export"
+          onClick={() =>
+            void downloadCompetitorAnchorCsv(locale, "listing-amz-001").then(
+              () => setMessage(t("channelsCompetitorAnchorAmzExportDone"))
+            )
+          }
+        >
+          {t("channelsCompetitorAnchorAmzExportCsv")}
         </button>
       </div>
 

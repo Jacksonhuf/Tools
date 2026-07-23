@@ -10,6 +10,8 @@ import {
   downloadP3ReadinessCsv,
   downloadAgentMilestonesCsv,
   downloadAgentMilestoneCsv,
+  downloadAgentReadinessCsv,
+  downloadCompetitorAnchorCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -59,6 +61,28 @@ export function ProductReadinessPage() {
               ? t("readinessAllAccepted")
               : t("readinessInProgress")}
           </p>
+          <button
+            type="button"
+            data-testid="readiness-agent-readiness-export"
+            onClick={() =>
+              void downloadAgentReadinessCsv(locale).then(() =>
+                setMessage(t("readinessAgentReadinessExportDone"))
+              )
+            }
+          >
+            {t("readinessAgentReadinessExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-competitor-anchor-export"
+            onClick={() =>
+              void downloadCompetitorAnchorCsv(locale, "listing-ml-001").then(
+                () => setMessage(t("readinessCompetitorAnchorExportDone"))
+              )
+            }
+          >
+            {t("readinessCompetitorAnchorExportCsv")}
+          </button>
           <button
             type="button"
             data-testid="readiness-milestones-export"

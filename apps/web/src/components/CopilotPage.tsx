@@ -34,6 +34,8 @@ import {
   downloadAgentToolRowCsv,
   downloadAgentReadinessCsv,
   downloadAgentReadinessCheckCsv,
+  downloadProductReadinessCsv,
+  downloadCompetitorAnchorCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -484,6 +486,29 @@ export function CopilotPage() {
             }
           >
             {t("copilotListingIngestStatusExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-product-readiness-export"
+            onClick={() =>
+              void downloadProductReadinessCsv(locale).then(() =>
+                setMessage(t("copilotProductReadinessExportDone"))
+              )
+            }
+          >
+            {t("copilotProductReadinessExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-competitor-anchor-export"
+            onClick={() =>
+              void downloadCompetitorAnchorCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              ).then(() => setMessage(t("copilotCompetitorAnchorExportDone")))
+            }
+          >
+            {t("copilotCompetitorAnchorExportCsv")}
           </button>
           <button
             type="button"
