@@ -7,6 +7,7 @@ import {
   fetchPriceHistory,
   fetchCompetitorCurve,
   downloadCompetitorCurveCsv,
+  downloadCompetitorCurvePointCsv,
   downloadCompetitorCurveDirect,
   downloadPriceHistoryCsv,
   downloadPriceObservationCsv,
@@ -61,6 +62,7 @@ export function CompetitorsPage() {
   const [latestRepricingEventId, setLatestRepricingEventId] = useState<
     string | null
   >(null);
+  const [latestCurveDate, setLatestCurveDate] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -81,6 +83,7 @@ export function CompetitorsPage() {
       setLatestRepricingEventId(events.items[0]?.id ?? null);
       const curve = await fetchCompetitorCurve(locale, listingId, "7d");
       setCurveDays(curve.points.length);
+      setLatestCurveDate(curve.points[0]?.date ?? null);
       const ingest = await fetchIngestStatus(locale, listingId);
       setIngestTier(ingest.tier);
       setIngestFailed(Boolean(ingest.ingest_failed));
@@ -335,6 +338,23 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorCurveExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-curve-point-export"
+          disabled={!latestCurveDate}
+          onClick={() => {
+            const curveDate = latestCurveDate;
+            if (!curveDate) return;
+            void downloadCompetitorCurvePointCsv(
+              locale,
+              listingId,
+              curveDate,
+              "7d"
+            ).then(() => setMessage(t("competitorCurvePointExportDone")));
+          }}
+        >
+          {t("competitorCurvePointExportCsv")}
         </button>
         <button
           type="button"

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   fetchCrossChannelDashboard,
   downloadCrossChannelDashboardCsv,
+  downloadCrossChannelDashboardRowCsv,
   type CrossChannelDashboardSnapshot,
 } from "../api/client";
 
@@ -50,6 +51,20 @@ export function CrossChannelDashboardPage() {
             }
           >
             {t("crossChannelExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="cross-channel-row-export"
+            disabled={!data.items[0]}
+            onClick={() => {
+              const skuId = data.items[0]?.sku_id;
+              if (!skuId) return;
+              void downloadCrossChannelDashboardRowCsv(locale, skuId).then(() =>
+                setMessage(t("crossChannelRowExportDone"))
+              );
+            }}
+          >
+            {t("crossChannelRowExportCsv")}
           </button>
           <table className="batch-table">
             <thead>

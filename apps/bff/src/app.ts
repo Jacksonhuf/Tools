@@ -248,6 +248,7 @@ import {
 import { channelSandboxStatusToCsv } from "./channel-sandbox-status-csv.js";
 import {
   invokeAgentTool,
+  getAgentTool,
   listAgentTools,
 } from "./agent-tools.js";
 import {
@@ -507,6 +508,34 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="cross-channel-dashboard.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/cross-channel/dashboard/:skuId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
+    const item = snapshot.items.find((i) => i.sku_id === skuId);
+    if (!item) {
+      throw new HTTPException(404, {
+        message: "CROSS_CHANNEL_DASHBOARD_ROW_NOT_FOUND",
+      });
+    }
+    const csv = crossChannelDashboardToCsv({
+      ...snapshot,
+      sku_count: 1,
+      alert_count: item.warning ? 1 : 0,
+      items: [item],
+    });
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="cross-channel-dashboard-${skuId}.csv"`,
       },
     });
   });
@@ -1596,6 +1625,8 @@ export function createApp(options: CreateAppOptions = {}) {
       worker_id?: string;
       observation_id?: string;
       repricing_event_id?: string;
+      curve_date?: string;
+      tool_name?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2357,6 +2388,82 @@ export function createApp(options: CreateAppOptions = {}) {
       );
       content = agentDigestToCsv(digest);
       content_type = "text/csv";
+    } else if (kind === "pricing_snapshot_row_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const channel = (body.channel ?? "MERCADO_LIBRE") as
+        | "MERCADO_LIBRE"
+        | "AMAZON_MX";
+      if (channel !== "MERCADO_LIBRE" && channel !== "AMAZON_MX") {
+        throw new HTTPException(400, { message: "INVALID_CHANNEL" });
+      }
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
+      const row = rows.find((r) => r.channel === channel);
+      if (!row) {
+        throw new HTTPException(404, { message: "PRICING_SNAPSHOT_ROW_NOT_FOUND" });
+      }
+      content = pricingSnapshotToCsv([row], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "cross_channel_dashboard_row_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
+      const item = snapshot.items.find((i) => i.sku_id === skuId);
+      if (!item) {
+        throw new HTTPException(404, {
+          message: "CROSS_CHANNEL_DASHBOARD_ROW_NOT_FOUND",
+        });
+      }
+      content = crossChannelDashboardToCsv({
+        ...snapshot,
+        sku_count: 1,
+        alert_count: item.warning ? 1 : 0,
+        items: [item],
+      });
+      content_type = "text/csv";
+    } else if (kind === "competitor_curve_point_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const curveDate = body.curve_date?.trim() ?? body.date?.trim();
+      if (!curveDate) {
+        throw new HTTPException(400, { message: "CURVE_DATE_REQUIRED" });
+      }
+      const range = body.range ?? "7d";
+      const days = range === "30d" ? 30 : 7;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const observations = await competitors.listObservations(listingId, since);
+      const points = buildCompetitorCurve(
+        observations.map((o) => ({
+          observed_at: o.observed_at,
+          effective_price: o.effective_price,
+        }))
+      );
+      const point = points.find((p) => p.date === curveDate);
+      if (!point) {
+        throw new HTTPException(404, { message: "COMPETITOR_CURVE_POINT_NOT_FOUND" });
+      }
+      content = competitorCurvePointsToCsv([point]);
+      content_type = "text/csv";
+    } else if (kind === "agent_tool_row_csv") {
+      const toolName = body.tool_name?.trim();
+      if (!toolName) {
+        throw new HTTPException(400, { message: "TOOL_NAME_REQUIRED" });
+      }
+      const tool = getAgentTool(toolName);
+      if (!tool) {
+        throw new HTTPException(404, { message: "AGENT_TOOL_NOT_FOUND" });
+      }
+      content = agentToolsToCsv([tool], new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2505,6 +2612,37 @@ export function createApp(options: CreateAppOptions = {}) {
       },
     });
   });
+
+  app.get(
+    "/api/v1/reports/pricing-snapshots/:skuId/rows/:channel/export",
+    async (c) => {
+      const tenantId = c.get("tenantId");
+      const skuId = c.req.param("skuId");
+      const channel = c.req.param("channel") as "MERCADO_LIBRE" | "AMAZON_MX";
+      if (channel !== "MERCADO_LIBRE" && channel !== "AMAZON_MX") {
+        throw new HTTPException(400, { message: "INVALID_CHANNEL" });
+      }
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      const rows = await buildPricingSnapshotRows(catalog, tenantId, skuId);
+      const row = rows.find((r) => r.channel === channel);
+      if (!row) {
+        throw new HTTPException(404, {
+          message: "PRICING_SNAPSHOT_ROW_NOT_FOUND",
+        });
+      }
+      const exportedAt = new Date().toISOString();
+      const csv = pricingSnapshotToCsv([row], exportedAt);
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="pricing-snapshot-row-${skuId}-${channel}.csv"`,
+        },
+      });
+    }
+  );
 
   app.get("/api/v1/reports/reconciliation-alerts", async (c) => {
     const tenantId = c.get("tenantId");
@@ -2982,6 +3120,42 @@ export function createApp(options: CreateAppOptions = {}) {
       },
     });
   });
+
+  app.get(
+    "/api/v1/listings/:listingId/competitors/curve/:curveDate/export",
+    async (c) => {
+      const tenantId = c.get("tenantId");
+      const listingId = c.req.param("listingId");
+      const curveDate = c.req.param("curveDate");
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const range = c.req.query("range") ?? "7d";
+      const days = range === "30d" ? 30 : 7;
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const observations = await competitors.listObservations(listingId, since);
+      const points = buildCompetitorCurve(
+        observations.map((o) => ({
+          observed_at: o.observed_at,
+          effective_price: o.effective_price,
+        }))
+      );
+      const point = points.find((p) => p.date === curveDate);
+      if (!point) {
+        throw new HTTPException(404, {
+          message: "COMPETITOR_CURVE_POINT_NOT_FOUND",
+        });
+      }
+      const csv = competitorCurvePointsToCsv([point]);
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="competitor-curve-point-${listingId}-${curveDate}.csv"`,
+        },
+      });
+    }
+  );
 
   app.get("/api/v1/listings/:listingId/ingest/status/export", async (c) => {
     const tenantId = c.get("tenantId");
@@ -4179,6 +4353,22 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="agent-tools.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/agent/tools/:toolName/export", async (c) => {
+    const toolName = decodeURIComponent(c.req.param("toolName"));
+    const tool = getAgentTool(toolName);
+    if (!tool) {
+      throw new HTTPException(404, { message: "AGENT_TOOL_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = agentToolsToCsv([tool], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-tool-${toolName}.csv"`,
       },
     });
   });

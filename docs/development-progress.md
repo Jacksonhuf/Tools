@@ -1540,6 +1540,34 @@
 | **实现** | `GET /agent/digest/daily/:date/export`；`agent_digest_date_csv`（`date`）；竞品/调价/Copilot 单行导出按钮 |
 | **测试** | `loop-190-193.test.ts` |
 
+### Loop 194 — 单条定价快照行 CSV（P0-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reports/pricing-snapshots/:skuId/rows/:channel/export`；`pricing_snapshot_row_csv`（`sku_id` + `channel`） |
+| **测试** | `loop-194-197.test.ts`、`loop-194-197-csv.test.ts` |
+
+### Loop 195 — 跨渠道看板 SKU 行 CSV（P3-E3-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /cross-channel/dashboard/:skuId/export`；`cross_channel_dashboard_row_csv` |
+| **测试** | `loop-194-197.test.ts` |
+
+### Loop 196 — 竞品曲线单日 CSV（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /listings/:listingId/competitors/curve/:curveDate/export`；`competitor_curve_point_csv`（`curve_date`） |
+| **测试** | `loop-194-197.test.ts` |
+
+### Loop 197 — 单条 Agent 工具目录行 CSV + Web（P4-E1-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getAgentTool`；`GET /agent/tools/:toolName/export`；`agent_tool_row_csv`；运维/看板/竞品/Copilot 导出按钮 |
+| **测试** | `loop-194-197.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1632,3 +1660,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.12 | 2026-07-23 | Loop 182–185 listing sync job, digest queued job, worker heartbeat CSV + Web |
 | v7.13 | 2026-07-23 | Loop 186–189 digest dispatch, sandbox event, dead-letter job, tool audit row CSV + Web |
 | v7.14 | 2026-07-23 | Loop 190–193 price observation, repricing event, adjustment index row, digest date CSV + Web |
+| v7.15 | 2026-07-23 | Loop 194–197 pricing snapshot row, cross-channel row, curve point, agent tool row CSV + Web |

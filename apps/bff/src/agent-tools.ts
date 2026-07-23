@@ -45,6 +45,11 @@ export function listAgentTools() {
   return AGENT_TOOL_CATALOG.map((t) => ({ ...t }));
 }
 
+export function getAgentTool(name: string) {
+  const tool = AGENT_TOOL_CATALOG.find((t) => t.name === name);
+  return tool ? { ...tool } : undefined;
+}
+
 export function assertAllowedAgentTool(name: string): AgentToolName {
   if (BLOCKED_TOOL_NAMES.has(name)) {
     throw new Error("TOOL_NOT_ALLOWED");
