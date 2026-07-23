@@ -77,4 +77,37 @@ describe("export store kinds (Loop 130-133)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports listing_sync_ops_status_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "listing_sync_ops_status_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports listing_sync_jobs_listing_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "listing_sync_jobs_listing_csv",
+        listing_id: "listing-ml-001",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports reconciliation_alerts_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "reconciliation_alerts_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

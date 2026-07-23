@@ -1132,6 +1132,34 @@
 | **实现** | 对账直链、同步状态、Listing 同步作业、Agent 工具目录导出 |
 | **测试** | `loop-130-133.test.ts` |
 
+### Loop 206 — 补全 Loop 130：Channels 对账直链 CSV（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道页 `channels-reconciliation-direct-export`（`GET /reconciliation-alerts/export`） |
+| **测试** | `loop-130-133.test.ts`（`reconciliation_alerts_csv` POST） |
+
+### Loop 207 — 补全 Loop 131：Channels 同步运维状态 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道页 `channels-listing-sync-ops-export` |
+| **测试** | `loop-130-133.test.ts`（`listing_sync_ops_status_csv` POST） |
+
+### Loop 208 — 补全 Loop 132：双通道 Listing 同步作业 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道页 Amazon `channel-listing-sync-export-amz` |
+| **测试** | `loop-130-133.test.ts`（`listing_sync_jobs_listing_csv` POST） |
+
+### Loop 209 — 补全 Loop 133：运维中心 Agent 工具目录 CSV（P4-E1-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维中心 `ops-agent-tools-export`（与 Copilot 工具目录一致） |
+| **测试** | 沿用 `loop-130-133.test.ts` |
+
 ### Loop 134 — 重算批处理汇总 CSV（P5）
 
 | 项 | 内容 |
@@ -1731,3 +1759,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.15 | 2026-07-23 | Loop 194–197 pricing snapshot row, cross-channel row, curve point, agent tool row CSV + Web |
 | v7.16 | 2026-07-23 | Loop 198–201 readiness check, milestone, product check, feature flag row CSV + Web |
 | v7.17 | 2026-07-23 | Loop 202–205 i18n glossary, notification templates API/CSV + Web; Story 完成度快照 |
+| v7.18 | 2026-07-23 | Loop 206–209 补全 Loop 130–133 Channels/Ops Web 导出与 export POST 测 |
