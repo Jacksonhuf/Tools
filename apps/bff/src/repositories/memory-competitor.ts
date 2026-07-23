@@ -116,6 +116,16 @@ export class MemoryCompetitorRepository implements CompetitorRepository {
     );
   }
 
+  async getObservation(
+    observationId: string
+  ): Promise<PriceObservationRecord | undefined> {
+    for (const list of observations.values()) {
+      const found = list.find((o) => o.id === observationId);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
   resetForTests(): void {
     offers.clear();
     observations.clear();

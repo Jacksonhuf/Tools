@@ -899,8 +899,30 @@ export async function fetchPriceHistory(
   );
   if (!res.ok) throw new Error(`price-history ${res.status}`);
   return res.json() as Promise<{
-    observations: Array<{ effective_price: number; observed_at: string }>;
+    observations: Array<{
+      id: string;
+      effective_price: number;
+      observed_at: string;
+    }>;
   }>;
+}
+
+export async function downloadPriceObservationCsv(
+  locale: string,
+  observationId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/price-observations/${encodeURIComponent(observationId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`price-observation-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `price-observation-${observationId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function downloadPriceHistoryCsv(
@@ -936,6 +958,39 @@ export async function downloadRepricingEventsCsv(
   const a = document.createElement("a");
   a.href = url;
   a.download = `repricing-events-${listingId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function fetchListingRepricingEvents(
+  locale: string,
+  listingId: string,
+  limit = 20
+) {
+  const res = await fetch(
+    `/api/v1/listings/${encodeURIComponent(listingId)}/repricing-events?limit=${limit}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-events ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{ id: string; type: string; status: string }>;
+  }>;
+}
+
+export async function downloadRepricingEventCsv(
+  locale: string,
+  eventId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/repricing-events/${encodeURIComponent(eventId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-event-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `repricing-event-${eventId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1238,6 +1293,24 @@ export async function downloadAdjustmentBatchCsv(
     { kind: "adjustment_batch_csv", batch_id: batchId },
     `adjustment-batch-${batchId}.csv`
   );
+}
+
+export async function downloadAdjustmentBatchIndexCsv(
+  locale: string,
+  batchId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/adjustment-batches/${encodeURIComponent(batchId)}/index/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`adjustment-batch-index-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `adjustment-batch-index-${batchId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function downloadReconciliationAlertsExport(
@@ -2738,6 +2811,24 @@ export async function downloadAgentDigestCsv(
   const a = document.createElement("a");
   a.href = url;
   a.download = "agent-digest.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadAgentDigestDateCsv(
+  locale: string,
+  date: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/digest/daily/${encodeURIComponent(date)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`agent-digest-date-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `agent-digest-${date}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

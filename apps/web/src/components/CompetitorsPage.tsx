@@ -9,7 +9,10 @@ import {
   downloadCompetitorCurveCsv,
   downloadCompetitorCurveDirect,
   downloadPriceHistoryCsv,
+  downloadPriceObservationCsv,
   downloadRepricingEventsCsv,
+  downloadRepricingEventCsv,
+  fetchListingRepricingEvents,
   downloadCompetitorOffersCsv,
   downloadCompetitorOfferCsv,
   downloadCompetitorAnchorCsv,
@@ -52,6 +55,12 @@ export function CompetitorsPage() {
   const [ruleFrozen, setRuleFrozen] = useState(false);
   const [staleFrozen, setStaleFrozen] = useState(false);
   const [ingestFailed, setIngestFailed] = useState(false);
+  const [latestObservationId, setLatestObservationId] = useState<string | null>(
+    null
+  );
+  const [latestRepricingEventId, setLatestRepricingEventId] = useState<
+    string | null
+  >(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -67,6 +76,9 @@ export function CompetitorsPage() {
       );
       const hist = await fetchPriceHistory(locale, listingId, "7d");
       setHistoryCount(hist.observations.length);
+      setLatestObservationId(hist.observations[0]?.id ?? null);
+      const events = await fetchListingRepricingEvents(locale, listingId);
+      setLatestRepricingEventId(events.items[0]?.id ?? null);
       const curve = await fetchCompetitorCurve(locale, listingId, "7d");
       setCurveDays(curve.points.length);
       const ingest = await fetchIngestStatus(locale, listingId);
@@ -276,6 +288,20 @@ export function CompetitorsPage() {
         </button>
         <button
           type="button"
+          data-testid="competitor-price-observation-export"
+          disabled={!latestObservationId}
+          onClick={() => {
+            const observationId = latestObservationId;
+            if (!observationId) return;
+            void downloadPriceObservationCsv(locale, observationId).then(() =>
+              setMessage(t("priceObservationExportDone"))
+            );
+          }}
+        >
+          {t("priceObservationExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="competitor-repricing-events-export"
           onClick={() =>
             void downloadRepricingEventsCsv(locale, listingId).then(() =>
@@ -284,6 +310,20 @@ export function CompetitorsPage() {
           }
         >
           {t("repricingEventsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-event-export"
+          disabled={!latestRepricingEventId}
+          onClick={() => {
+            const eventId = latestRepricingEventId;
+            if (!eventId) return;
+            void downloadRepricingEventCsv(locale, eventId).then(() =>
+              setMessage(t("repricingEventExportDone"))
+            );
+          }}
+        >
+          {t("repricingEventExportCsv")}
         </button>
         <button
           type="button"

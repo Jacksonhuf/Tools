@@ -52,5 +52,8 @@ export interface CompetitorRepository {
     listingId: string,
     since: Date
   ): Promise<PriceObservationRecord[]>;
+  getObservation(
+    observationId: string
+  ): Promise<PriceObservationRecord | undefined>;
   resetForTests?(): void;
 }
