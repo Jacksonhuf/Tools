@@ -55,6 +55,9 @@ import {
   downloadProductReadinessCsv,
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
+  downloadDigestQueuedJobsSummaryCsv,
+  downloadChannelAdapterStatusCsv,
+  downloadRuleCompilerStatusCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -283,6 +286,39 @@ export function OpsCenterPage() {
           }
         >
           {t("opsProductReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-jobs-summary-export"
+          onClick={() =>
+            void downloadDigestQueuedJobsSummaryCsv(locale).then(() =>
+              setMessage(t("opsDigestJobsSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsDigestJobsSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-channel-adapter-export"
+          onClick={() =>
+            void downloadChannelAdapterStatusCsv(locale).then(() =>
+              setMessage(t("opsChannelAdapterExportDone"))
+            )
+          }
+        >
+          {t("opsChannelAdapterExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-rule-compiler-export"
+          onClick={() =>
+            void downloadRuleCompilerStatusCsv(locale).then(() =>
+              setMessage(t("opsRuleCompilerExportDone"))
+            )
+          }
+        >
+          {t("opsRuleCompilerExportCsv")}
         </button>
       </div>
 

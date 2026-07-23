@@ -14,6 +14,8 @@ import {
   downloadListingSyncOpsStatusCsv,
   downloadReconciliationAlertsDirectCsv,
   downloadCompetitorAnchorCsv,
+  downloadRuleCompilerStatusCsv,
+  downloadDigestQueuedJobsSummaryCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -280,6 +282,28 @@ export function ChannelsPage() {
           }
         >
           {t("channelsCompetitorAnchorAmzExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-rule-compiler-export"
+          onClick={() =>
+            void downloadRuleCompilerStatusCsv(locale).then(() =>
+              setMessage(t("channelsRuleCompilerExportDone"))
+            )
+          }
+        >
+          {t("channelsRuleCompilerExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-jobs-summary-export"
+          onClick={() =>
+            void downloadDigestQueuedJobsSummaryCsv(locale).then(() =>
+              setMessage(t("channelsDigestJobsSummaryExportDone"))
+            )
+          }
+        >
+          {t("channelsDigestJobsSummaryExportCsv")}
         </button>
       </div>
 

@@ -12,6 +12,8 @@ import {
   downloadAgentMilestoneCsv,
   downloadAgentReadinessCsv,
   downloadCompetitorAnchorCsv,
+  downloadDigestQueuedJobsSummaryCsv,
+  downloadRuleCompilerStatusCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -82,6 +84,28 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessCompetitorAnchorExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-jobs-summary-export"
+            onClick={() =>
+              void downloadDigestQueuedJobsSummaryCsv(locale).then(() =>
+                setMessage(t("readinessDigestJobsSummaryExportDone"))
+              )
+            }
+          >
+            {t("readinessDigestJobsSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-rule-compiler-export"
+            onClick={() =>
+              void downloadRuleCompilerStatusCsv(locale).then(() =>
+                setMessage(t("readinessRuleCompilerExportDone"))
+              )
+            }
+          >
+            {t("readinessRuleCompilerExportCsv")}
           </button>
           <button
             type="button"

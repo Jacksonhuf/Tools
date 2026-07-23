@@ -21,6 +21,9 @@ import {
   downloadListingIngestStatusCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadAgentReadinessCsv,
+  downloadChannelAdapterStatusCsv,
+  downloadRuleCompilerStatusCsv,
+  downloadDigestQueuedJobsSummaryCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -266,6 +269,39 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorAgentReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-channel-adapter-export"
+          onClick={() =>
+            void downloadChannelAdapterStatusCsv(locale).then(() =>
+              setMessage(t("competitorChannelAdapterExportDone"))
+            )
+          }
+        >
+          {t("competitorChannelAdapterExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-rule-compiler-export"
+          onClick={() =>
+            void downloadRuleCompilerStatusCsv(locale).then(() =>
+              setMessage(t("competitorRuleCompilerExportDone"))
+            )
+          }
+        >
+          {t("competitorRuleCompilerExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-jobs-summary-export"
+          onClick={() =>
+            void downloadDigestQueuedJobsSummaryCsv(locale).then(() =>
+              setMessage(t("competitorDigestJobsSummaryExportDone"))
+            )
+          }
+        >
+          {t("competitorDigestJobsSummaryExportCsv")}
         </button>
         <button
           type="button"
