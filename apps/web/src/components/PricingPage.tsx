@@ -5,6 +5,7 @@ import {
   applyLandedFromCostSheet,
   createCostSheetRow,
   downloadCostSheetsCsv,
+  downloadCostSheetCsv,
   downloadSkusCatalogCsv,
   downloadSkuCatalogCsv,
   downloadCrossChannelGuardCsv,
@@ -307,6 +308,20 @@ export function PricingPage() {
           }
         >
           {t("costSheetExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="cost-sheet-row-export"
+          disabled={!costSheets[0]}
+          onClick={() => {
+            const sheet = costSheets[0];
+            if (!sheet) return;
+            void downloadCostSheetCsv(locale, "demo-sku-001", sheet.id).then(() =>
+              setMessage(t("costSheetRowExportDone"))
+            );
+          }}
+        >
+          {t("costSheetRowExportCsv")}
         </button>
         <ul>
           {costSheets.slice(0, 3).map((s) => (
