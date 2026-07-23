@@ -1920,6 +1920,87 @@ export async function downloadFeatureFlagCsv(
   URL.revokeObjectURL(url);
 }
 
+export interface I18nGlossaryTerm {
+  key: string;
+  category: string;
+  label: string;
+  description: string;
+}
+
+export async function fetchI18nGlossary(locale: string) {
+  const res = await fetch(`/api/v1/i18n/glossary`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`i18n-glossary ${res.status}`);
+  return res.json() as Promise<{ locale: string; terms: I18nGlossaryTerm[] }>;
+}
+
+export async function downloadI18nGlossaryCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/i18n/glossary/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`i18n-glossary-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `i18n-glossary-${locale}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadI18nGlossaryTermCsv(
+  locale: string,
+  termKey: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/i18n/glossary/terms/export?term_key=${encodeURIComponent(termKey)}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`i18n-glossary-term-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `i18n-glossary-term-${termKey}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadNotificationTemplatesCsv(
+  locale: string
+): Promise<void> {
+  const res = await fetch(`/api/v1/notifications/templates/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-templates-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notification-templates-${locale}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadNotificationTemplateCsv(
+  locale: string,
+  templateId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/notifications/templates/row/export?template_id=${encodeURIComponent(templateId)}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`notification-template-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notification-template.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/auth/status/export`, {
     headers: headers(locale),

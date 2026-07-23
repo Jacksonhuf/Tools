@@ -209,6 +209,24 @@ paths:
   /api/v1/feature-flags/{flagKey}/export:
     get:
       summary: Download one feature flag as CSV
+  /api/v1/i18n/glossary:
+    get:
+      summary: Localized waterfall/tax glossary (P0-E7-04)
+  /api/v1/i18n/glossary/export:
+    get:
+      summary: Download glossary as CSV
+  /api/v1/i18n/glossary/terms/export:
+    get:
+      summary: Download one glossary term as CSV (query term_key)
+  /api/v1/notifications/templates:
+    get:
+      summary: Repricing notification templates zh/en/es-MX (P2-E3-05)
+  /api/v1/notifications/templates/export:
+    get:
+      summary: Download all notification templates as CSV
+  /api/v1/notifications/templates/row/export:
+    get:
+      summary: Download one notification template as CSV (query template_id)
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)

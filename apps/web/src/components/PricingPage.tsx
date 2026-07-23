@@ -11,6 +11,9 @@ import {
   downloadCrossChannelGuardCsv,
   downloadPricingSnapshotCsv,
   downloadPricingContextCsv,
+  downloadI18nGlossaryCsv,
+  downloadI18nGlossaryTermCsv,
+  fetchI18nGlossary,
   fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
@@ -51,22 +54,27 @@ export function PricingPage() {
   const [costSheets, setCostSheets] = useState<CostSheetRow[]>([]);
   const [batchNo, setBatchNo] = useState("BATCH-DEMO-01");
   const [cogsAmount, setCogsAmount] = useState(1000);
+  const [layerLabels, setLayerLabels] = useState<Record<string, string>>({});
 
   const locale = i18n.language;
 
   const loadAll = useCallback(async () => {
     setError(null);
     try {
-      const [ml, amz, skuList, xch, sheets] = await Promise.all([
+      const [ml, amz, skuList, xch, sheets, glossary] = await Promise.all([
         fetchPricingContext(locale, "MERCADO_LIBRE"),
         fetchPricingContext(locale, "AMAZON_MX"),
         fetchSkus(locale),
         fetchCrossChannelGuard(locale),
         fetchCostSheets(locale, "demo-sku-001"),
+        fetchI18nGlossary(locale),
       ]);
       setContextByChannel({ MERCADO_LIBRE: ml, AMAZON_MX: amz });
       setCrossChannelWarning(xch.warning);
       setCostSheets(sheets.items);
+      setLayerLabels(
+        Object.fromEntries(glossary.terms.map((term) => [term.key, term.label]))
+      );
       const first = skuList.items[0];
       if (first) setLandedEdit(first.landed_cost_mxn);
     } catch (e) {
@@ -392,7 +400,45 @@ export function PricingPage() {
         <button type="button" data-testid="simulate-both" onClick={() => void runSimulateAll()}>
           {t("simulateBoth")}
         </button>
+        <button
+          type="button"
+          data-testid="i18n-glossary-export"
+          onClick={() =>
+            void downloadI18nGlossaryCsv(locale).then(() =>
+              setMessage(t("glossaryExportDone"))
+            )
+          }
+        >
+          {t("glossaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="i18n-glossary-term-export"
+          onClick={() =>
+            void downloadI18nGlossaryTermCsv(locale, "LANDED").then(() =>
+              setMessage(t("glossaryTermExportDone"))
+            )
+          }
+        >
+          {t("glossaryTermExportCsv")}
+        </button>
       </section>
+
+      {layerLabels.LANDED && (
+        <section className="card" data-testid="pricing-glossary-hint">
+          <h2>{t("glossaryTitle")}</h2>
+          <p>{t("glossaryHint")}</p>
+          <ul>
+            {["LANDED", "LIST_PRICE", "IVA_DISPLAY"].map((key) =>
+              layerLabels[key] ? (
+                <li key={key}>
+                  <code>{key}</code> — {layerLabels[key]}
+                </li>
+              ) : null
+            )}
+          </ul>
+        </section>
+      )}
 
       <div className="dual-channel" data-testid="dual-channel-grid">
         {mlCtx && (
@@ -424,6 +470,7 @@ export function PricingPage() {
                   }
                 );
               }}
+              layerLabels={layerLabels}
             />
           </section>
         )}
@@ -456,6 +503,7 @@ export function PricingPage() {
                   }
                 );
               }}
+              layerLabels={layerLabels}
             />
           </section>
         )}

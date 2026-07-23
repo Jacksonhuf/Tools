@@ -34,6 +34,7 @@ interface Props {
   floorLabel: string;
   guardsLabel: string;
   noGuardsLabel: string;
+  layerLabels?: Record<string, string>;
 }
 
 export function ChannelPricingColumn({
@@ -50,6 +51,7 @@ export function ChannelPricingColumn({
   floorLabel,
   guardsLabel,
   noGuardsLabel,
+  layerLabels,
 }: Props) {
   const floor =
     channel === "MERCADO_LIBRE"
@@ -77,6 +79,7 @@ export function ChannelPricingColumn({
           <WaterfallChart
             rows={simulation.waterfall}
             formatAmount={formatAmount}
+            layerLabels={layerLabels}
           />
           <h3>{guardsLabel}</h3>
           {simulation.guards.length === 0 ? (

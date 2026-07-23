@@ -11,8 +11,11 @@ const LAYER_LABELS: Record<string, string> = {
   LIST_PRICE: "LIST_PRICE",
 };
 
-export function layerLabel(layerId: string): string {
-  return LAYER_LABELS[layerId] ?? layerId;
+export function layerLabel(
+  layerId: string,
+  labels?: Record<string, string>
+): string {
+  return labels?.[layerId] ?? LAYER_LABELS[layerId] ?? layerId;
 }
 
 /** Largest amount first for visual cascade (P0-E6-05) */
