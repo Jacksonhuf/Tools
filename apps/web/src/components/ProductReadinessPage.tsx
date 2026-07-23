@@ -6,6 +6,8 @@ import {
   downloadFeatureFlagsCsv,
   downloadProductReadinessCsv,
   downloadP5ReadinessCsv,
+  downloadP4ReadinessCsv,
+  downloadP3ReadinessCsv,
   downloadAgentMilestonesCsv,
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
@@ -75,6 +77,28 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessProductExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-p3-export"
+            onClick={() =>
+              void downloadP3ReadinessCsv(locale).then(() =>
+                setMessage(t("readinessP3ExportDone"))
+              )
+            }
+          >
+            {t("readinessP3ExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-p4-export"
+            onClick={() =>
+              void downloadP4ReadinessCsv(locale).then(() =>
+                setMessage(t("readinessP4ExportDone"))
+              )
+            }
+          >
+            {t("readinessP4ExportCsv")}
           </button>
           <button
             type="button"

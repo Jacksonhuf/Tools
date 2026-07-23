@@ -128,7 +128,7 @@ import {
   listCategoryRuleTemplates,
 } from "./category-rule-template.js";
 import { skuCategoryRuleTemplateToCsv } from "./sku-category-rule-template-csv.js";
-import { listSharedFeeTemplates } from "./tenant-fee-template-share.js";
+import { listSharedFeeTemplates, getSharedFeeTemplate } from "./tenant-fee-template-share.js";
 import { applySharedFeeTemplateToSku } from "./shared-fee-template-apply.js";
 import { getCrossChannelGuardForSku } from "./cross-channel-guard.js";
 import { crossChannelGuardToCsv } from "./cross-channel-guard-csv.js";
@@ -144,6 +144,10 @@ import { versionBackupToCsv } from "./version-backup-csv.js";
 import { priceVersionToCsv } from "./price-version-csv.js";
 import { evaluateP5Readiness } from "./p5-readiness.js";
 import { p5ReadinessToCsv } from "./p5-readiness-csv.js";
+import { evaluateP3Readiness } from "./p3-readiness.js";
+import { p3ReadinessToCsv } from "./p3-readiness-csv.js";
+import { evaluateAgentReadiness } from "./agent-readiness.js";
+import { p4ReadinessToCsv } from "./p4-readiness-csv.js";
 import { validateVersionBackupSnapshot } from "./version-backup-validate.js";
 import {
   createStoredExport,
@@ -283,7 +287,6 @@ import {
   processDigestQueue,
   resetDigestJobQueueForTests,
 } from "./digest-job-queue.js";
-import { evaluateAgentReadiness } from "./agent-readiness.js";
 import {
   getProductMilestoneStatus,
   getProductReadinessSummary,
@@ -1469,6 +1472,7 @@ export function createApp(options: CreateAppOptions = {}) {
       session_id?: string;
       version_id?: string;
       shop_id?: string;
+      fee_template_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1959,6 +1963,32 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
       }
       content = shopsToCsv([shopPublicView(shop)], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "p3_readiness_csv") {
+      content = p3ReadinessToCsv(
+        evaluateP3Readiness(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "p4_readiness_csv") {
+      content = p4ReadinessToCsv(
+        evaluateAgentReadiness(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "shared_fee_template_csv") {
+      const templateId = body.fee_template_id ?? "fee-tpl-ml-electronics";
+      const tpl = getSharedFeeTemplate(tenantId, templateId);
+      if (!tpl) {
+        throw new HTTPException(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
+      }
+      content = sharedFeeTemplatesToCsv([tpl], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "tenant_shared_fee_templates_csv") {
+      content = sharedFeeTemplatesToCsv(
+        listSharedFeeTemplates(tenantId),
+        new Date().toISOString()
+      );
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -3257,6 +3287,25 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(tpl);
   });
 
+  app.get("/api/v1/tenants/:tenantId/shared-fee-templates/export", async (c) => {
+    const tenantId = c.req.param("tenantId");
+    const headerTenant = c.get("tenantId");
+    if (tenantId !== headerTenant) {
+      throw new HTTPException(403, { message: "TENANT_MISMATCH" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = sharedFeeTemplatesToCsv(
+      listSharedFeeTemplates(tenantId),
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="shared-fee-templates-${tenantId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/tenants/:tenantId/shared-fee-templates", async (c) => {
     const tenantId = c.req.param("tenantId");
     const headerTenant = c.get("tenantId");
@@ -3264,6 +3313,23 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(403, { message: "TENANT_MISMATCH" });
     }
     return c.json({ items: listSharedFeeTemplates(tenantId) });
+  });
+
+  app.get("/api/v1/shared-fee-templates/:templateId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const templateId = c.req.param("templateId");
+    const tpl = getSharedFeeTemplate(tenantId, templateId);
+    if (!tpl) {
+      throw new HTTPException(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = sharedFeeTemplatesToCsv([tpl], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="shared-fee-template-${templateId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/shared-fee-templates/export", async (c) => {
@@ -3614,6 +3680,28 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/agent/milestones", async (c) => {
     return c.json(getProductMilestoneStatus());
+  });
+
+  app.get("/api/v1/product/readiness/p3/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = p3ReadinessToCsv(evaluateP3Readiness(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="p3-readiness.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/product/readiness/p4/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = p4ReadinessToCsv(evaluateAgentReadiness(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="p4-readiness.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/product/readiness/p5/export", async (c) => {

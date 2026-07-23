@@ -24,6 +24,7 @@ import {
   downloadRuleCompilerStatusCsv,
   downloadDigestScheduleCsv,
   downloadCopilotSessionCsv,
+  downloadP4ReadinessCsv,
   downloadAgentToolsCsv,
   downloadAgentReadinessCsv,
   updateDigestSchedule,
@@ -305,7 +306,18 @@ export function CopilotPage() {
       <p className="hint">{t("copilotHint")}</p>
       {p4Ready != null && (
         <p className="hint" data-testid="p4-readiness">
-          P4: {p4Ready ? t("copilotP4Ready") : t("copilotP4NotReady")}
+          P4: {p4Ready ? t("copilotP4Ready") : t("copilotP4NotReady")}{" "}
+          <button
+            type="button"
+            data-testid="copilot-p4-readiness-export"
+            onClick={() =>
+              void downloadP4ReadinessCsv(locale).then(() =>
+                setMessage(t("readinessP4ExportDone"))
+              )
+            }
+          >
+            {t("readinessP4ExportCsv")}
+          </button>
         </p>
       )}
       {compilerLabel && (
