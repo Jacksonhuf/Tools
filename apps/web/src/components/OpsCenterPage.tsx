@@ -4,6 +4,7 @@ import {
   batchChannelPublish,
   DEMO_SKU,
   downloadPricingSnapshotCsv,
+  downloadPricingSnapshotRowCsv,
   downloadTenantPricingSnapshotsCsv,
   downloadVersionBackup,
   downloadVersionBackupCsv,
@@ -326,6 +327,19 @@ export function OpsCenterPage() {
           }
         >
           {t("opsTenantPricingExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-export-pricing-row-csv"
+          onClick={() =>
+            void downloadPricingSnapshotRowCsv(
+              locale,
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            ).then(() => setMessage(t("opsPricingRowExportDone")))
+          }
+        >
+          {t("opsPricingRowExportCsv")}
         </button>
         <button
           type="button"

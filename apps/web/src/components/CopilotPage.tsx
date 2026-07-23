@@ -31,6 +31,7 @@ import {
   downloadCopilotSessionCsv,
   downloadP4ReadinessCsv,
   downloadAgentToolsCsv,
+  downloadAgentToolRowCsv,
   downloadAgentReadinessCsv,
   updateDigestSchedule,
   runDigestRunDue,
@@ -427,6 +428,20 @@ export function CopilotPage() {
             onClick={() => void downloadAgentToolsCsv(locale)}
           >
             {t("copilotToolsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-tool-row-export"
+            disabled={!tools[0]}
+            onClick={() => {
+              const toolName = tools[0]?.name;
+              if (!toolName) return;
+              void downloadAgentToolRowCsv(locale, toolName).then(() =>
+                setMessage(t("copilotToolRowExportDone"))
+              );
+            }}
+          >
+            {t("copilotToolRowExportCsv")}
           </button>
           <button
             type="button"

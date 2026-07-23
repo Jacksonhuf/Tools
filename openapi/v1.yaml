@@ -185,6 +185,9 @@ paths:
   /api/v1/reports/pricing-snapshots/export:
     get:
       summary: Download all SKU pricing snapshot rows for tenant as CSV
+  /api/v1/reports/pricing-snapshots/{skuId}/rows/{channel}/export:
+    get:
+      summary: Download one pricing snapshot row (SKU + channel) as CSV
   /api/v1/reports/reconciliation-alerts:
     get:
       summary: Reconciliation alerts export (JSON or CSV)
@@ -416,6 +419,9 @@ paths:
   /api/v1/agent/tools/export:
     get:
       summary: Download agent tool catalog as CSV
+  /api/v1/agent/tools/{toolName}/export:
+    get:
+      summary: Download one agent tool catalog row as CSV
   /api/v1/agent/tools/invoke:
     post:
       summary: Invoke agent tool with audit (TC-INT-AGENT-001/004)
@@ -472,6 +478,9 @@ paths:
   /api/v1/cross-channel/dashboard/export:
     get:
       summary: Download cross-channel dashboard as CSV
+  /api/v1/cross-channel/dashboard/{skuId}/export:
+    get:
+      summary: Download one cross-channel dashboard SKU row as CSV
   /api/v1/skus/{skuId}/cost-sheets/export:
     get:
       summary: Download cost sheet rows for SKU as CSV
@@ -590,6 +599,9 @@ paths:
   /api/v1/listings/{listingId}/competitors/curve/export:
     get:
       summary: Download competitor price curve as CSV (P2-E1-03)
+  /api/v1/listings/{listingId}/competitors/curve/{curveDate}/export:
+    get:
+      summary: Download one competitor curve day as CSV
   /api/v1/adjustment-batches/{batchId}/export:
     get:
       summary: Download adjustment batch as CSV (P0-E5-04)

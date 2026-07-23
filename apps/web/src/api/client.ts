@@ -1026,6 +1026,26 @@ export async function fetchCompetitorCurve(
   }>;
 }
 
+export async function downloadCompetitorCurvePointCsv(
+  locale: string,
+  listingId: string,
+  curveDate: string,
+  range: "7d" | "30d" = "7d"
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${encodeURIComponent(listingId)}/competitors/curve/${encodeURIComponent(curveDate)}/export?range=${range}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-curve-point-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `competitor-curve-point-${listingId}-${curveDate}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadWaterfallExportCsv(
   locale: string,
   body: {
@@ -1700,6 +1720,24 @@ export async function downloadCrossChannelDashboardCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadCrossChannelDashboardRowCsv(
+  locale: string,
+  skuId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/cross-channel/dashboard/${encodeURIComponent(skuId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`cross-channel-row-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cross-channel-dashboard-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadCostSheetsCsv(
   locale: string,
   skuId: string
@@ -2073,6 +2111,25 @@ export async function downloadPricingSnapshotCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadPricingSnapshotRowCsv(
+  locale: string,
+  skuId: string,
+  channel: Channel
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/reports/pricing-snapshots/${encodeURIComponent(skuId)}/rows/${encodeURIComponent(channel)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`pricing-snapshot-row-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pricing-snapshot-row-${skuId}-${channel}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadTenantPricingSnapshotsCsv(
   locale: string
 ): Promise<void> {
@@ -2202,6 +2259,24 @@ export async function downloadAgentToolsCsv(locale: string): Promise<void> {
   const a = document.createElement("a");
   a.href = url;
   a.download = "agent-tools.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadAgentToolRowCsv(
+  locale: string,
+  toolName: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/tools/${encodeURIComponent(toolName)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`agent-tool-row-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `agent-tool-${toolName}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
