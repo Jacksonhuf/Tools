@@ -140,6 +140,24 @@ export async function downloadCategoryRuleTemplatesCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadCategoryRuleTemplateCsv(
+  locale: string,
+  categoryId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/category-rule-templates/${encodeURIComponent(categoryId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`category-rule-template-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `category-rule-template-${categoryId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadSharedFeeTemplatesCsv(
   locale: string
 ): Promise<void> {
@@ -301,6 +319,25 @@ export async function fetchPricingContext(locale: string, channel: Channel) {
   );
   if (!res.ok) throw new Error(`context ${res.status}`);
   return res.json();
+}
+
+export async function downloadPricingContextCsv(
+  locale: string,
+  channel: Channel,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/pricing-context/export?channel=${channel}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`pricing-context-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pricing-context-${skuId}-${channel.toLowerCase()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export interface CrossChannelGuardResponse {
@@ -1500,6 +1537,51 @@ export async function fetchRepricingBatchJobsSummary(locale: string) {
   }>;
 }
 
+export async function fetchRepricingBatchJobs(
+  locale: string,
+  limit = 5
+): Promise<{
+  items: Array<{ job_id: string; status: string }>;
+}> {
+  const res = await fetch(
+    `/api/v1/repricing-batch/jobs?limit=${encodeURIComponent(String(limit))}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-batch-jobs ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{ job_id: string; status: string }>;
+  }>;
+}
+
+export async function downloadRepricingBatchJobCsv(
+  locale: string,
+  jobId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/repricing-batch/jobs/${encodeURIComponent(jobId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`repricing-batch-job-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `repricing-batch-job-${jobId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadLatestRepricingBatchJobCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchRepricingBatchJobs(locale, 1);
+  const jobId = items[0]?.job_id;
+  if (!jobId) {
+    throw new Error("REPRICING_BATCH_JOB_EMPTY");
+  }
+  await downloadRepricingBatchJobCsv(locale, jobId);
+}
+
 export async function downloadRepricingBatchJobsCsv(
   locale: string
 ): Promise<void> {
@@ -2210,6 +2292,24 @@ export async function createCopilotSession(
     messages: CopilotChatMessage[];
     context_bootstrapped: boolean;
   }>;
+}
+
+export async function downloadCopilotSessionCsv(
+  locale: string,
+  sessionId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/copilot/sessions/${encodeURIComponent(sessionId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`copilot-session-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `copilot-session-${sessionId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export type CopilotChatMessage = {

@@ -23,6 +23,7 @@ import {
   downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsCsv,
   downloadRepricingBatchJobsSummaryCsv,
+  downloadLatestRepricingBatchJobCsv,
   downloadRepricingBatchShardPlanCsv,
   downloadRepricingQueueCsv,
   downloadSkuRepricingQueueCsv,
@@ -474,6 +475,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingBatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("opsRepricingBatchJobExportDone")))
+              .catch(() => setError(t("opsRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("opsRepricingBatchJobExportCsv")}
         </button>
         <button
           type="button"

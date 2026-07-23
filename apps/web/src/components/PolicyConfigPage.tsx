@@ -9,6 +9,7 @@ import {
   batchPatchSkuPolicies,
   fetchCategoryRuleTemplates,
   downloadCategoryRuleTemplatesCsv,
+  downloadCategoryRuleTemplateCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadSharedFeeTemplatesCsv,
 } from "../api/client";
@@ -175,6 +176,18 @@ export function PolicyConfigPage() {
           }
         >
           {t("categoryRuleTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-category-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("categoryRuleTemplateExportDone")))
+          }
+        >
+          {t("categoryRuleTemplateExportCsv")}
         </button>
         <button
           type="button"

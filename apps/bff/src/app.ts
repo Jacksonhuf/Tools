@@ -7,6 +7,8 @@ import {
   type GuardCode,
 } from "@mx-pricing/pricing-engine";
 import { buildPricingContext, runSimulate } from "./pricing-service.js";
+import { buildSkuPricingContextView } from "./pricing-context-view.js";
+import { pricingContextToCsv } from "./pricing-context-csv.js";
 import {
   type CatalogRepository,
   getCatalogRepository,
@@ -250,6 +252,7 @@ import {
   createCopilotSession,
   getCopilotSession,
 } from "./copilot-session.js";
+import { copilotSessionToCsv } from "./copilot-session-csv.js";
 import {
   buildPricingContextNarrative,
   copilotWelcomeMessage,
@@ -400,49 +403,52 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
-  app.get("/api/v1/skus/:skuId/pricing-context", async (c) => {
+  app.get("/api/v1/skus/:skuId/pricing-context/export", async (c) => {
     const tenantId = c.get("tenantId");
-    const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
-    if (!sku) {
-      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
-    }
+    const skuId = c.req.param("skuId");
     const channel = c.req.query("channel") as
       | "MERCADO_LIBRE"
       | "AMAZON_MX"
       | undefined;
-    const versions = await catalog.listVersions(sku.id);
-    const active = versions.find(
-      (v) => v.state === "active" && v.channel === (channel ?? "MERCADO_LIBRE")
+    const view = await buildSkuPricingContextView(
+      { catalog, competitors },
+      tenantId,
+      skuId,
+      c.get("locale"),
+      channel
     );
-    const ctx = buildPricingContext(sku, channel, c.get("locale"));
-    if (active) {
-      const locale = c.get("locale");
-      ctx.versions.active = {
-        version_id: active.id,
-        publish_price_mxn: active.publish_price_mxn,
-        publish_price: formatMoney({
-          locale,
-          currency: "MXN",
-          amount: active.publish_price_mxn,
-        }),
-        channel: active.channel as "MERCADO_LIBRE" | "AMAZON_MX",
-      };
+    if (!view) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    const ch = channel ?? "MERCADO_LIBRE";
-    const listingId = getListingIdForChannel(ch);
-    if (listingId) {
-      const withLatest = await mapOffersWithLatestObservations(
-        competitors,
-        listingId
-      );
-      Object.assign(ctx, {
-        competitors: {
-          offers: withLatest,
-          anchor: buildCompetitorAnchorSummary(withLatest),
-        },
-      });
+    const exportedAt = new Date().toISOString();
+    const csv = pricingContextToCsv(view, exportedAt);
+    const ch = view.channel.toLowerCase().replace("_", "-");
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="pricing-context-${skuId}-${ch}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/skus/:skuId/pricing-context", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const channel = c.req.query("channel") as
+      | "MERCADO_LIBRE"
+      | "AMAZON_MX"
+      | undefined;
+    const view = await buildSkuPricingContextView(
+      { catalog, competitors },
+      tenantId,
+      skuId,
+      c.get("locale"),
+      channel
+    );
+    if (!view) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    return c.json(ctx);
+    return c.json(view.context);
   });
 
   app.get("/api/v1/skus/:skuId/cross-channel-guard", async (c) => {
@@ -1407,6 +1413,9 @@ export function createApp(options: CreateAppOptions = {}) {
       sample?: number;
       date?: string;
       shard_total?: number;
+      job_id?: string;
+      category_id?: string;
+      session_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1823,6 +1832,51 @@ export function createApp(options: CreateAppOptions = {}) {
         template ?? null,
         new Date().toISOString()
       );
+      content_type = "text/csv";
+    } else if (kind === "pricing_context_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const channel = body.channel ?? "MERCADO_LIBRE";
+      const view = await buildSkuPricingContextView(
+        { catalog, competitors },
+        tenantId,
+        skuId,
+        c.get("locale"),
+        channel
+      );
+      if (!view) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      content = pricingContextToCsv(view, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "repricing_batch_job_csv") {
+      const jobId = body.job_id;
+      if (!jobId?.trim()) {
+        throw new HTTPException(400, { message: "JOB_ID_REQUIRED" });
+      }
+      const job = await getRepricingBatchJob(tenantId, jobId);
+      if (!job) {
+        throw new HTTPException(404, { message: "JOB_NOT_FOUND" });
+      }
+      content = repricingBatchJobsToCsv([job], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "category_rule_template_csv") {
+      const categoryId = body.category_id ?? "cat-electronics-mx";
+      const tpl = getCategoryRuleTemplate(tenantId, categoryId);
+      if (!tpl) {
+        throw new HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+      }
+      content = categoryRuleTemplatesToCsv([tpl], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "copilot_session_csv") {
+      const sessionId = body.session_id;
+      if (!sessionId?.trim()) {
+        throw new HTTPException(400, { message: "SESSION_ID_REQUIRED" });
+      }
+      const session = getCopilotSession(tenantId, sessionId);
+      if (!session) {
+        throw new HTTPException(404, { message: "SESSION_NOT_FOUND" });
+      }
+      content = copilotSessionToCsv(session, new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -3029,6 +3083,22 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: await listRepricingBatchJobs(tenantId, limit) });
   });
 
+  app.get("/api/v1/repricing-batch/jobs/:jobId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const job = await getRepricingBatchJob(tenantId, c.req.param("jobId"));
+    if (!job) {
+      throw new HTTPException(404, { message: "JOB_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = repricingBatchJobsToCsv([job], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="repricing-batch-job-${job.job_id}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/repricing-batch/jobs/:jobId", async (c) => {
     const tenantId = c.get("tenantId");
     const job = await getRepricingBatchJob(tenantId, c.req.param("jobId"));
@@ -3076,6 +3146,22 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="category-rule-templates.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/category-rule-templates/:categoryId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const tpl = getCategoryRuleTemplate(tenantId, c.req.param("categoryId"));
+    if (!tpl) {
+      throw new HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = categoryRuleTemplatesToCsv([tpl], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="category-rule-template-${tpl.category_id}.csv"`,
       },
     });
   });
@@ -3834,6 +3920,23 @@ export function createApp(options: CreateAppOptions = {}) {
       }
     }
     return c.json(out);
+  });
+
+  app.get("/api/v1/agent/copilot/sessions/:sessionId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const sessionId = c.req.param("sessionId");
+    const session = getCopilotSession(tenantId, sessionId);
+    if (!session) {
+      throw new HTTPException(404, { message: "SESSION_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = copilotSessionToCsv(session, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="copilot-session-${sessionId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/agent/copilot/sessions/:sessionId", async (c) => {

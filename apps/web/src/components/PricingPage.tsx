@@ -8,6 +8,7 @@ import {
   downloadSkusCatalogCsv,
   downloadCrossChannelGuardCsv,
   downloadPricingSnapshotCsv,
+  downloadPricingContextCsv,
   fetchCostSheets,
   fetchCrossChannelGuard,
   fetchPricingContext,
@@ -209,6 +210,17 @@ export function PricingPage() {
           }
         >
           {t("pricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-context-export-ml"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE").then(() =>
+              setMessage(t("pricingContextExportDone"))
+            )
+          }
+        >
+          {t("pricingContextExportCsv")}
         </button>
         <button
           type="button"
