@@ -6,6 +6,8 @@ import {
   downloadPricingSnapshotCsv,
   downloadTenantPricingSnapshotsCsv,
   downloadVersionBackup,
+  downloadVersionBackupCsv,
+  downloadPriceVersionCsv,
   fetchOpsMetrics,
   fetchWorkerStatus,
   importCostSheetsCsv,
@@ -324,6 +326,17 @@ export function OpsCenterPage() {
           onClick={() => void downloadVersionBackup(locale)}
         >
           {t("opsVersionBackup")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("opsVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("opsVersionBackupCsv")}
         </button>
       </section>
 
@@ -719,6 +732,20 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingQueueSkuExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-price-version-export"
+          disabled={items.length === 0}
+          onClick={() =>
+            items[0]
+              ? void downloadPriceVersionCsv(locale, items[0].version_id).then(
+                  () => setMessage(t("opsPriceVersionExportDone"))
+                )
+              : undefined
+          }
+        >
+          {t("opsPriceVersionExportCsv")}
         </button>
         <table className="batch-table" data-testid="repricing-queue-table">
           <thead>

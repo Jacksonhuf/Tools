@@ -140,6 +140,10 @@ import {
   parseLandedCostCsv,
 } from "./landed-cost-import.js";
 import { buildVersionBackupSnapshot } from "./version-backup-service.js";
+import { versionBackupToCsv } from "./version-backup-csv.js";
+import { priceVersionToCsv } from "./price-version-csv.js";
+import { evaluateP5Readiness } from "./p5-readiness.js";
+import { p5ReadinessToCsv } from "./p5-readiness-csv.js";
 import { validateVersionBackupSnapshot } from "./version-backup-validate.js";
 import {
   createStoredExport,
@@ -597,6 +601,23 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/price-versions/:versionId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const versionId = c.req.param("versionId");
+    const version = await catalog.getVersion(tenantId, versionId);
+    if (!version) {
+      throw new HTTPException(404, { message: "VERSION_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = priceVersionToCsv(version, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="price-version-${versionId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/price-versions/:versionId", async (c) => {
     const tenantId = c.get("tenantId");
     const versionId = c.req.param("versionId");
@@ -1004,6 +1025,23 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ items: items.map(shopPublicView) });
   });
 
+  app.get("/api/v1/shops/:shopId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const shop = await shops.getShop(tenantId, shopId);
+    if (!shop) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = shopsToCsv([shopPublicView(shop)], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="shop-${shopId}.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/shops/export", async (c) => {
     const tenantId = c.get("tenantId");
     const exportedAt = new Date().toISOString();
@@ -1061,6 +1099,19 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="ops-metrics.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/ops/version-backup/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const exportedAt = new Date().toISOString();
+    const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
+    const csv = versionBackupToCsv(snapshot, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="version-backup-${tenantId}.csv"`,
       },
     });
   });
@@ -1416,6 +1467,8 @@ export function createApp(options: CreateAppOptions = {}) {
       job_id?: string;
       category_id?: string;
       session_id?: string;
+      version_id?: string;
+      shop_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1877,6 +1930,35 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "SESSION_NOT_FOUND" });
       }
       content = copilotSessionToCsv(session, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "price_version_csv") {
+      const versionId = body.version_id;
+      if (!versionId?.trim()) {
+        throw new HTTPException(400, { message: "VERSION_ID_REQUIRED" });
+      }
+      const version = await catalog.getVersion(tenantId, versionId);
+      if (!version) {
+        throw new HTTPException(404, { message: "VERSION_NOT_FOUND" });
+      }
+      content = priceVersionToCsv(version, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "version_backup_rows_csv") {
+      const snapshot = await buildVersionBackupSnapshot(catalog, tenantId);
+      content = versionBackupToCsv(snapshot, new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "p5_readiness_csv") {
+      content = p5ReadinessToCsv(
+        evaluateP5Readiness(),
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "shop_csv") {
+      const shopId = body.shop_id ?? "shop-ml-demo";
+      const shop = await shops.getShop(tenantId, shopId);
+      if (!shop) {
+        throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      }
+      content = shopsToCsv([shopPublicView(shop)], new Date().toISOString());
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -3532,6 +3614,17 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/agent/milestones", async (c) => {
     return c.json(getProductMilestoneStatus());
+  });
+
+  app.get("/api/v1/product/readiness/p5/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = p5ReadinessToCsv(evaluateP5Readiness(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="p5-readiness.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/product/readiness/export", async (c) => {

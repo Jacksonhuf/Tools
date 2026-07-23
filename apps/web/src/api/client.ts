@@ -676,6 +676,24 @@ export async function downloadShopsCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadShopCsv(
+  locale: string,
+  shopId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/shops/${encodeURIComponent(shopId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`shop-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `shop-${shopId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function startShopOAuth(locale: string, shopId: string) {
   const res = await fetch(`/api/v1/shops/${shopId}/oauth/start`, {
     method: "POST",
@@ -1776,6 +1794,38 @@ export async function downloadVersionBackup(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadVersionBackupCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/ops/version-backup/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`version-backup-csv-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "version-backup.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadPriceVersionCsv(
+  locale: string,
+  versionId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/price-versions/${encodeURIComponent(versionId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`price-version-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `price-version-${versionId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchWorkerStatus(locale: string) {
   const res = await fetch(`/api/v1/ops/workers/status`, {
     headers: headers(locale),
@@ -1980,6 +2030,20 @@ export async function downloadProductReadinessCsv(locale: string): Promise<void>
   const a = document.createElement("a");
   a.href = url;
   a.download = "product-readiness.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadP5ReadinessCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/product/readiness/p5/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`p5-readiness-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "p5-readiness.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
