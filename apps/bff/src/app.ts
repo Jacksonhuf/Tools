@@ -170,6 +170,7 @@ import {
 } from "./adjustment-price-import.js";
 import {
   createCostSheet,
+  getCostSheet,
   listCostSheets,
 } from "./cost-sheet-store.js";
 import { computeLandedFromCostSheet } from "./landed-cost-from-sheet.js";
@@ -799,6 +800,28 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="cost-sheets-${skuId}.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/skus/:skuId/cost-sheets/:sheetId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sheetId = c.req.param("sheetId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const sheet = getCostSheet(tenantId, skuId, sheetId);
+    if (!sheet) {
+      throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = costSheetsToCsv([sheet], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="cost-sheet-${sheetId}.csv"`,
       },
     });
   });
@@ -1540,6 +1563,9 @@ export function createApp(options: CreateAppOptions = {}) {
       hs_code?: string;
       fx_base?: string;
       fx_quote?: string;
+      cost_sheet_id?: string;
+      offer_id?: string;
+      alert_id?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2109,6 +2135,57 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       content = fxRatesToCsv([row], new Date().toISOString());
       content_type = "text/csv";
+    } else if (kind === "cost_sheet_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sheetId = body.cost_sheet_id;
+      if (!sheetId?.trim()) {
+        throw new HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
+      }
+      const sheet = getCostSheet(tenantId, skuId, sheetId.trim());
+      if (!sheet) {
+        throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+      }
+      content = costSheetsToCsv([sheet], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "competitor_offer_csv") {
+      const offerId = body.offer_id;
+      if (!offerId?.trim()) {
+        throw new HTTPException(400, { message: "OFFER_ID_REQUIRED" });
+      }
+      const offer = await competitors.getOffer(offerId.trim());
+      if (!offer) {
+        throw new HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+      }
+      const listing = await catalog.getListing(tenantId, offer.listing_id);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      const withLatest = await mapOffersWithLatestObservations(
+        competitors,
+        offer.listing_id
+      );
+      const row = withLatest.find((o) => o.id === offerId.trim());
+      if (!row) {
+        throw new HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+      }
+      content = competitorOffersToCsv(
+        offer.listing_id,
+        [row],
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "reconciliation_alert_csv") {
+      const alertId = body.alert_id;
+      if (!alertId?.trim()) {
+        throw new HTTPException(400, { message: "ALERT_ID_REQUIRED" });
+      }
+      const items = await reconciliationAlerts.listAlerts(tenantId);
+      const alert = items.find((a) => a.id === alertId.trim());
+      if (!alert) {
+        throw new HTTPException(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
+      }
+      content = reconciliationAlertsToCsv([alert], new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2501,6 +2578,35 @@ export function createApp(options: CreateAppOptions = {}) {
       is_primary: body.is_primary,
     });
     return c.json(offer, 201);
+  });
+
+  app.get("/api/v1/competitor-offers/:offerId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const offerId = c.req.param("offerId");
+    const offer = await competitors.getOffer(offerId);
+    if (!offer) {
+      throw new HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+    }
+    const listing = await catalog.getListing(tenantId, offer.listing_id);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const withLatest = await mapOffersWithLatestObservations(
+      competitors,
+      offer.listing_id
+    );
+    const row = withLatest.find((o) => o.id === offerId);
+    if (!row) {
+      throw new HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = competitorOffersToCsv(offer.listing_id, [row], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="competitor-offer-${offerId}.csv"`,
+      },
+    });
   });
 
   app.post("/api/v1/competitor-offers/:offerId/observations", async (c) => {
@@ -3560,6 +3666,24 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="reconciliation-alerts.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/reconciliation-alerts/:alertId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const alertId = c.req.param("alertId");
+    const items = await reconciliationAlerts.listAlerts(tenantId);
+    const alert = items.find((a) => a.id === alertId);
+    if (!alert) {
+      throw new HTTPException(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = reconciliationAlertsToCsv([alert], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="reconciliation-alert-${alertId}.csv"`,
       },
     });
   });

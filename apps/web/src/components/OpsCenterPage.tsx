@@ -21,6 +21,7 @@ import {
   downloadListingSyncOpsStatusCsv,
   downloadListingSyncScheduleCsv,
   downloadReconciliationAlertsDirectCsv,
+  downloadReconciliationAlertCsv,
   downloadReconciliationAlertsExport,
   downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsCsv,
@@ -479,6 +480,20 @@ export function OpsCenterPage() {
           }
         >
           {t("opsReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-alert-export"
+          disabled={!alerts[0]}
+          onClick={() => {
+            const alert = alerts[0];
+            if (!alert) return;
+            void downloadReconciliationAlertCsv(locale, alert.id).then(() =>
+              setMessage(t("opsReconciliationAlertExportDone"))
+            );
+          }}
+        >
+          {t("opsReconciliationAlertExportCsv")}
         </button>
         <button
           type="button"

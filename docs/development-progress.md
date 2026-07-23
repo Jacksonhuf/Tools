@@ -1428,6 +1428,34 @@
 | **实现** | `GET /fx-rates/:base/:quote/export`；`fx_rate_csv`；定价/渠道/运维导出按钮 |
 | **测试** | `loop-174-177.test.ts` |
 
+### Loop 178 — 单条 Cost Sheet CSV（P0-E2-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /skus/:skuId/cost-sheets/:sheetId/export`；`cost_sheet_csv` |
+| **测试** | `loop-178-181.test.ts`、`loop-178-181-csv.test.ts` |
+
+### Loop 179 — 单条竞品 Offer CSV（P2-E1-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /competitor-offers/:offerId/export`；`competitor_offer_csv` |
+| **测试** | `loop-178-181.test.ts` |
+
+### Loop 180 — 单条对账告警 CSV（P3-E3-01 / TC-INT-RECON-001）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /reconciliation-alerts/:alertId/export`；`reconciliation_alert_csv` |
+| **测试** | `loop-178-181.test.ts` |
+
+### Loop 181 — Cost Sheet / 竞品 / 对账 Web
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价页最新 cost sheet、竞品页所选 offer、运维中心首条告警 CSV 导出按钮 |
+| **测试** | `loop-178-181.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1516,3 +1544,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.8 | 2026-07-23 | Loop 166–169 price version, version backup rows, P5 readiness, shop CSV + Web |
 | v7.9 | 2026-07-23 | Loop 170–173 P3/P4 readiness, shared fee template and tenant fee templates CSV + Web |
 | v7.10 | 2026-07-23 | Loop 174–177 SKU row, listing, HS tariff row, FX rate row CSV + Web |
+| v7.11 | 2026-07-23 | Loop 178–181 cost sheet, competitor offer, reconciliation alert CSV + Web |

@@ -11,6 +11,7 @@ import {
   downloadPriceHistoryCsv,
   downloadRepricingEventsCsv,
   downloadCompetitorOffersCsv,
+  downloadCompetitorOfferCsv,
   downloadCompetitorAnchorCsv,
   downloadDynamicRepricingRuleCsv,
   downloadListingIngestStatusCsv,
@@ -248,6 +249,19 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorOffersExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-offer-export"
+          disabled={!selectedOffer}
+          onClick={() => {
+            if (!selectedOffer) return;
+            void downloadCompetitorOfferCsv(locale, selectedOffer).then(() =>
+              setMessage(t("competitorOfferExportDone"))
+            );
+          }}
+        >
+          {t("competitorOfferExportCsv")}
         </button>
         <button
           type="button"

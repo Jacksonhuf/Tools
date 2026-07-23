@@ -252,6 +252,9 @@ paths:
   /api/v1/listings/{listingId}/competitors/anchor/export:
     get:
       summary: Download competitor anchor summary as CSV
+  /api/v1/competitor-offers/{offerId}/export:
+    get:
+      summary: Download one competitor offer with latest price as CSV
   /api/v1/competitor-offers/{offerId}/observations:
     post:
       summary: Manual price observation (P2-E1-03)
@@ -392,6 +395,9 @@ paths:
   /api/v1/reconciliation-alerts/export:
     get:
       summary: Download reconciliation alerts as CSV
+  /api/v1/reconciliation-alerts/{alertId}/export:
+    get:
+      summary: Download one reconciliation alert as CSV
   /api/v1/listings/{listingId}/reconcile:
     post:
       summary: Compare active version to channel pull price
@@ -451,6 +457,9 @@ paths:
   /api/v1/skus/{skuId}/cost-sheets/export:
     get:
       summary: Download cost sheet rows for SKU as CSV
+  /api/v1/skus/{skuId}/cost-sheets/{sheetId}/export:
+    get:
+      summary: Download one cost sheet row as CSV
   /api/v1/repricing-batch/jobs/summary:
     get:
       summary: Repricing batch job queue summary by status

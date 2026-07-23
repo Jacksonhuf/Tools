@@ -210,6 +210,24 @@ export async function downloadCompetitorOffersCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadCompetitorOfferCsv(
+  locale: string,
+  offerId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/competitor-offers/${encodeURIComponent(offerId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`competitor-offer-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `competitor-offer-${offerId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadOpsMetricsCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/ops/metrics/export`, {
     headers: headers(locale),
@@ -1122,6 +1140,24 @@ export async function downloadReconciliationAlertsDirectCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadReconciliationAlertCsv(
+  locale: string,
+  alertId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/reconciliation-alerts/${encodeURIComponent(alertId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`reconciliation-alert-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `reconciliation-alert-${alertId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function downloadExportCsv(
   locale: string,
   body: Record<string, unknown>,
@@ -1569,6 +1605,25 @@ export async function downloadCostSheetsCsv(
   const a = document.createElement("a");
   a.href = url;
   a.download = `cost-sheets-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadCostSheetCsv(
+  locale: string,
+  skuId: string,
+  sheetId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets/${encodeURIComponent(sheetId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`cost-sheet-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `cost-sheet-${sheetId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
