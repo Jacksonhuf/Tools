@@ -11,6 +11,8 @@ import {
   downloadShopCsv,
   downloadListingCsv,
   downloadListingSyncJobsForListingCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadReconciliationAlertsDirectCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -232,6 +234,40 @@ export function ChannelsPage() {
           }
         >
           {t("channelListingSyncExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channel-listing-sync-export-amz"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-amz-001"
+            ).then(() => setMessage(t("channelListingSyncAmzExportDone")))
+          }
+        >
+          {t("channelListingSyncAmzExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-sync-ops-export"
+          onClick={() =>
+            void downloadListingSyncOpsStatusCsv(locale).then(() =>
+              setMessage(t("channelsListingSyncOpsExportDone"))
+            )
+          }
+        >
+          {t("channelsListingSyncOpsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-reconciliation-direct-export"
+          onClick={() =>
+            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+              setMessage(t("channelsReconciliationDirectExportDone"))
+            )
+          }
+        >
+          {t("channelsReconciliationDirectExportCsv")}
         </button>
       </div>
 

@@ -48,6 +48,7 @@ import {
   downloadFxRatesCsv,
   downloadFxRateCsv,
   downloadAuthStatusCsv,
+  downloadAgentToolsCsv,
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
   promoteRepricingToPending,
@@ -245,6 +246,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsNotificationTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-tools-export"
+          onClick={() =>
+            void downloadAgentToolsCsv(locale).then(() =>
+              setMessage(t("opsAgentToolsExportDone"))
+            )
+          }
+        >
+          {t("opsAgentToolsExportCsv")}
         </button>
       </div>
 
