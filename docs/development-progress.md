@@ -1400,6 +1400,34 @@
 | **实现** | `GET /tenants/:tenantId/shared-fee-templates/export`；`tenant_shared_fee_templates_csv`；就绪/策略/Copilot 导出按钮 |
 | **测试** | `loop-170-173.test.ts` |
 
+### Loop 174 — 单 SKU 目录行 CSV（P0-E2-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /skus/:skuId/export`；`sku_catalog_csv` |
+| **测试** | `loop-174-177.test.ts` |
+
+### Loop 175 — Listing 绑定 CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `listing-csv.ts`；`GET /listings/:listingId/export`；`listing_csv` |
+| **测试** | `loop-174-177.test.ts`、`loop-174-177-csv.test.ts` |
+
+### Loop 176 — 单条 HS 关税 CSV（P0-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /tariff-hs-rates/:hsCode/export`；`tariff_hs_rate_csv` |
+| **测试** | `loop-174-177.test.ts` |
+
+### Loop 177 — 单条 FX 汇率 CSV + Web（P0-E2-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /fx-rates/:base/:quote/export`；`fx_rate_csv`；定价/渠道/运维导出按钮 |
+| **测试** | `loop-174-177.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1487,3 +1515,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.7 | 2026-07-23 | Loop 162–165 pricing context, repricing batch job, category template, copilot session CSV + Web |
 | v7.8 | 2026-07-23 | Loop 166–169 price version, version backup rows, P5 readiness, shop CSV + Web |
 | v7.9 | 2026-07-23 | Loop 170–173 P3/P4 readiness, shared fee template and tenant fee templates CSV + Web |
+| v7.10 | 2026-07-23 | Loop 174–177 SKU row, listing, HS tariff row, FX rate row CSV + Web |

@@ -44,6 +44,24 @@ export async function downloadSkusCatalogCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadSkuCatalogCsv(
+  locale: string,
+  skuId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`sku-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `sku-${skuId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function patchSkuLandedCost(
   locale: string,
   skuId: string,
@@ -690,6 +708,24 @@ export async function downloadShopCsv(
   const a = document.createElement("a");
   a.href = url;
   a.download = `shop-${shopId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadListingCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/listings/${encodeURIComponent(listingId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`listing-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `listing-${listingId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1721,6 +1757,24 @@ export async function downloadTariffHsRatesCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadTariffHsRateCsv(
+  locale: string,
+  hsCode: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/tariff-hs-rates/${encodeURIComponent(hsCode)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`tariff-hs-rate-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tariff-hs-${hsCode}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function previewLandedCostFromHs(
   locale: string,
   skuId: string,
@@ -2224,6 +2278,25 @@ export async function downloadFxRatesCsv(locale: string): Promise<void> {
   const a = document.createElement("a");
   a.href = url;
   a.download = "fx-rates.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadFxRateCsv(
+  locale: string,
+  base = "USD",
+  quote = "MXN"
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/fx-rates/${encodeURIComponent(base)}/${encodeURIComponent(quote)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`fx-rate-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `fx-rate-${base}-${quote}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }

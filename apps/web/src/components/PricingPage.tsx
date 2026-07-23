@@ -6,6 +6,7 @@ import {
   createCostSheetRow,
   downloadCostSheetsCsv,
   downloadSkusCatalogCsv,
+  downloadSkuCatalogCsv,
   downloadCrossChannelGuardCsv,
   downloadPricingSnapshotCsv,
   downloadPricingContextCsv,
@@ -199,6 +200,17 @@ export function PricingPage() {
           }
         >
           {t("skusCatalogExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-sku-export"
+          onClick={() =>
+            void downloadSkuCatalogCsv(locale, "demo-sku-001").then(() =>
+              setMessage(t("skuCatalogExportDone"))
+            )
+          }
+        >
+          {t("skuCatalogExportCsv")}
         </button>
         <button
           type="button"
