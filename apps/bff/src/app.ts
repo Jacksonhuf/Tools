@@ -153,13 +153,14 @@ import {
   createStoredExport,
   getStoredExport,
 } from "./export-file-store.js";
-import { listFxRates, upsertFxRate } from "./fx-rate-table.js";
+import { getFxRate, listFxRates, upsertFxRate } from "./fx-rate-table.js";
 import { fxRatesToCsv } from "./fx-rates-csv.js";
 import { agentToolAuditToCsv } from "./agent-audit-csv.js";
 import { runDueDigestDispatch } from "./digest-run-due.js";
 import { computeLandedFromFx } from "./landed-cost-fx.js";
 import { computeLandedFromHs } from "./landed-cost-hs.js";
 import {
+  getTariffHsRate,
   listTariffHsRates,
   upsertTariffHsRate,
 } from "./tariff-hs-table.js";
@@ -202,6 +203,7 @@ import { agentReadinessToCsv } from "./agent-readiness-csv.js";
 import { listingSyncOpsStatusToCsv } from "./listing-sync-ops-status-csv.js";
 import { sharedFeeTemplatesToCsv } from "./shared-fee-templates-csv.js";
 import { shopsToCsv } from "./shops-csv.js";
+import { listingsToCsv } from "./listing-csv.js";
 import { skusCatalogToCsv } from "./skus-catalog-csv.js";
 import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
@@ -667,6 +669,33 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="skus-catalog.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/skus/:skuId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const skuId = c.req.param("skuId");
+    const sku = await catalog.getSku(tenantId, skuId);
+    if (!sku) {
+      throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = skusCatalogToCsv(
+      [
+        {
+          id: sku.id,
+          sku_code: sku.sku_code,
+          name: sku.name,
+          landed_cost_mxn: sku.landed_cost_mxn,
+        },
+      ],
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="sku-${skuId}.csv"`,
       },
     });
   });
@@ -1160,6 +1189,24 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.get("/api/v1/fx-rates/:base/:quote/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const base = c.req.param("base").toUpperCase();
+    const quote = c.req.param("quote").toUpperCase();
+    const row = getFxRate(tenantId, base, quote);
+    if (!row) {
+      throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = fxRatesToCsv([row], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="fx-rate-${base}-${quote}.csv"`,
+      },
+    });
+  });
+
   app.put("/api/v1/fx-rates/:base/:quote", async (c) => {
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
@@ -1185,6 +1232,23 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/tariff-hs-rates", async (c) => {
     const tenantId = c.get("tenantId");
     return c.json({ items: listTariffHsRates(tenantId) });
+  });
+
+  app.get("/api/v1/tariff-hs-rates/:hsCode/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const hsCode = decodeURIComponent(c.req.param("hsCode"));
+    const row = getTariffHsRate(tenantId, hsCode);
+    if (!row) {
+      throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = tariffHsRatesToCsv([row], exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="tariff-hs-${hsCode.replace(/[^a-zA-Z0-9.-]+/g, "_")}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/tariff-hs-rates/export", async (c) => {
@@ -1473,6 +1537,9 @@ export function createApp(options: CreateAppOptions = {}) {
       version_id?: string;
       shop_id?: string;
       fee_template_id?: string;
+      hs_code?: string;
+      fx_base?: string;
+      fx_quote?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -1990,6 +2057,58 @@ export function createApp(options: CreateAppOptions = {}) {
         new Date().toISOString()
       );
       content_type = "text/csv";
+    } else if (kind === "sku_catalog_csv") {
+      const skuId = body.sku_id ?? "demo-sku-001";
+      const sku = await catalog.getSku(tenantId, skuId);
+      if (!sku) {
+        throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
+      }
+      content = skusCatalogToCsv(
+        [
+          {
+            id: sku.id,
+            sku_code: sku.sku_code,
+            name: sku.name,
+            landed_cost_mxn: sku.landed_cost_mxn,
+          },
+        ],
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "listing_csv") {
+      const listingId = body.listing_id ?? "listing-ml-001";
+      const listing = await catalog.getListing(tenantId, listingId);
+      if (!listing) {
+        throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      }
+      content = listingsToCsv(
+        [
+          {
+            id: listing.id,
+            sku_id: listing.sku_id,
+            channel: listing.channel,
+          },
+        ],
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "tariff_hs_rate_csv") {
+      const hsCode = body.hs_code ?? "HS-ELECTRONICS-MX";
+      const row = getTariffHsRate(tenantId, hsCode);
+      if (!row) {
+        throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
+      }
+      content = tariffHsRatesToCsv([row], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "fx_rate_csv") {
+      const base = (body.fx_base ?? "USD").toUpperCase();
+      const quote = (body.fx_quote ?? "MXN").toUpperCase();
+      const row = getFxRate(tenantId, base, quote);
+      if (!row) {
+        throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+      }
+      content = fxRatesToCsv([row], new Date().toISOString());
+      content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
@@ -2270,6 +2389,32 @@ export function createApp(options: CreateAppOptions = {}) {
       }
     }
     return c.json({ shop_id: shopId, snapshot });
+  });
+
+  app.get("/api/v1/listings/:listingId/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const listingId = c.req.param("listingId");
+    const listing = await catalog.getListing(tenantId, listingId);
+    if (!listing) {
+      throw new HTTPException(404, { message: "LISTING_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = listingsToCsv(
+      [
+        {
+          id: listing.id,
+          sku_id: listing.sku_id,
+          channel: listing.channel,
+        },
+      ],
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="listing-${listingId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/listings/:listingId/competitors/anchor/export", async (c) => {

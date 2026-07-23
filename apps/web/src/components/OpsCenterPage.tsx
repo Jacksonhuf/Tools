@@ -40,7 +40,9 @@ import {
   previewAdjustmentPricesCsv,
   previewLandedCostFromHs,
   downloadTariffHsRatesCsv,
+  downloadTariffHsRateCsv,
   downloadFxRatesCsv,
+  downloadFxRateCsv,
   downloadAuthStatusCsv,
   promoteRepricingToPending,
   reconcileListing,
@@ -672,6 +674,17 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-tariff-rate-export"
+          onClick={() =>
+            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
+              setMessage(t("opsTariffRateExportDone"))
+            )
+          }
+        >
+          {t("opsTariffRateExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-fx-export"
           onClick={() =>
             void downloadFxRatesCsv(locale).then(() =>
@@ -680,6 +693,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsFxExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-fx-rate-export"
+          onClick={() =>
+            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+              setMessage(t("opsFxRateExportDone"))
+            )
+          }
+        >
+          {t("opsFxRateExportCsv")}
         </button>
       </section>
 

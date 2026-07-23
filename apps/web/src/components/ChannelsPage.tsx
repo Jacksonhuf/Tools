@@ -8,6 +8,7 @@ import {
   downloadChannelSandboxEventsCsv,
   downloadShopsCsv,
   downloadShopCsv,
+  downloadListingCsv,
   downloadListingSyncJobsForListingCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -207,6 +208,17 @@ export function ChannelsPage() {
           }
         >
           {t("shopExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-export"
+          onClick={() =>
+            void downloadListingCsv(locale, "listing-ml-001").then(() =>
+              setMessage(t("listingExportDone"))
+            )
+          }
+        >
+          {t("listingExportCsv")}
         </button>
         <button
           type="button"

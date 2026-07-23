@@ -15,6 +15,9 @@ paths:
   /api/v1/skus/export:
     get:
       summary: Download tenant SKU catalog as CSV
+  /api/v1/skus/{skuId}/export:
+    get:
+      summary: Download one SKU catalog row as CSV
   /api/v1/skus/{skuId}:
     patch:
       summary: Update SKU landed cost
@@ -235,6 +238,9 @@ paths:
   /api/v1/shops/{shopId}/listings/pull:
     post:
       summary: Mock pullListing (TC-INT-CH-001/002)
+  /api/v1/listings/{listingId}/export:
+    get:
+      summary: Download listing channel binding as CSV
   /api/v1/listings/{listingId}/competitors:
     get:
       summary: List competitor offers (SDD §10.6)
@@ -463,6 +469,9 @@ paths:
   /api/v1/fx-rates/export:
     get:
       summary: Download FX rate table as CSV
+  /api/v1/fx-rates/{base}/{quote}/export:
+    get:
+      summary: Download one FX rate row as CSV
   /api/v1/fx-rates/{base}/{quote}:
     put:
       summary: Upsert FX rate row
@@ -475,6 +484,9 @@ paths:
   /api/v1/tariff-hs-rates/export:
     get:
       summary: Download HS tariff table as CSV
+  /api/v1/tariff-hs-rates/{hsCode}/export:
+    get:
+      summary: Download one HS tariff row as CSV
   /api/v1/tariff-hs-rates/{hsCode}:
     put:
       summary: Upsert HS tariff row
