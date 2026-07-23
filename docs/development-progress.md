@@ -1188,6 +1188,34 @@
 | **实现** | 重算批处理汇总、采集状态、特性开关 CSV 导出按钮 |
 | **测试** | `loop-134-137.test.ts` |
 
+### Loop 210 — 补全 Loop 134：竞品页重算批处理汇总 CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 竞品页 `competitor-repricing-batch-summary-export` |
+| **测试** | `loop-134-137.test.ts`（`repricing_batch_jobs_summary_csv` POST） |
+
+### Loop 211 — 补全 Loop 135：运维中心 Listing 采集状态 CSV（P2-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维中心 `ops-listing-ingest-status-export` |
+| **测试** | `loop-134-137.test.ts`（`listing_ingest_status_csv` POST） |
+
+### Loop 212 — 补全 Loop 136：运维中心特性开关 CSV（X-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维中心 `ops-feature-flags-export` |
+| **测试** | 沿用 `loop-134-137.test.ts` |
+
+### Loop 213 — 补全 Loop 137：Copilot 批处理汇总 / 开关 / 采集状态 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | Copilot `copilot-repricing-batch-summary-export`、`copilot-feature-flags-export`、`copilot-listing-ingest-status-export` |
+| **测试** | 沿用 `loop-134-137.test.ts` |
+
 ### Loop 138 — P4 Agent 就绪 CSV（P4-E1）
 
 | 项 | 内容 |
@@ -1760,3 +1788,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.16 | 2026-07-23 | Loop 198–201 readiness check, milestone, product check, feature flag row CSV + Web |
 | v7.17 | 2026-07-23 | Loop 202–205 i18n glossary, notification templates API/CSV + Web; Story 完成度快照 |
 | v7.18 | 2026-07-23 | Loop 206–209 补全 Loop 130–133 Channels/Ops Web 导出与 export POST 测 |
+| v7.19 | 2026-07-23 | Loop 210–213 补全 Loop 134–137 竞品/Ops/Copilot Web 导出与 export POST 测 |

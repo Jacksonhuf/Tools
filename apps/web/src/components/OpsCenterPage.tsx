@@ -28,6 +28,8 @@ import {
   downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsCsv,
   downloadRepricingBatchJobsSummaryCsv,
+  downloadListingIngestStatusCsv,
+  downloadFeatureFlagsCsv,
   downloadLatestRepricingBatchJobCsv,
   downloadRepricingBatchShardPlanCsv,
   downloadRepricingQueueCsv,
@@ -607,6 +609,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-ingest-status-export"
+          onClick={() =>
+            void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("listingIngestStatusExportDone"))
+            )
+          }
+        >
+          {t("opsListingIngestStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-feature-flags-export"
+          onClick={() =>
+            void downloadFeatureFlagsCsv(locale).then(() =>
+              setMessage(t("readinessFeatureFlagsExportDone"))
+            )
+          }
+        >
+          {t("opsFeatureFlagsExportCsv")}
         </button>
         {syncJobs.length > 0 && (
           <table
