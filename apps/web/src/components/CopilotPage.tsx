@@ -23,6 +23,7 @@ import {
   downloadDigestDispatchesCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestScheduleCsv,
+  downloadCopilotSessionCsv,
   downloadAgentToolsCsv,
   downloadAgentReadinessCsv,
   updateDigestSchedule,
@@ -571,6 +572,20 @@ export function CopilotPage() {
           onClick={() => void sendChat()}
         >
           {t("copilotChatSend")}
+        </button>
+        <button
+          type="button"
+          data-testid="copilot-session-export"
+          disabled={!sessionId}
+          onClick={() =>
+            sessionId
+              ? void downloadCopilotSessionCsv(locale, sessionId).then(() =>
+                  setMessage(t("copilotSessionExportDone"))
+                )
+              : undefined
+          }
+        >
+          {t("copilotSessionExportCsv")}
         </button>
       </section>
 

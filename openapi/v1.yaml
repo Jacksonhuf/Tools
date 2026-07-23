@@ -72,6 +72,9 @@ paths:
           description: Unauthorized
         "404":
           description: SKU not found
+  /api/v1/skus/{skuId}/pricing-context/export:
+    get:
+      summary: Download pricing context snapshot as CSV
   /api/v1/listings/{listingId}/price-versions:
     post:
       summary: Publish price version (SDD §10.3)
@@ -332,6 +335,9 @@ paths:
   /api/v1/repricing-batch/jobs/{jobId}:
     get:
       summary: Get repricing batch job by id
+  /api/v1/repricing-batch/jobs/{jobId}/export:
+    get:
+      summary: Download repricing batch job as CSV
   /api/v1/repricing-batch/jobs/process:
     post:
       summary: Process queued repricing batch jobs
@@ -344,6 +350,9 @@ paths:
   /api/v1/category-rule-templates/{categoryId}:
     get:
       summary: Get category rule template by id
+  /api/v1/category-rule-templates/{categoryId}/export:
+    get:
+      summary: Download one category rule template as CSV
   /api/v1/skus/{skuId}/category-rule-template:
     get:
       summary: Resolve category template for SKU
@@ -617,6 +626,9 @@ paths:
   /api/v1/agent/copilot/sessions/{sessionId}:
     get:
       summary: Copilot session transcript
+  /api/v1/agent/copilot/sessions/{sessionId}/export:
+    get:
+      summary: Download copilot session transcript as CSV
   /api/v1/agent/copilot/sessions/{sessionId}/messages:
     post:
       summary: User turn — clarification or NL rule compile draft

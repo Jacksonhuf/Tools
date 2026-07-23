@@ -1316,6 +1316,34 @@
 | **实现** | `GET /reports/reconciliation-alerts/export`；指挥中心 SKU 队列/分片计划/对账报表导出；策略页 SKU 类目模板导出 |
 | **测试** | `loop-158-161.test.ts` |
 
+### Loop 162 — 定价上下文 CSV（P0-E4-07 / P2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `pricing-context-view.ts` + `pricing-context-csv.ts`；`GET /skus/:skuId/pricing-context/export`；`pricing_context_csv` |
+| **测试** | `loop-162-165.test.ts`、`loop-162-165-csv.test.ts` |
+
+### Loop 163 — 重算批作业单条 CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /repricing-batch/jobs/:jobId/export`；`repricing_batch_job_csv` |
+| **测试** | `loop-162-165.test.ts` |
+
+### Loop 164 — 类目模板单条 CSV（P5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /category-rule-templates/:categoryId/export`；`category_rule_template_csv` |
+| **测试** | `loop-162-165.test.ts` |
+
+### Loop 165 — Copilot 会话 CSV + Web（P4 / SDD §12）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `copilot-session-csv.ts`；`GET /agent/copilot/sessions/:sessionId/export`；`copilot_session_csv`；定价/策略/指挥中心/Copilot 导出按钮 |
+| **测试** | `loop-162-165.test.ts`、`loop-162-165-csv.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1400,3 +1428,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.4 | 2026-07-22 | Loop 150–153 listing sync schedule, milestones, approval policy, workers summary CSV + Web |
 | v7.5 | 2026-07-22 | Loop 154–157 pricing snapshot export path, cross-channel guard, digest schedule, dynamic rule CSV + Web |
 | v7.6 | 2026-07-22 | Loop 158–161 SKU repricing queue, shard plan, category template, reconciliation report export + Web |
+| v7.7 | 2026-07-23 | Loop 162–165 pricing context, repricing batch job, category template, copilot session CSV + Web |
