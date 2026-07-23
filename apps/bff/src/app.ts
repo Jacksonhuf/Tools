@@ -309,8 +309,9 @@ import {
 } from "./repositories/agent-audit-index.js";
 import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
 import { authStatusToCsv } from "./auth-status-csv.js";
-import { getFeatureFlags } from "./feature-flags.js";
+import { getFeatureFlags, getFeatureFlagValue } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
+import { featureFlagKeyToCsv } from "./feature-flag-key-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
@@ -415,6 +416,22 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="feature-flags.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/feature-flags/:flagKey/export", async (c) => {
+    const flagKey = c.req.param("flagKey");
+    const flag = getFeatureFlagValue(flagKey);
+    if (!flag) {
+      throw new HTTPException(404, { message: "FEATURE_FLAG_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = featureFlagKeyToCsv(flag.key, flag.enabled, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="feature-flag-${flag.key}.csv"`,
       },
     });
   });
@@ -1627,6 +1644,9 @@ export function createApp(options: CreateAppOptions = {}) {
       repricing_event_id?: string;
       curve_date?: string;
       tool_name?: string;
+      check_id?: string;
+      milestone_id?: string;
+      flag_key?: string;
     };
     const kind = body.kind ?? "version_backup";
     let content = "";
@@ -2463,6 +2483,76 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "AGENT_TOOL_NOT_FOUND" });
       }
       content = agentToolsToCsv([tool], new Date().toISOString());
+      content_type = "text/csv";
+    } else if (kind === "agent_readiness_check_csv") {
+      const checkId = body.check_id?.trim();
+      if (!checkId) {
+        throw new HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+      }
+      const snapshot = evaluateAgentReadiness();
+      const check = snapshot.checks.find((c) => c.id === checkId);
+      if (!check) {
+        throw new HTTPException(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
+      }
+      content = agentReadinessToCsv(
+        { ...snapshot, checks: [check] },
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "agent_milestone_csv") {
+      const milestoneId = body.milestone_id?.trim();
+      if (!milestoneId) {
+        throw new HTTPException(400, { message: "MILESTONE_ID_REQUIRED" });
+      }
+      const status = getProductMilestoneStatus();
+      const milestone = status.milestones.find((m) => m.id === milestoneId);
+      if (!milestone) {
+        throw new HTTPException(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
+      }
+      content = agentMilestonesToCsv(
+        { ...status, milestones: [milestone] },
+        new Date().toISOString()
+      );
+      content_type = "text/csv";
+    } else if (kind === "product_readiness_check_csv") {
+      const checkId = body.check_id?.trim();
+      if (!checkId) {
+        throw new HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+      }
+      const exportedAt = new Date().toISOString();
+      const summary = getProductReadinessSummary();
+      const p3 = summary.p3.checks.find((c) => c.id === checkId);
+      if (p3) {
+        content = p3ReadinessToCsv({ ...summary.p3, checks: [p3] }, exportedAt);
+      } else {
+        const p4 = summary.p4.checks.find((c) => c.id === checkId);
+        if (p4) {
+          content = p4ReadinessToCsv({ ...summary.p4, checks: [p4] }, exportedAt);
+        } else {
+          const p5 = summary.p5.checks.find((c) => c.id === checkId);
+          if (!p5) {
+            throw new HTTPException(404, {
+              message: "PRODUCT_READINESS_CHECK_NOT_FOUND",
+            });
+          }
+          content = p5ReadinessToCsv({ ...summary.p5, checks: [p5] }, exportedAt);
+        }
+      }
+      content_type = "text/csv";
+    } else if (kind === "feature_flag_csv") {
+      const flagKey = body.flag_key?.trim();
+      if (!flagKey) {
+        throw new HTTPException(400, { message: "FLAG_KEY_REQUIRED" });
+      }
+      const flag = getFeatureFlagValue(flagKey);
+      if (!flag) {
+        throw new HTTPException(404, { message: "FEATURE_FLAG_NOT_FOUND" });
+      }
+      content = featureFlagKeyToCsv(
+        flag.key,
+        flag.enabled,
+        new Date().toISOString()
+      );
       content_type = "text/csv";
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
@@ -4392,6 +4482,29 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(evaluateAgentReadiness());
   });
 
+  app.get("/api/v1/agent/readiness/checks/export", async (c) => {
+    const checkId = c.req.query("check_id")?.trim();
+    if (!checkId) {
+      throw new HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+    }
+    const snapshot = evaluateAgentReadiness();
+    const check = snapshot.checks.find((ch) => ch.id === checkId);
+    if (!check) {
+      throw new HTTPException(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = agentReadinessToCsv(
+      { ...snapshot, checks: [check] },
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-readiness-check.csv"`,
+      },
+    });
+  });
+
   app.get("/api/v1/agent/milestones/export", async (c) => {
     const exportedAt = new Date().toISOString();
     const csv = agentMilestonesToCsv(getProductMilestoneStatus(), exportedAt);
@@ -4405,6 +4518,26 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/agent/milestones", async (c) => {
     return c.json(getProductMilestoneStatus());
+  });
+
+  app.get("/api/v1/agent/milestones/:milestoneId/export", async (c) => {
+    const milestoneId = c.req.param("milestoneId");
+    const status = getProductMilestoneStatus();
+    const milestone = status.milestones.find((m) => m.id === milestoneId);
+    if (!milestone) {
+      throw new HTTPException(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
+    }
+    const exportedAt = new Date().toISOString();
+    const csv = agentMilestonesToCsv(
+      { ...status, milestones: [milestone] },
+      exportedAt
+    );
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="agent-milestone-${milestoneId}.csv"`,
+      },
+    });
   });
 
   app.get("/api/v1/product/readiness/p3/export", async (c) => {
@@ -4436,6 +4569,39 @@ export function createApp(options: CreateAppOptions = {}) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="p5-readiness.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/product/readiness/checks/export", async (c) => {
+    const checkId = c.req.query("check_id")?.trim();
+    if (!checkId) {
+      throw new HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+    }
+    const exportedAt = new Date().toISOString();
+    const summary = getProductReadinessSummary();
+    const p3 = summary.p3.checks.find((ch) => ch.id === checkId);
+    let csv: string;
+    if (p3) {
+      csv = p3ReadinessToCsv({ ...summary.p3, checks: [p3] }, exportedAt);
+    } else {
+      const p4 = summary.p4.checks.find((ch) => ch.id === checkId);
+      if (p4) {
+        csv = p4ReadinessToCsv({ ...summary.p4, checks: [p4] }, exportedAt);
+      } else {
+        const p5 = summary.p5.checks.find((ch) => ch.id === checkId);
+        if (!p5) {
+          throw new HTTPException(404, {
+            message: "PRODUCT_READINESS_CHECK_NOT_FOUND",
+          });
+        }
+        csv = p5ReadinessToCsv({ ...summary.p5, checks: [p5] }, exportedAt);
+      }
+    }
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="product-readiness-check.csv"`,
       },
     });
   });

@@ -1902,6 +1902,24 @@ export async function downloadFeatureFlagsCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadFeatureFlagCsv(
+  locale: string,
+  flagKey: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/feature-flags/${encodeURIComponent(flagKey)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`feature-flag-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `feature-flag-${flagKey}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/auth/status/export`, {
     headers: headers(locale),
@@ -2295,6 +2313,24 @@ export async function downloadAgentReadinessCsv(locale: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadAgentReadinessCheckCsv(
+  locale: string,
+  checkId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/readiness/checks/export?check_id=${encodeURIComponent(checkId)}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`agent-readiness-check-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `agent-readiness-check-${checkId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadCompetitorAnchorCsv(
   locale: string,
   listingId: string
@@ -2415,6 +2451,42 @@ export async function downloadAgentMilestonesCsv(locale: string): Promise<void> 
   const a = document.createElement("a");
   a.href = url;
   a.download = "agent-milestones.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadAgentMilestoneCsv(
+  locale: string,
+  milestoneId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/agent/milestones/${encodeURIComponent(milestoneId)}/export`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`agent-milestone-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `agent-milestone-${milestoneId}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadProductReadinessCheckCsv(
+  locale: string,
+  checkId: string
+): Promise<void> {
+  const res = await fetch(
+    `/api/v1/product/readiness/checks/export?check_id=${encodeURIComponent(checkId)}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`product-readiness-check-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `product-readiness-check-${checkId}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -2928,9 +3000,18 @@ export interface ProductReadinessSnapshot {
     summary: string;
     loops: string;
   }>;
-  p3: { ready: boolean };
-  p4: { ready: boolean };
-  p5: { ready: boolean };
+  p3: {
+    ready: boolean;
+    checks: Array<{ id: string; passed: boolean; detail: string }>;
+  };
+  p4: {
+    ready: boolean;
+    checks: Array<{ id: string; passed: boolean; detail: string }>;
+  };
+  p5: {
+    ready: boolean;
+    checks: Array<{ id: string; passed: boolean; detail: string }>;
+  };
 }
 
 export async function fetchProductReadiness(locale: string) {

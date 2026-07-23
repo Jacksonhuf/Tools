@@ -206,6 +206,9 @@ paths:
   /api/v1/feature-flags/export:
     get:
       summary: Download feature flags snapshot as CSV
+  /api/v1/feature-flags/{flagKey}/export:
+    get:
+      summary: Download one feature flag as CSV
   /api/v1/ops/metrics:
     get:
       summary: Ops metrics snapshot (sandbox, adapters, digest queue)
@@ -662,18 +665,27 @@ paths:
   /api/v1/product/readiness/p5/export:
     get:
       summary: Download P5 readiness checklist as CSV
+  /api/v1/product/readiness/checks/export:
+    get:
+      summary: Download one product readiness check row as CSV (check_id query)
   /api/v1/agent/milestones:
     get:
       summary: P3/P4 milestone status (P4 accepted when readiness passes)
   /api/v1/agent/milestones/export:
     get:
       summary: Download P3/P4/P5 milestone catalog as CSV
+  /api/v1/agent/milestones/{milestoneId}/export:
+    get:
+      summary: Download one milestone row as CSV
   /api/v1/agent/readiness:
     get:
       summary: P4 milestone acceptance checks (SEC-004, AGENT APIs)
   /api/v1/agent/readiness/export:
     get:
       summary: Download P4 agent readiness checks as CSV
+  /api/v1/agent/readiness/checks/export:
+    get:
+      summary: Download one P4 agent readiness check row as CSV (check_id query)
   /api/v1/agent/digest/daily/enqueue:
     post:
       summary: Enqueue digest job for async worker

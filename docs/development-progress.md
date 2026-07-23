@@ -1568,6 +1568,34 @@
 | **实现** | `getAgentTool`；`GET /agent/tools/:toolName/export`；`agent_tool_row_csv`；运维/看板/竞品/Copilot 导出按钮 |
 | **测试** | `loop-194-197.test.ts` |
 
+### Loop 198 — 单条 P4 Agent 就绪检查 CSV（P4-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/readiness/checks/export?check_id=`；`agent_readiness_check_csv` |
+| **测试** | `loop-198-201.test.ts`、`loop-198-201-csv.test.ts` |
+
+### Loop 199 — 单条产品里程碑 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /agent/milestones/:milestoneId/export`；`agent_milestone_csv`（`milestone_id`） |
+| **测试** | `loop-198-201.test.ts` |
+
+### Loop 200 — 单条产品就绪检查 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `GET /product/readiness/checks/export?check_id=`；`product_readiness_check_csv` |
+| **测试** | `loop-198-201.test.ts`（含带 `/` 的 check id） |
+
+### Loop 201 — 单条特性开关 CSV + Web（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | `getFeatureFlagValue`；`GET /feature-flags/:flagKey/export`；`feature_flag_csv`；Copilot / 产品就绪页按钮 |
+| **测试** | `loop-198-201.test.ts` |
+
 ---
 
 ## 本地命令
@@ -1661,3 +1689,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.13 | 2026-07-23 | Loop 186–189 digest dispatch, sandbox event, dead-letter job, tool audit row CSV + Web |
 | v7.14 | 2026-07-23 | Loop 190–193 price observation, repricing event, adjustment index row, digest date CSV + Web |
 | v7.15 | 2026-07-23 | Loop 194–197 pricing snapshot row, cross-channel row, curve point, agent tool row CSV + Web |
+| v7.16 | 2026-07-23 | Loop 198–201 readiness check, milestone, product check, feature flag row CSV + Web |
