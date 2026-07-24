@@ -60,6 +60,11 @@ import {
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadDynamicRepricingRuleCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -343,6 +348,61 @@ export function OpsCenterPage() {
           }
         >
           {t("opsDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("opsAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("opsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("opsAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("opsAdjustmentApprovalPolicyExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("opsCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("opsDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("opsDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(locale, DEMO_LISTINGS[0]).then(
+              () => setMessage(t("opsDynamicRepricingRuleExportDone"))
+            )
+          }
+        >
+          {t("opsDynamicRepricingRuleExportCsv")}
         </button>
       </div>
 

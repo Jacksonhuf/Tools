@@ -10,6 +10,7 @@ import {
   downloadSkuCatalogCsv,
   downloadCrossChannelGuardCsv,
   downloadPricingSnapshotCsv,
+  downloadDynamicRepricingRuleCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
   downloadI18nGlossaryTermCsv,
@@ -253,6 +254,17 @@ export function PricingPage() {
           }
         >
           {t("crossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("dynamicRepricingRuleExportDone"))
+            )
+          }
+        >
+          {t("dynamicRepricingRuleExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (
