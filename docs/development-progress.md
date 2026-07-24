@@ -1440,6 +1440,34 @@
 | **实现** | 通道、竞品、就绪、Copilot `ops-workers-summary-export` |
 | **测试** | `loop-150-153.test.ts`（`ops_workers_status_summary_csv` POST） |
 
+### Loop 230 — 补全 Loop 154：通道/竞品/就绪/Copilot 定价快照 CSV（P0/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `pricing-snapshot-export`（定价/运维原有保留） |
+| **测试** | `loop-154-157.test.ts`（`pricing_snapshot_csv` POST） |
+
+### Loop 231 — 补全 Loop 155：运维/通道/竞品/就绪/Copilot 跨渠道 Guard CSV（P5-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `cross-channel-guard-export` |
+| **测试** | 沿用 `loop-154-157.test.ts` |
+
+### Loop 232 — 补全 Loop 156：运维/通道/竞品/就绪 Digest 计划 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪 `digest-schedule-export`（Copilot 原有保留） |
+| **测试** | 沿用 `loop-154-157.test.ts` |
+
+### Loop 233 — 补全 Loop 157：运维/通道/就绪/Copilot 动态调价规则 CSV（P2-E3-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、就绪、Copilot `dynamic-repricing-rule-export`；定价页补按钮 |
+| **测试** | `loop-154-157.test.ts` 增至 5 条 POST |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -1905,3 +1933,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.21 | 2026-07-23 | Loop 218–221 补全 Loop 142–145 digest/adapter/compiler Web 与 export POST 测 |
 | v7.22 | 2026-07-24 | Loop 222–225 补全 Loop 146–149 auth/sandbox/dlq Web 与 export POST 测 |
 | v7.23 | 2026-07-24 | Loop 226–229 补全 Loop 150–153 sync/milestones/policy/workers Web 与 export POST 测 |
+| v7.24 | 2026-07-24 | Loop 230–233 补全 Loop 154–157 pricing/guard/digest/dynamic-rule Web 与 export POST 测 |

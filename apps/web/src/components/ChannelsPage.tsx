@@ -22,6 +22,11 @@ import {
   downloadAgentMilestonesCsv,
   downloadAdjustmentApprovalPolicyCsv,
   downloadOpsWorkersStatusSummaryCsv,
+  DEMO_SKU,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadDynamicRepricingRuleCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -376,6 +381,51 @@ export function ChannelsPage() {
           }
         >
           {t("channelsOpsWorkersSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsPricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("channelsPricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("channelsCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("channelsDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("channelsDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            ).then(() => setMessage(t("channelsDynamicRepricingRuleExportDone")))
+          }
+        >
+          {t("channelsDynamicRepricingRuleExportCsv")}
         </button>
       </div>
 

@@ -20,6 +20,11 @@ import {
   downloadListingSyncScheduleCsv,
   downloadAdjustmentApprovalPolicyCsv,
   downloadOpsWorkersStatusSummaryCsv,
+  DEMO_SKU,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadDynamicRepricingRuleCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -178,6 +183,51 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessOpsWorkersSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-pricing-snapshot-export"
+            onClick={() =>
+              void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("readinessPricingSnapshotExportDone"))
+              )
+            }
+          >
+            {t("readinessPricingSnapshotExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-cross-channel-guard-export"
+            onClick={() =>
+              void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("readinessCrossChannelGuardExportDone"))
+              )
+            }
+          >
+            {t("readinessCrossChannelGuardExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-schedule-export"
+            onClick={() =>
+              void downloadDigestScheduleCsv(locale).then(() =>
+                setMessage(t("readinessDigestScheduleExportDone"))
+              )
+            }
+          >
+            {t("readinessDigestScheduleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-dynamic-repricing-rule-export"
+            onClick={() =>
+              void downloadDynamicRepricingRuleCsv(
+                locale,
+                "listing-ml-001"
+              ).then(() => setMessage(t("readinessDynamicRepricingRuleExportDone")))
+            }
+          >
+            {t("readinessDynamicRepricingRuleExportCsv")}
           </button>
           <button
             type="button"

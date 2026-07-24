@@ -31,6 +31,10 @@ import {
   downloadAgentMilestonesCsv,
   downloadAdjustmentApprovalPolicyCsv,
   downloadOpsWorkersStatusSummaryCsv,
+  DEMO_SKU,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -386,6 +390,39 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorOpsWorkersSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorPricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("competitorPricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("competitorCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("competitorDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("competitorDigestScheduleExportCsv")}
         </button>
         <button
           type="button"
