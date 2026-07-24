@@ -38,6 +38,17 @@ import {
   downloadCompetitorAnchorCsv,
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDynamicRepricingRuleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -533,6 +544,128 @@ export function CopilotPage() {
             }
           >
             {t("copilotChannelSandboxStatusExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-sync-schedule-export"
+            onClick={() =>
+              void downloadListingSyncScheduleCsv(locale).then(() =>
+                setMessage(t("copilotListingSyncScheduleExportDone"))
+              )
+            }
+          >
+            {t("copilotListingSyncScheduleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-agent-milestones-export"
+            onClick={() =>
+              void downloadAgentMilestonesCsv(locale).then(() =>
+                setMessage(t("copilotAgentMilestonesExportDone"))
+              )
+            }
+          >
+            {t("copilotAgentMilestonesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-adjustment-approval-policy-export"
+            onClick={() =>
+              void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+                setMessage(t("copilotAdjustmentApprovalPolicyExportDone"))
+              )
+            }
+          >
+            {t("copilotAdjustmentApprovalPolicyExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-ops-workers-summary-export"
+            onClick={() =>
+              void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+                setMessage(t("copilotOpsWorkersSummaryExportDone"))
+              )
+            }
+          >
+            {t("copilotOpsWorkersSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-pricing-snapshot-export"
+            onClick={() =>
+              void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotPricingSnapshotExportDone"))
+              )
+            }
+          >
+            {t("copilotPricingSnapshotExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-cross-channel-guard-export"
+            onClick={() =>
+              void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotCrossChannelGuardExportDone"))
+              )
+            }
+          >
+            {t("copilotCrossChannelGuardExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-dynamic-repricing-rule-export"
+            onClick={() =>
+              void downloadDynamicRepricingRuleCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              ).then(() => setMessage(t("copilotDynamicRepricingRuleExportDone")))
+            }
+          >
+            {t("copilotDynamicRepricingRuleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-queue-sku-export"
+            onClick={() =>
+              void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotRepricingQueueSkuExportDone"))
+              )
+            }
+          >
+            {t("copilotRepricingQueueSkuExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-batch-shard-plan-export"
+            onClick={() =>
+              void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+                () => setMessage(t("copilotRepricingBatchShardPlanExportDone"))
+              )
+            }
+          >
+            {t("copilotRepricingBatchShardPlanExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-sku-category-template-export"
+            onClick={() =>
+              void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotSkuCategoryRuleTemplateExportDone"))
+              )
+            }
+          >
+            {t("copilotSkuCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-reconciliation-report-export"
+            onClick={() =>
+              void downloadReconciliationAlertsReportCsv(locale).then(() =>
+                setMessage(t("copilotReconciliationReportExportDone"))
+              )
+            }
+          >
+            {t("copilotReconciliationReportExportCsv")}
           </button>
           <button
             type="button"

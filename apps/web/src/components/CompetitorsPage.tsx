@@ -27,6 +27,18 @@ import {
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
+  DEMO_SKU,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -338,6 +350,127 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-listing-sync-schedule-export"
+          onClick={() =>
+            void downloadListingSyncScheduleCsv(locale).then(() =>
+              setMessage(t("competitorListingSyncScheduleExportDone"))
+            )
+          }
+        >
+          {t("competitorListingSyncScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("competitorAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("competitorAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("competitorAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("competitorAdjustmentApprovalPolicyExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-ops-workers-summary-export"
+          onClick={() =>
+            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+              setMessage(t("competitorOpsWorkersSummaryExportDone"))
+            )
+          }
+        >
+          {t("competitorOpsWorkersSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorPricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("competitorPricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("competitorCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("competitorDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("competitorDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-queue-sku-export"
+          onClick={() =>
+            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorRepricingQueueSkuExportDone"))
+            )
+          }
+        >
+          {t("competitorRepricingQueueSkuExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("competitorRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("competitorRepricingBatchShardPlanExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("competitorSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("competitorReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("competitorReconciliationReportExportCsv")}
         </button>
         <button
           type="button"

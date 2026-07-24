@@ -53,6 +53,19 @@ describe("dynamic repricing rule CSV (Loop 157)", () => {
 });
 
 describe("export store kinds (Loop 154-157)", () => {
+  it("POST /exports pricing_snapshot_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "pricing_snapshot_csv",
+        sku_id: "demo-sku-001",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
   it("POST /exports cross_channel_guard_csv", async () => {
     const { app } = createTestApp();
     const post = await app.request("/api/v1/exports", {
