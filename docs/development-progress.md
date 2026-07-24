@@ -1356,6 +1356,34 @@
 | **实现** | 认证状态、沙箱状态、死信汇总 CSV 导出按钮 |
 | **测试** | `loop-146-149.test.ts` |
 
+### Loop 222 — 补全 Loop 146：通道/竞品/就绪/Copilot 认证状态 CSV（P0-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `auth-export`（运维原有保留） |
+| **测试** | `loop-146-149.test.ts`（`auth_status_csv` POST） |
+
+### Loop 223 — 补全 Loop 147：运维/竞品/就绪/Copilot 沙箱状态 CSV（P3-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、竞品、就绪、Copilot `channel-sandbox-status-export` |
+| **测试** | 沿用 `loop-146-149.test.ts` |
+
+### Loop 224 — 补全 Loop 148：运维/通道/竞品/就绪 Digest 死信汇总 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪 `digest-dlq-summary-export`（Copilot 原有保留） |
+| **测试** | `loop-146-149.test.ts`（`digest_dead_letter_summary_csv` POST） |
+
+### Loop 225 — 补全 Loop 149：多页指挥中心/通道/Copilot 能力对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 上述 Web 按钮覆盖 Ops / Channels / Competitors / Readiness / Copilot |
+| **测试** | `loop-146-149.test.ts` 增至 6 条 |
+
 ### Loop 150 — Listing 同步计划 CSV（P1-E2-04）
 
 | 项 | 内容 |
@@ -1847,3 +1875,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.19 | 2026-07-23 | Loop 210–213 补全 Loop 134–137 竞品/Ops/Copilot Web 导出与 export POST 测 |
 | v7.20 | 2026-07-23 | Loop 214–217 补全 Loop 138–141 就绪/锚点/产品就绪 Web 与 export POST 测 |
 | v7.21 | 2026-07-23 | Loop 218–221 补全 Loop 142–145 digest/adapter/compiler Web 与 export POST 测 |
+| v7.22 | 2026-07-24 | Loop 222–225 补全 Loop 146–149 auth/sandbox/dlq Web 与 export POST 测 |

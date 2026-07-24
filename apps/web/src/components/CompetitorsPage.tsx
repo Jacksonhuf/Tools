@@ -24,6 +24,9 @@ import {
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestQueuedJobsSummaryCsv,
+  downloadAuthStatusCsv,
+  downloadChannelSandboxStatusCsv,
+  downloadDigestDeadLetterSummaryCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -302,6 +305,39 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorDigestJobsSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-auth-export"
+          onClick={() =>
+            void downloadAuthStatusCsv(locale).then(() =>
+              setMessage(t("competitorAuthExportDone"))
+            )
+          }
+        >
+          {t("competitorAuthExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-channel-sandbox-status-export"
+          onClick={() =>
+            void downloadChannelSandboxStatusCsv(locale).then(() =>
+              setMessage(t("competitorChannelSandboxStatusExportDone"))
+            )
+          }
+        >
+          {t("competitorChannelSandboxStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-dlq-summary-export"
+          onClick={() =>
+            void downloadDigestDeadLetterSummaryCsv(locale).then(() =>
+              setMessage(t("competitorDigestDlqSummaryExportDone"))
+            )
+          }
+        >
+          {t("competitorDigestDlqSummaryExportCsv")}
         </button>
         <button
           type="button"

@@ -14,6 +14,9 @@ import {
   downloadCompetitorAnchorCsv,
   downloadDigestQueuedJobsSummaryCsv,
   downloadRuleCompilerStatusCsv,
+  downloadAuthStatusCsv,
+  downloadChannelSandboxStatusCsv,
+  downloadDigestDeadLetterSummaryCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -106,6 +109,39 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessRuleCompilerExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-auth-export"
+            onClick={() =>
+              void downloadAuthStatusCsv(locale).then(() =>
+                setMessage(t("readinessAuthExportDone"))
+              )
+            }
+          >
+            {t("readinessAuthExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-channel-sandbox-status-export"
+            onClick={() =>
+              void downloadChannelSandboxStatusCsv(locale).then(() =>
+                setMessage(t("readinessChannelSandboxStatusExportDone"))
+              )
+            }
+          >
+            {t("readinessChannelSandboxStatusExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-dlq-summary-export"
+            onClick={() =>
+              void downloadDigestDeadLetterSummaryCsv(locale).then(() =>
+                setMessage(t("readinessDigestDlqSummaryExportDone"))
+              )
+            }
+          >
+            {t("readinessDigestDlqSummaryExportCsv")}
           </button>
           <button
             type="button"
