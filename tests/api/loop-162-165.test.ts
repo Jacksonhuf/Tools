@@ -85,4 +85,59 @@ describe("export store kinds (Loop 162-165)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports repricing_batch_job_csv", async () => {
+    const { app } = createTestApp();
+    const enq = await app.request("/api/v1/repricing-batch/jobs/enqueue", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ scope: "tenant", shard_total: 2 }),
+    });
+    const { job } = (await enq.json()) as { job: { job_id: string } };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "repricing_batch_job_csv",
+        job_id: job.job_id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports category_rule_template_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "category_rule_template_csv",
+        category_id: "cat-electronics-mx",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports copilot_session_csv", async () => {
+    resetCopilotSessionsForTests();
+    const { app } = createTestApp();
+    const created = await app.request("/api/v1/agent/copilot/sessions", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        listing_id: "listing-ml-001",
+        sku_id: "demo-sku-001",
+      }),
+    });
+    const { session_id } = (await created.json()) as { session_id: string };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "copilot_session_csv",
+        session_id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

@@ -39,6 +39,11 @@ import {
   downloadRepricingBatchShardPlanCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadReconciliationAlertsReportCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -471,6 +476,56 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("competitorPricingContextExportDone"))
+            )
+          }
+        >
+          {t("competitorPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("competitorRepricingBatchJobExportDone")))
+              .catch(() => setMessage(t("competitorRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("competitorRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("competitorCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("competitorCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              listingId,
+              DEMO_SKU,
+              LISTINGS.find((l) => l.id === listingId)?.channel
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("competitorCopilotSessionExportDone")))
+          }
+        >
+          {t("competitorCopilotSessionExportCsv")}
         </button>
         <button
           type="button"

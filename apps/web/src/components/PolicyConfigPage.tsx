@@ -11,6 +11,10 @@ import {
   downloadCategoryRuleTemplatesCsv,
   downloadCategoryRuleTemplateCsv,
   downloadSkuCategoryRuleTemplateCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
   downloadSharedFeeTemplatesCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
@@ -224,6 +228,44 @@ export function PolicyConfigPage() {
           }
         >
           {t("skuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("policyPricingContextExportDone"))
+            )
+          }
+        >
+          {t("policyPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("policyRepricingBatchJobExportDone")))
+              .catch(() => setMessage(t("policyRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("policyRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="policy-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              "listing-ml-001",
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("policyCopilotSessionExportDone")))
+          }
+        >
+          {t("policyCopilotSessionExportCsv")}
         </button>
       </section>
     </div>

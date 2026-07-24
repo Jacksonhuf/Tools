@@ -66,6 +66,10 @@ import {
   downloadDigestScheduleCsv,
   downloadDynamicRepricingRuleCsv,
   downloadSkuCategoryRuleTemplateCsv,
+  downloadPricingContextCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -415,6 +419,45 @@ export function OpsCenterPage() {
           }
         >
           {t("opsSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("opsPricingContextExportDone"))
+            )
+          }
+        >
+          {t("opsPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("opsCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("opsCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              DEMO_LISTINGS[0],
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("opsCopilotSessionExportDone")))
+          }
+        >
+          {t("opsCopilotSessionExportCsv")}
         </button>
       </div>
 
