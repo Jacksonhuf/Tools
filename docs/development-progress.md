@@ -1468,6 +1468,34 @@
 | **实现** | 运维、通道、就绪、Copilot `dynamic-repricing-rule-export`；定价页补按钮 |
 | **测试** | `loop-154-157.test.ts` 增至 5 条 POST |
 
+### Loop 234 — 补全 Loop 158：通道/竞品/就绪/Copilot SKU 重算队列 CSV（P3/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `repricing-queue-sku-export`（运维原有保留） |
+| **测试** | `loop-158-161.test.ts`（`repricing_queue_sku_csv` POST） |
+
+### Loop 235 — 补全 Loop 159：通道/竞品/就绪/Copilot 重算分片计划 CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `repricing-batch-shard-plan-export` |
+| **测试** | 沿用 `loop-158-161.test.ts` |
+
+### Loop 236 — 补全 Loop 160：运维/通道/竞品/就绪/Copilot SKU 类目模板 CSV（P2-E3-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `sku-category-template-export`（策略页原有保留） |
+| **测试** | 沿用 `loop-158-161.test.ts` |
+
+### Loop 237 — 补全 Loop 161：通道/竞品/就绪/Copilot 对账报表 CSV（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `reconciliation-report-export` |
+| **测试** | `loop-158-161.test.ts`（`reconciliation_alerts_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -1934,3 +1962,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.22 | 2026-07-24 | Loop 222–225 补全 Loop 146–149 auth/sandbox/dlq Web 与 export POST 测 |
 | v7.23 | 2026-07-24 | Loop 226–229 补全 Loop 150–153 sync/milestones/policy/workers Web 与 export POST 测 |
 | v7.24 | 2026-07-24 | Loop 230–233 补全 Loop 154–157 pricing/guard/digest/dynamic-rule Web 与 export POST 测 |
+| v7.25 | 2026-07-24 | Loop 234–237 补全 Loop 158–161 queue/shard/template/reconciliation Web 与 export POST 测 |

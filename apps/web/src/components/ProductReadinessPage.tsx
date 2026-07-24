@@ -25,6 +25,10 @@ import {
   downloadCrossChannelGuardCsv,
   downloadDigestScheduleCsv,
   downloadDynamicRepricingRuleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -228,6 +232,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessDynamicRepricingRuleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-repricing-queue-sku-export"
+            onClick={() =>
+              void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("readinessRepricingQueueSkuExportDone"))
+              )
+            }
+          >
+            {t("readinessRepricingQueueSkuExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-repricing-batch-shard-plan-export"
+            onClick={() =>
+              void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+                () => setMessage(t("readinessRepricingBatchShardPlanExportDone"))
+              )
+            }
+          >
+            {t("readinessRepricingBatchShardPlanExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-sku-category-template-export"
+            onClick={() =>
+              void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("readinessSkuCategoryRuleTemplateExportDone"))
+              )
+            }
+          >
+            {t("readinessSkuCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-reconciliation-report-export"
+            onClick={() =>
+              void downloadReconciliationAlertsReportCsv(locale).then(() =>
+                setMessage(t("readinessReconciliationReportExportDone"))
+              )
+            }
+          >
+            {t("readinessReconciliationReportExportCsv")}
           </button>
           <button
             type="button"

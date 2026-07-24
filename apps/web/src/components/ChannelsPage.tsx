@@ -27,6 +27,10 @@ import {
   downloadCrossChannelGuardCsv,
   downloadDigestScheduleCsv,
   downloadDynamicRepricingRuleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -426,6 +430,50 @@ export function ChannelsPage() {
           }
         >
           {t("channelsDynamicRepricingRuleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-queue-sku-export"
+          onClick={() =>
+            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsRepricingQueueSkuExportDone"))
+            )
+          }
+        >
+          {t("channelsRepricingQueueSkuExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("channelsRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("channelsRepricingBatchShardPlanExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("channelsSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("channelsReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("channelsReconciliationReportExportCsv")}
         </button>
       </div>
 

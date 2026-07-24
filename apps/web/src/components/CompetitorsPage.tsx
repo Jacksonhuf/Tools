@@ -35,6 +35,10 @@ import {
   downloadPricingSnapshotCsv,
   downloadCrossChannelGuardCsv,
   downloadDigestScheduleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -423,6 +427,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-queue-sku-export"
+          onClick={() =>
+            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorRepricingQueueSkuExportDone"))
+            )
+          }
+        >
+          {t("competitorRepricingQueueSkuExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("competitorRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("competitorRepricingBatchShardPlanExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("competitorSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("competitorReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("competitorReconciliationReportExportCsv")}
         </button>
         <button
           type="button"

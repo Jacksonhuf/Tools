@@ -45,6 +45,10 @@ import {
   downloadPricingSnapshotCsv,
   downloadCrossChannelGuardCsv,
   downloadDynamicRepricingRuleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -618,6 +622,50 @@ export function CopilotPage() {
             }
           >
             {t("copilotDynamicRepricingRuleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-queue-sku-export"
+            onClick={() =>
+              void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotRepricingQueueSkuExportDone"))
+              )
+            }
+          >
+            {t("copilotRepricingQueueSkuExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-batch-shard-plan-export"
+            onClick={() =>
+              void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+                () => setMessage(t("copilotRepricingBatchShardPlanExportDone"))
+              )
+            }
+          >
+            {t("copilotRepricingBatchShardPlanExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-sku-category-template-export"
+            onClick={() =>
+              void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotSkuCategoryRuleTemplateExportDone"))
+              )
+            }
+          >
+            {t("copilotSkuCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-reconciliation-report-export"
+            onClick={() =>
+              void downloadReconciliationAlertsReportCsv(locale).then(() =>
+                setMessage(t("copilotReconciliationReportExportDone"))
+              )
+            }
+          >
+            {t("copilotReconciliationReportExportCsv")}
           </button>
           <button
             type="button"
