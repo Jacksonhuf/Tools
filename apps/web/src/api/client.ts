@@ -2181,6 +2181,18 @@ export async function downloadPriceVersionCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadLatestQueuePriceVersionCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const { items } = await fetchRepricingQueue(locale, skuId);
+  const versionId = items[0]?.version_id;
+  if (!versionId) {
+    throw new Error("PRICE_VERSION_EMPTY");
+  }
+  await downloadPriceVersionCsv(locale, versionId);
+}
+
 export async function fetchWorkerStatus(locale: string) {
   const res = await fetch(`/api/v1/ops/workers/status`, {
     headers: headers(locale),

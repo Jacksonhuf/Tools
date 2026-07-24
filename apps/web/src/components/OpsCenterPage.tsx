@@ -70,6 +70,8 @@ import {
   downloadCategoryRuleTemplateCsv,
   createCopilotSession,
   downloadCopilotSessionCsv,
+  downloadP5ReadinessCsv,
+  downloadShopCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -458,6 +460,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("opsP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsP5ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-shop-export"
+          onClick={() =>
+            void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+              setMessage(t("opsShopExportDone"))
+            )
+          }
+        >
+          {t("opsShopExportCsv")}
         </button>
       </div>
 

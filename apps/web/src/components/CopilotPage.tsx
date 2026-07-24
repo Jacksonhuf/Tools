@@ -52,6 +52,10 @@ import {
   downloadPricingContextCsv,
   downloadLatestRepricingBatchJobCsv,
   downloadCategoryRuleTemplateCsv,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadP5ReadinessCsv,
+  downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -705,6 +709,50 @@ export function CopilotPage() {
             }
           >
             {t("copilotCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-price-version-export"
+            onClick={() =>
+              void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+                .then(() => setMessage(t("copilotPriceVersionExportDone")))
+                .catch(() => setMessage(t("copilotPriceVersionExportEmpty")))
+            }
+          >
+            {t("copilotPriceVersionExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-version-backup-csv"
+            onClick={() =>
+              void downloadVersionBackupCsv(locale).then(() =>
+                setMessage(t("copilotVersionBackupCsvDone"))
+              )
+            }
+          >
+            {t("copilotVersionBackupCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-p5-readiness-export"
+            onClick={() =>
+              void downloadP5ReadinessCsv(locale).then(() =>
+                setMessage(t("copilotP5ReadinessExportDone"))
+              )
+            }
+          >
+            {t("copilotP5ReadinessExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-shop-export"
+            onClick={() =>
+              void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+                setMessage(t("copilotShopExportDone"))
+              )
+            }
+          >
+            {t("copilotShopExportCsv")}
           </button>
           <button
             type="button"
