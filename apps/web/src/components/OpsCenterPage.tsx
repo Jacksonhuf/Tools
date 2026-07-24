@@ -58,6 +58,8 @@ import {
   downloadDigestQueuedJobsSummaryCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
+  downloadChannelSandboxStatusCsv,
+  downloadDigestDeadLetterSummaryCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -319,6 +321,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsRuleCompilerExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-channel-sandbox-status-export"
+          onClick={() =>
+            void downloadChannelSandboxStatusCsv(locale).then(() =>
+              setMessage(t("opsChannelSandboxStatusExportDone"))
+            )
+          }
+        >
+          {t("opsChannelSandboxStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-dlq-summary-export"
+          onClick={() =>
+            void downloadDigestDeadLetterSummaryCsv(locale).then(() =>
+              setMessage(t("opsDigestDlqSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsDigestDlqSummaryExportCsv")}
         </button>
       </div>
 

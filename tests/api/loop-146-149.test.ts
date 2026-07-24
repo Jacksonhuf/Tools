@@ -49,4 +49,24 @@ describe("export store kinds (Loop 146-148)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports auth_status_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "auth_status_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports digest_dead_letter_summary_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "digest_dead_letter_summary_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

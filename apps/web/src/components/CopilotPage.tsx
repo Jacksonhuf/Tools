@@ -36,6 +36,8 @@ import {
   downloadAgentReadinessCheckCsv,
   downloadProductReadinessCsv,
   downloadCompetitorAnchorCsv,
+  downloadAuthStatusCsv,
+  downloadChannelSandboxStatusCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -509,6 +511,28 @@ export function CopilotPage() {
             }
           >
             {t("copilotCompetitorAnchorExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-auth-export"
+            onClick={() =>
+              void downloadAuthStatusCsv(locale).then(() =>
+                setMessage(t("copilotAuthExportDone"))
+              )
+            }
+          >
+            {t("copilotAuthExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-channel-sandbox-status-export"
+            onClick={() =>
+              void downloadChannelSandboxStatusCsv(locale).then(() =>
+                setMessage(t("copilotChannelSandboxStatusExportDone"))
+              )
+            }
+          >
+            {t("copilotChannelSandboxStatusExportCsv")}
           </button>
           <button
             type="button"

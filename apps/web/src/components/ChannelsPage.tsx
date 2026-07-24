@@ -16,6 +16,8 @@ import {
   downloadCompetitorAnchorCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestQueuedJobsSummaryCsv,
+  downloadAuthStatusCsv,
+  downloadDigestDeadLetterSummaryCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -304,6 +306,28 @@ export function ChannelsPage() {
           }
         >
           {t("channelsDigestJobsSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-auth-export"
+          onClick={() =>
+            void downloadAuthStatusCsv(locale).then(() =>
+              setMessage(t("channelsAuthExportDone"))
+            )
+          }
+        >
+          {t("channelsAuthExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-dlq-summary-export"
+          onClick={() =>
+            void downloadDigestDeadLetterSummaryCsv(locale).then(() =>
+              setMessage(t("channelsDigestDlqSummaryExportDone"))
+            )
+          }
+        >
+          {t("channelsDigestDlqSummaryExportCsv")}
         </button>
       </div>
 
