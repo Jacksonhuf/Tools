@@ -60,6 +60,8 @@ import {
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -343,6 +345,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("opsAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("opsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("opsAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("opsAdjustmentApprovalPolicyExportCsv")}
         </button>
       </div>
 
