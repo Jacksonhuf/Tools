@@ -18,6 +18,10 @@ import {
   downloadDigestQueuedJobsSummaryCsv,
   downloadAuthStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -328,6 +332,50 @@ export function ChannelsPage() {
           }
         >
           {t("channelsDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-sync-schedule-export"
+          onClick={() =>
+            void downloadListingSyncScheduleCsv(locale).then(() =>
+              setMessage(t("channelsListingSyncScheduleExportDone"))
+            )
+          }
+        >
+          {t("channelsListingSyncScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("channelsAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("channelsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("channelsAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("channelsAdjustmentApprovalPolicyExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-ops-workers-summary-export"
+          onClick={() =>
+            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+              setMessage(t("channelsOpsWorkersSummaryExportDone"))
+            )
+          }
+        >
+          {t("channelsOpsWorkersSummaryExportCsv")}
         </button>
       </div>
 

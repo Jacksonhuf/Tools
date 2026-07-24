@@ -1412,6 +1412,34 @@
 | **实现** | `ops-workers-status-summary-csv.ts`；`GET /ops/workers/status/summary/export`；`ops_workers_status_summary_csv`；同步计划/审批策略/里程碑/Worker 汇总导出按钮 |
 | **测试** | `loop-150-153.test.ts` |
 
+### Loop 226 — 补全 Loop 150：通道/竞品/就绪/Copilot 同步计划 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `listing-sync-schedule-export`（运维原有保留） |
+| **测试** | `loop-150-153.test.ts` |
+
+### Loop 227 — 补全 Loop 151：运维/通道/竞品/Copilot 里程碑 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、Copilot `agent-milestones-export`（就绪页原有保留） |
+| **测试** | `loop-150-153.test.ts`（`agent_milestones_csv` POST） |
+
+### Loop 228 — 补全 Loop 152：运维/通道/竞品/就绪/Copilot 审批策略 CSV（P0-E5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `adjustment-approval-policy-export` |
+| **测试** | `loop-150-153.test.ts`（`adjustment_approval_policy_csv` POST） |
+
+### Loop 229 — 补全 Loop 153：通道/竞品/就绪/Copilot Worker 汇总 CSV（P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot `ops-workers-summary-export` |
+| **测试** | `loop-150-153.test.ts`（`ops_workers_status_summary_csv` POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -1876,3 +1904,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.20 | 2026-07-23 | Loop 214–217 补全 Loop 138–141 就绪/锚点/产品就绪 Web 与 export POST 测 |
 | v7.21 | 2026-07-23 | Loop 218–221 补全 Loop 142–145 digest/adapter/compiler Web 与 export POST 测 |
 | v7.22 | 2026-07-24 | Loop 222–225 补全 Loop 146–149 auth/sandbox/dlq Web 与 export POST 测 |
+| v7.23 | 2026-07-24 | Loop 226–229 补全 Loop 150–153 sync/milestones/policy/workers Web 与 export POST 测 |
