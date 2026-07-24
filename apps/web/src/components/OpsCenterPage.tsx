@@ -60,6 +60,18 @@ import {
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadDynamicRepricingRuleCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadPricingContextCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
+  downloadP5ReadinessCsv,
+  downloadShopCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -343,6 +355,133 @@ export function OpsCenterPage() {
           }
         >
           {t("opsDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("opsAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("opsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("opsAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("opsAdjustmentApprovalPolicyExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("opsCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("opsDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("opsDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(locale, DEMO_LISTINGS[0]).then(
+              () => setMessage(t("opsDynamicRepricingRuleExportDone"))
+            )
+          }
+        >
+          {t("opsDynamicRepricingRuleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("opsSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("opsPricingContextExportDone"))
+            )
+          }
+        >
+          {t("opsPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("opsCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("opsCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              DEMO_LISTINGS[0],
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("opsCopilotSessionExportDone")))
+          }
+        >
+          {t("opsCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("opsP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsP5ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-shop-export"
+          onClick={() =>
+            void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+              setMessage(t("opsShopExportDone"))
+            )
+          }
+        >
+          {t("opsShopExportCsv")}
         </button>
       </div>
 

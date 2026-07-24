@@ -10,6 +10,15 @@ import {
   downloadSkuCatalogCsv,
   downloadCrossChannelGuardCsv,
   downloadPricingSnapshotCsv,
+  downloadDynamicRepricingRuleCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
+  DEMO_SKU,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadP5ReadinessCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
   downloadI18nGlossaryTermCsv,
@@ -253,6 +262,89 @@ export function PricingPage() {
           }
         >
           {t("crossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("dynamicRepricingRuleExportDone"))
+            )
+          }
+        >
+          {t("dynamicRepricingRuleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("pricingRepricingBatchJobExportDone")))
+              .catch(() => setMessage(t("pricingRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("pricingRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("pricingCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("pricingCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              "listing-ml-001",
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("pricingCopilotSessionExportDone")))
+          }
+        >
+          {t("pricingCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-price-version-export"
+          onClick={() =>
+            void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("pricingPriceVersionExportDone")))
+              .catch(() => setMessage(t("pricingPriceVersionExportEmpty")))
+          }
+        >
+          {t("pricingPriceVersionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("pricingVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("pricingVersionBackupCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("pricingP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("pricingP5ReadinessExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

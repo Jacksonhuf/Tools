@@ -18,6 +18,27 @@ import {
   downloadDigestQueuedJobsSummaryCsv,
   downloadAuthStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
+  DEMO_SKU,
+  downloadPricingSnapshotCsv,
+  downloadCrossChannelGuardCsv,
+  downloadDigestScheduleCsv,
+  downloadDynamicRepricingRuleCsv,
+  downloadSkuRepricingQueueCsv,
+  downloadRepricingBatchShardPlanCsv,
+  downloadSkuCategoryRuleTemplateCsv,
+  downloadReconciliationAlertsReportCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadP5ReadinessCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -328,6 +349,222 @@ export function ChannelsPage() {
           }
         >
           {t("channelsDigestDlqSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-sync-schedule-export"
+          onClick={() =>
+            void downloadListingSyncScheduleCsv(locale).then(() =>
+              setMessage(t("channelsListingSyncScheduleExportDone"))
+            )
+          }
+        >
+          {t("channelsListingSyncScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("channelsAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("channelsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-adjustment-approval-policy-export"
+          onClick={() =>
+            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+              setMessage(t("channelsAdjustmentApprovalPolicyExportDone"))
+            )
+          }
+        >
+          {t("channelsAdjustmentApprovalPolicyExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-ops-workers-summary-export"
+          onClick={() =>
+            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+              setMessage(t("channelsOpsWorkersSummaryExportDone"))
+            )
+          }
+        >
+          {t("channelsOpsWorkersSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsPricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("channelsPricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-cross-channel-guard-export"
+          onClick={() =>
+            void downloadCrossChannelGuardCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsCrossChannelGuardExportDone"))
+            )
+          }
+        >
+          {t("channelsCrossChannelGuardExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-schedule-export"
+          onClick={() =>
+            void downloadDigestScheduleCsv(locale).then(() =>
+              setMessage(t("channelsDigestScheduleExportDone"))
+            )
+          }
+        >
+          {t("channelsDigestScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-dynamic-repricing-rule-export"
+          onClick={() =>
+            void downloadDynamicRepricingRuleCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            ).then(() => setMessage(t("channelsDynamicRepricingRuleExportDone")))
+          }
+        >
+          {t("channelsDynamicRepricingRuleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-queue-sku-export"
+          onClick={() =>
+            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsRepricingQueueSkuExportDone"))
+            )
+          }
+        >
+          {t("channelsRepricingQueueSkuExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("channelsRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("channelsRepricingBatchShardPlanExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("channelsSkuCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("channelsReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("channelsReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("channelsPricingContextExportDone"))
+            )
+          }
+        >
+          {t("channelsPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("channelsRepricingBatchJobExportDone")))
+              .catch(() => setMessage(t("channelsRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("channelsRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("channelsCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("channelsCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              "listing-ml-001",
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("channelsCopilotSessionExportDone")))
+          }
+        >
+          {t("channelsCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-price-version-export"
+          onClick={() =>
+            void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("channelsPriceVersionExportDone")))
+              .catch(() => setMessage(t("channelsPriceVersionExportEmpty")))
+          }
+        >
+          {t("channelsPriceVersionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("channelsVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("channelsVersionBackupCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("channelsP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsP5ReadinessExportCsv")}
         </button>
       </div>
 
