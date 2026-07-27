@@ -166,4 +166,94 @@ describe("export store kinds (Loop 186-189)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports channel_sandbox_event_csv", async () => {
+    const { app } = createTestApp();
+    await app.request("/api/v1/shops/shop-ml-demo/oauth/mock-complete", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({}),
+    });
+    await app.request("/api/v1/listings/listing-ml-001/price-versions", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ explicit_price_mxn: 1625 }),
+    });
+    await app.request("/api/v1/listings/listing-ml-001/channel-publish", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({}),
+    });
+    const list = await app.request("/api/v1/channels/sandbox/events?limit=1", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    const { items } = (await list.json()) as { items: Array<{ id: string }> };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "channel_sandbox_event_csv",
+        sandbox_event_id: items[0].id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports digest_dead_letter_job_csv", async () => {
+    process.env.DIGEST_MAX_ATTEMPTS = "2";
+    const { app } = createTestApp();
+    await app.request("/api/v1/agent/digest/daily/enqueue", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ simulate_poison: true, channels: ["email_stub"] }),
+    });
+    await app.request("/api/v1/agent/digest/jobs/process", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ limit: 1 }),
+    });
+    await app.request("/api/v1/agent/digest/jobs/process", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ limit: 1 }),
+    });
+    const dlq = await app.request("/api/v1/agent/digest/jobs/dead-letter?limit=1", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    const { items } = (await dlq.json()) as { items: Array<{ job_id: string }> };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "digest_dead_letter_job_csv",
+        digest_job_id: items[0].job_id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports agent_tool_audit_csv", async () => {
+    const { app } = createTestApp();
+    await app.request("/api/v1/agent/tools/invoke", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        tool: "tool_list_price_versions",
+        arguments: { sku_id: "demo-sku-001" },
+      }),
+    });
+    const list = await app.request("/api/v1/agent/tool-audit?limit=1", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    const { items } = (await list.json()) as { items: Array<{ id: string }> };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "agent_tool_audit_csv",
+        audit_id: items[0].id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

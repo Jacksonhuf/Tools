@@ -2933,6 +2933,17 @@ export async function downloadDigestDispatchCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function fetchDigestDispatches(locale: string, limit = 20) {
+  const res = await fetch(
+    `/api/v1/agent/digest/dispatches?limit=${encodeURIComponent(String(limit))}`,
+    { headers: headers(locale) }
+  );
+  if (!res.ok) throw new Error(`digest-dispatches ${res.status}`);
+  return res.json() as Promise<{
+    items: Array<{ job_id: string; status: string; updated_at: string }>;
+  }>;
+}
+
 export async function downloadWorkerHeartbeatsCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/ops/workers/status/export`, {
     headers: headers(locale),
@@ -2996,6 +3007,50 @@ export async function downloadFirstWorkerHeartbeatCsv(
     throw new Error("WORKER_HEARTBEAT_EMPTY");
   }
   await downloadWorkerHeartbeatCsv(locale, workerId);
+}
+
+export async function downloadLatestDigestDispatchCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchDigestDispatches(locale, 1);
+  const jobId = items[0]?.job_id;
+  if (!jobId) {
+    throw new Error("DIGEST_DISPATCH_EMPTY");
+  }
+  await downloadDigestDispatchCsv(locale, jobId);
+}
+
+export async function downloadFirstChannelSandboxEventCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchChannelSandboxEvents(locale, 1);
+  const eventId = items[0]?.id;
+  if (!eventId) {
+    throw new Error("SANDBOX_EVENT_EMPTY");
+  }
+  await downloadChannelSandboxEventCsv(locale, eventId);
+}
+
+export async function downloadFirstDigestDeadLetterJobCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchDigestDeadLetterSummary(locale, 1);
+  const jobId = items[0]?.job_id;
+  if (!jobId) {
+    throw new Error("DIGEST_DEAD_LETTER_JOB_EMPTY");
+  }
+  await downloadDigestDeadLetterJobCsv(locale, jobId);
+}
+
+export async function downloadFirstAgentToolAuditRowCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchAgentToolAudit(locale, 1);
+  const auditId = items[0]?.id;
+  if (!auditId) {
+    throw new Error("AGENT_TOOL_AUDIT_EMPTY");
+  }
+  await downloadAgentToolAuditRowCsv(locale, auditId);
 }
 
 export async function downloadOpsWorkersStatusSummaryCsv(

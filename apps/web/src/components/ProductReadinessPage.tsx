@@ -49,6 +49,10 @@ import {
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
+  downloadLatestDigestDispatchCsv,
+  downloadFirstChannelSandboxEventCsv,
+  downloadFirstDigestDeadLetterJobCsv,
+  downloadFirstAgentToolAuditRowCsv,
   downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
@@ -513,6 +517,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessWorkerHeartbeatExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-dispatch-export"
+            onClick={() =>
+              void downloadLatestDigestDispatchCsv(locale)
+                .then(() => setMessage(t("readinessDigestDispatchExportDone")))
+                .catch(() => setMessage(t("readinessDigestDispatchExportEmpty")))
+            }
+          >
+            {t("readinessDigestDispatchExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-sandbox-event-export"
+            onClick={() =>
+              void downloadFirstChannelSandboxEventCsv(locale)
+                .then(() => setMessage(t("readinessSandboxEventExportDone")))
+                .catch(() => setMessage(t("readinessSandboxEventExportEmpty")))
+            }
+          >
+            {t("readinessSandboxEventExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-dead-letter-job-export"
+            onClick={() =>
+              void downloadFirstDigestDeadLetterJobCsv(locale)
+                .then(() => setMessage(t("readinessDigestDeadLetterJobExportDone")))
+                .catch(() => setMessage(t("readinessDigestDeadLetterJobExportEmpty")))
+            }
+          >
+            {t("readinessDigestDeadLetterJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-agent-tool-audit-row-export"
+            onClick={() =>
+              void downloadFirstAgentToolAuditRowCsv(locale)
+                .then(() => setMessage(t("readinessAgentToolAuditRowExportDone")))
+                .catch(() => setMessage(t("readinessAgentToolAuditRowExportEmpty")))
+            }
+          >
+            {t("readinessAgentToolAuditRowExportCsv")}
           </button>
           <button
             type="button"

@@ -67,6 +67,7 @@ import {
   downloadFirstReconciliationAlertCsv,
   downloadLatestListingSyncJobCsv,
   downloadFirstWorkerHeartbeatCsv,
+  downloadFirstChannelSandboxEventCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
@@ -903,6 +904,17 @@ export function CopilotPage() {
             }
           >
             {t("copilotWorkerHeartbeatExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-sandbox-event-export"
+            onClick={() =>
+              void downloadFirstChannelSandboxEventCsv(locale)
+                .then(() => setMessage(t("copilotSandboxEventExportDone")))
+                .catch(() => setMessage(t("copilotSandboxEventExportEmpty")))
+            }
+          >
+            {t("copilotSandboxEventExportCsv")}
           </button>
           <button
             type="button"

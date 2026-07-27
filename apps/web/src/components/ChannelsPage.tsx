@@ -52,6 +52,9 @@ import {
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
+  downloadLatestDigestDispatchCsv,
+  downloadFirstDigestDeadLetterJobCsv,
+  downloadFirstAgentToolAuditRowCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -726,6 +729,39 @@ export function ChannelsPage() {
           }
         >
           {t("channelsWorkerHeartbeatExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-dispatch-export"
+          onClick={() =>
+            void downloadLatestDigestDispatchCsv(locale)
+              .then(() => setMessage(t("channelsDigestDispatchExportDone")))
+              .catch(() => setMessage(t("channelsDigestDispatchExportEmpty")))
+          }
+        >
+          {t("channelsDigestDispatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-dead-letter-job-export"
+          onClick={() =>
+            void downloadFirstDigestDeadLetterJobCsv(locale)
+              .then(() => setMessage(t("channelsDigestDeadLetterJobExportDone")))
+              .catch(() => setMessage(t("channelsDigestDeadLetterJobExportEmpty")))
+          }
+        >
+          {t("channelsDigestDeadLetterJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-tool-audit-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolAuditRowCsv(locale)
+              .then(() => setMessage(t("channelsAgentToolAuditRowExportDone")))
+              .catch(() => setMessage(t("channelsAgentToolAuditRowExportEmpty")))
+          }
+        >
+          {t("channelsAgentToolAuditRowExportCsv")}
         </button>
       </div>
 

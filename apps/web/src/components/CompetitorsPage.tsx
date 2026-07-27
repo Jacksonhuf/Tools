@@ -60,6 +60,10 @@ import {
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
+  downloadLatestDigestDispatchCsv,
+  downloadFirstChannelSandboxEventCsv,
+  downloadFirstDigestDeadLetterJobCsv,
+  downloadFirstAgentToolAuditRowCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
@@ -732,6 +736,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorWorkerHeartbeatExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-dispatch-export"
+          onClick={() =>
+            void downloadLatestDigestDispatchCsv(locale)
+              .then(() => setMessage(t("competitorDigestDispatchExportDone")))
+              .catch(() => setMessage(t("competitorDigestDispatchExportEmpty")))
+          }
+        >
+          {t("competitorDigestDispatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-sandbox-event-export"
+          onClick={() =>
+            void downloadFirstChannelSandboxEventCsv(locale)
+              .then(() => setMessage(t("competitorSandboxEventExportDone")))
+              .catch(() => setMessage(t("competitorSandboxEventExportEmpty")))
+          }
+        >
+          {t("competitorSandboxEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-digest-dead-letter-job-export"
+          onClick={() =>
+            void downloadFirstDigestDeadLetterJobCsv(locale)
+              .then(() => setMessage(t("competitorDigestDeadLetterJobExportDone")))
+              .catch(() => setMessage(t("competitorDigestDeadLetterJobExportEmpty")))
+          }
+        >
+          {t("competitorDigestDeadLetterJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-tool-audit-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolAuditRowCsv(locale)
+              .then(() => setMessage(t("competitorAgentToolAuditRowExportDone")))
+              .catch(() => setMessage(t("competitorAgentToolAuditRowExportEmpty")))
+          }
+        >
+          {t("competitorAgentToolAuditRowExportCsv")}
         </button>
         <button
           type="button"
