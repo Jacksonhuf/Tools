@@ -51,6 +51,10 @@ import {
   downloadP4ReadinessCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadSkuCatalogCsv,
+  downloadListingCsv,
+  downloadTariffHsRateCsv,
+  downloadFxRateCsv,
   downloadShopCsv,
   fetchIngestStatus,
   fetchDynamicRule,
@@ -623,6 +627,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorTenantSharedFeeTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-sku-catalog-export"
+          onClick={() =>
+            void downloadSkuCatalogCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("competitorSkuCatalogExportDone"))
+            )
+          }
+        >
+          {t("competitorSkuCatalogExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-listing-export"
+          onClick={() =>
+            void downloadListingCsv(locale, listingId).then(() =>
+              setMessage(t("competitorListingExportDone"))
+            )
+          }
+        >
+          {t("competitorListingExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-tariff-rate-export"
+          onClick={() =>
+            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
+              setMessage(t("competitorTariffRateExportDone"))
+            )
+          }
+        >
+          {t("competitorTariffRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-fx-rate-export"
+          onClick={() =>
+            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+              setMessage(t("competitorFxRateExportDone"))
+            )
+          }
+        >
+          {t("competitorFxRateExportCsv")}
         </button>
         <button
           type="button"

@@ -39,6 +39,10 @@ import {
   downloadShopCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadSkuCatalogCsv,
+  downloadListingCsv,
+  downloadTariffHsRateCsv,
+  downloadFxRateCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -392,6 +396,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessTenantSharedFeeTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-sku-catalog-export"
+            onClick={() =>
+              void downloadSkuCatalogCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("readinessSkuCatalogExportDone"))
+              )
+            }
+          >
+            {t("readinessSkuCatalogExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-export"
+            onClick={() =>
+              void downloadListingCsv(locale, "listing-ml-001").then(() =>
+                setMessage(t("readinessListingExportDone"))
+              )
+            }
+          >
+            {t("readinessListingExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-tariff-rate-export"
+            onClick={() =>
+              void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(
+                () => setMessage(t("readinessTariffRateExportDone"))
+              )
+            }
+          >
+            {t("readinessTariffRateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-fx-rate-export"
+            onClick={() =>
+              void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+                setMessage(t("readinessFxRateExportDone"))
+              )
+            }
+          >
+            {t("readinessFxRateExportCsv")}
           </button>
           <button
             type="button"

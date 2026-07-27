@@ -58,6 +58,10 @@ import {
   downloadP3ReadinessCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadSkuCatalogCsv,
+  downloadListingCsv,
+  downloadTariffHsRateCsv,
+  downloadFxRateCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
@@ -790,6 +794,51 @@ export function CopilotPage() {
             }
           >
             {t("copilotTenantSharedFeeTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-sku-catalog-export"
+            onClick={() =>
+              void downloadSkuCatalogCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("copilotSkuCatalogExportDone"))
+              )
+            }
+          >
+            {t("copilotSkuCatalogExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-export"
+            onClick={() =>
+              void downloadListingCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              ).then(() => setMessage(t("copilotListingExportDone")))
+            }
+          >
+            {t("copilotListingExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-tariff-rate-export"
+            onClick={() =>
+              void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(
+                () => setMessage(t("copilotTariffRateExportDone"))
+              )
+            }
+          >
+            {t("copilotTariffRateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-fx-rate-export"
+            onClick={() =>
+              void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+                setMessage(t("copilotFxRateExportDone"))
+              )
+            }
+          >
+            {t("copilotFxRateExportCsv")}
           </button>
           <button
             type="button"

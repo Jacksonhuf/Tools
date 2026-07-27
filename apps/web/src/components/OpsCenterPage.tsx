@@ -75,6 +75,8 @@ import {
   downloadP4ReadinessCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadSkuCatalogCsv,
+  downloadListingCsv,
   downloadShopCsv,
   promoteRepricingToPending,
   reconcileListing,
@@ -531,6 +533,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsTenantSharedFeeTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-sku-catalog-export"
+          onClick={() =>
+            void downloadSkuCatalogCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsSkuCatalogExportDone"))
+            )
+          }
+        >
+          {t("opsSkuCatalogExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-export"
+          onClick={() =>
+            void downloadListingCsv(locale, DEMO_LISTINGS[0]).then(() =>
+              setMessage(t("opsListingExportDone"))
+            )
+          }
+        >
+          {t("opsListingExportCsv")}
         </button>
       </div>
 

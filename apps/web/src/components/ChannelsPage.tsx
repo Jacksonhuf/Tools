@@ -43,6 +43,9 @@ import {
   downloadP4ReadinessCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadSkuCatalogCsv,
+  downloadTariffHsRateCsv,
+  downloadFxRateCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -614,6 +617,39 @@ export function ChannelsPage() {
           }
         >
           {t("channelsTenantSharedFeeTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-sku-catalog-export"
+          onClick={() =>
+            void downloadSkuCatalogCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("channelsSkuCatalogExportDone"))
+            )
+          }
+        >
+          {t("channelsSkuCatalogExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-tariff-rate-export"
+          onClick={() =>
+            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
+              setMessage(t("channelsTariffRateExportDone"))
+            )
+          }
+        >
+          {t("channelsTariffRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-fx-rate-export"
+          onClick={() =>
+            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+              setMessage(t("channelsFxRateExportDone"))
+            )
+          }
+        >
+          {t("channelsFxRateExportCsv")}
         </button>
       </div>
 
