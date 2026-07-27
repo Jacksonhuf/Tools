@@ -70,4 +70,43 @@ describe("export store kinds (Loop 198-201)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports agent_readiness_check_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "agent_readiness_check_csv",
+        check_id: "TC-NFR-SEC-004",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports agent_milestone_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "agent_milestone_csv",
+        milestone_id: "P3",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports product_readiness_check_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "product_readiness_check_csv",
+        check_id: "TC-INT-CH-003/004",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

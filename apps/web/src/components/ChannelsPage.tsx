@@ -63,6 +63,10 @@ import {
   downloadCrossChannelDashboardRowCsv,
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
+  downloadFirstAgentReadinessCheckCsv,
+  downloadFirstAgentMilestoneCsv,
+  downloadFirstProductReadinessCheckCsv,
+  downloadFirstFeatureFlagCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -871,6 +875,50 @@ export function ChannelsPage() {
           }
         >
           {t("channelsAgentToolRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-readiness-check-export"
+          onClick={() =>
+            void downloadFirstAgentReadinessCheckCsv(locale)
+              .then(() => setMessage(t("channelsAgentReadinessCheckExportDone")))
+              .catch(() => setMessage(t("channelsAgentReadinessCheckExportEmpty")))
+          }
+        >
+          {t("channelsAgentReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-milestone-export"
+          onClick={() =>
+            void downloadFirstAgentMilestoneCsv(locale)
+              .then(() => setMessage(t("channelsAgentMilestoneExportDone")))
+              .catch(() => setMessage(t("channelsAgentMilestoneExportEmpty")))
+          }
+        >
+          {t("channelsAgentMilestoneExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-product-readiness-check-export"
+          onClick={() =>
+            void downloadFirstProductReadinessCheckCsv(locale)
+              .then(() => setMessage(t("channelsProductReadinessCheckExportDone")))
+              .catch(() => setMessage(t("channelsProductReadinessCheckExportEmpty")))
+          }
+        >
+          {t("channelsProductReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-feature-flag-export"
+          onClick={() =>
+            void downloadFirstFeatureFlagCsv(locale)
+              .then(() => setMessage(t("channelsFeatureFlagExportDone")))
+              .catch(() => setMessage(t("channelsFeatureFlagExportEmpty")))
+          }
+        >
+          {t("channelsFeatureFlagExportCsv")}
         </button>
       </div>
 
