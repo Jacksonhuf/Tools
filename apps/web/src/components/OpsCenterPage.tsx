@@ -71,6 +71,10 @@ import {
   createCopilotSession,
   downloadCopilotSessionCsv,
   downloadP5ReadinessCsv,
+  downloadP3ReadinessCsv,
+  downloadP4ReadinessCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   downloadShopCsv,
   promoteRepricingToPending,
   reconcileListing,
@@ -482,6 +486,51 @@ export function OpsCenterPage() {
           }
         >
           {t("opsShopExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-p3-readiness-export"
+          onClick={() =>
+            void downloadP3ReadinessCsv(locale).then(() =>
+              setMessage(t("opsP3ReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsP3ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-p4-readiness-export"
+          onClick={() =>
+            void downloadP4ReadinessCsv(locale).then(() =>
+              setMessage(t("opsP4ReadinessExportDone"))
+            )
+          }
+        >
+          {t("opsP4ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-shared-fee-template-export"
+          onClick={() =>
+            void downloadSharedFeeTemplateCsv(
+              locale,
+              "fee-tpl-ml-electronics"
+            ).then(() => setMessage(t("opsSharedFeeTemplateExportDone")))
+          }
+        >
+          {t("opsSharedFeeTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-tenant-shared-fee-export"
+          onClick={() =>
+            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+              () => setMessage(t("opsTenantSharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("opsTenantSharedFeeTemplatesExportCsv")}
         </button>
       </div>
 

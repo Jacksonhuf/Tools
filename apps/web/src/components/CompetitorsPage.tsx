@@ -47,6 +47,10 @@ import {
   downloadLatestQueuePriceVersionCsv,
   downloadVersionBackupCsv,
   downloadP5ReadinessCsv,
+  downloadP3ReadinessCsv,
+  downloadP4ReadinessCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   downloadShopCsv,
   fetchIngestStatus,
   fetchDynamicRule,
@@ -574,6 +578,51 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorShopExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-p3-readiness-export"
+          onClick={() =>
+            void downloadP3ReadinessCsv(locale).then(() =>
+              setMessage(t("competitorP3ReadinessExportDone"))
+            )
+          }
+        >
+          {t("competitorP3ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-p4-readiness-export"
+          onClick={() =>
+            void downloadP4ReadinessCsv(locale).then(() =>
+              setMessage(t("competitorP4ReadinessExportDone"))
+            )
+          }
+        >
+          {t("competitorP4ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-shared-fee-template-export"
+          onClick={() =>
+            void downloadSharedFeeTemplateCsv(
+              locale,
+              "fee-tpl-ml-electronics"
+            ).then(() => setMessage(t("competitorSharedFeeTemplateExportDone")))
+          }
+        >
+          {t("competitorSharedFeeTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-tenant-shared-fee-export"
+          onClick={() =>
+            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+              () => setMessage(t("competitorTenantSharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("competitorTenantSharedFeeTemplatesExportCsv")}
         </button>
         <button
           type="button"
