@@ -1720,6 +1720,34 @@
 | **实现** | 运维、通道、竞品、就绪、定价 `agent-digest-date-export`（Copilot 页原有保留）；文档与 i18n 对齐 |
 | **测试** | `loop-190-193.test.ts`（`agent_digest_date_csv` POST，增至 4 条 POST） |
 
+### Loop 270 — 补全 Loop 194：通道/竞品/就绪/Copilot/定价 定价快照行 CSV（P0-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `pricing-row-export`（运维页原有保留） |
+| **测试** | `loop-194-197.test.ts`（`pricing_snapshot_row_csv` POST） |
+
+### Loop 271 — 补全 Loop 195：运维/通道/竞品/就绪/Copilot/定价 跨渠道看板行 CSV（P3-E3-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot、定价 `cross-channel-row-export`（看板页原有保留） |
+| **测试** | `loop-194-197.test.ts`（`cross_channel_dashboard_row_csv` POST） |
+
+### Loop 272 — 补全 Loop 196：运维/通道/就绪/Copilot/定价 竞品曲线点 CSV（P2-E1-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、就绪、Copilot、定价 `curve-point-export`（竞品页原有保留） |
+| **测试** | `loop-194-197.test.ts`（`competitor_curve_point_csv` POST） |
+
+### Loop 273 — 补全 Loop 197：运维/通道/竞品/就绪/定价 Agent 工具行 CSV + 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、定价 `agent-tool-row-export`（Copilot 页原有保留）；文档与 i18n 对齐 |
+| **测试** | `loop-194-197.test.ts`（`agent_tool_row_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2195,3 +2223,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.31 | 2026-07-27 | Loop 258–261 补全 Loop 182–185 listing-sync/digest-queued/worker-heartbeat Web 与 export POST 测 |
 | v7.32 | 2026-07-27 | Loop 262–265 补全 Loop 186–189 digest-dispatch/sandbox/dead-letter/tool-audit Web 与 export POST 测 |
 | v7.33 | 2026-07-27 | Loop 266–269 补全 Loop 190–193 price-observation/repricing-event/adjustment-index/digest-date Web 与 export POST 测 |
+| v7.34 | 2026-07-27 | Loop 270–273 补全 Loop 194–197 pricing-row/cross-channel/curve-point/agent-tool Web 与 export POST 测 |

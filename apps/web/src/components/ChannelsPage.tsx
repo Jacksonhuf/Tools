@@ -59,6 +59,10 @@ import {
   downloadLatestRepricingEventCsv,
   downloadLatestAdjustmentBatchIndexCsv,
   downloadLatestAgentDigestDateCsv,
+  downloadPricingSnapshotRowCsv,
+  downloadCrossChannelDashboardRowCsv,
+  downloadLatestCompetitorCurvePointCsv,
+  downloadFirstAgentToolRowCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -816,6 +820,57 @@ export function ChannelsPage() {
           }
         >
           {t("channelsAgentDigestDateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-pricing-row-export"
+          onClick={() =>
+            void downloadPricingSnapshotRowCsv(
+              locale,
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then(() => setMessage(t("channelsPricingRowExportDone")))
+              .catch(() => setMessage(t("channelsPricingRowExportEmpty")))
+          }
+        >
+          {t("channelsPricingRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-cross-channel-row-export"
+          onClick={() =>
+            void downloadCrossChannelDashboardRowCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("channelsCrossChannelRowExportDone")))
+              .catch(() => setMessage(t("channelsCrossChannelRowExportEmpty")))
+          }
+        >
+          {t("channelsCrossChannelRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-curve-point-export"
+          onClick={() =>
+            void downloadLatestCompetitorCurvePointCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            )
+              .then(() => setMessage(t("channelsCurvePointExportDone")))
+              .catch(() => setMessage(t("channelsCurvePointExportEmpty")))
+          }
+        >
+          {t("channelsCurvePointExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-tool-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolRowCsv(locale)
+              .then(() => setMessage(t("channelsAgentToolRowExportDone")))
+              .catch(() => setMessage(t("channelsAgentToolRowExportEmpty")))
+          }
+        >
+          {t("channelsAgentToolRowExportCsv")}
         </button>
       </div>
 

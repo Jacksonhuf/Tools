@@ -99,4 +99,65 @@ describe("export store kinds (Loop 194-197)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports cross_channel_dashboard_row_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "cross_channel_dashboard_row_csv",
+        sku_id: "demo-sku-001",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports competitor_curve_point_csv", async () => {
+    resetDebounceForTests();
+    const { app, competitors } = createTestApp();
+    competitors.resetForTests?.();
+    const create = await app.request(
+      "/api/v1/listings/listing-ml-001/competitors",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ external_ref: "MLM-CURVE-EXPORT-196" }),
+      }
+    );
+    const offer = (await create.json()) as { id: string };
+    const day = new Date().toISOString().slice(0, 10);
+    await app.request(`/api/v1/competitor-offers/${offer.id}/observations`, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        sale_price: 1500,
+        observed_at: `${day}T12:00:00.000Z`,
+      }),
+    });
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "competitor_curve_point_csv",
+        listing_id: "listing-ml-001",
+        curve_date: day,
+        range: "7d",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports agent_tool_row_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "agent_tool_row_csv",
+        tool_name: "tool_get_pricing_context",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

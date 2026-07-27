@@ -3098,6 +3098,30 @@ export async function downloadLatestAgentDigestDateCsv(
   await downloadAgentDigestDateCsv(locale, date);
 }
 
+export async function downloadLatestCompetitorCurvePointCsv(
+  locale: string,
+  listingId: string,
+  range: "7d" | "30d" = "7d"
+): Promise<void> {
+  const { points } = await fetchCompetitorCurve(locale, listingId, range);
+  const curveDate = points[0]?.date;
+  if (!curveDate) {
+    throw new Error("COMPETITOR_CURVE_POINT_EMPTY");
+  }
+  await downloadCompetitorCurvePointCsv(locale, listingId, curveDate, range);
+}
+
+export async function downloadFirstAgentToolRowCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchAgentTools(locale);
+  const toolName = items[0]?.name;
+  if (!toolName) {
+    throw new Error("AGENT_TOOL_ROW_EMPTY");
+  }
+  await downloadAgentToolRowCsv(locale, toolName);
+}
+
 export async function downloadOpsWorkersStatusSummaryCsv(
   locale: string
 ): Promise<void> {

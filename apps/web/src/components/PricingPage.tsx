@@ -39,6 +39,10 @@ import {
   downloadLatestRepricingEventCsv,
   downloadLatestAdjustmentBatchIndexCsv,
   downloadLatestAgentDigestDateCsv,
+  downloadPricingSnapshotRowCsv,
+  downloadCrossChannelDashboardRowCsv,
+  downloadLatestCompetitorCurvePointCsv,
+  downloadFirstAgentToolRowCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -587,6 +591,54 @@ export function PricingPage() {
           }
         >
           {t("pricingAgentDigestDateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-snapshot-row-export"
+          onClick={() =>
+            void downloadPricingSnapshotRowCsv(
+              locale,
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then(() => setMessage(t("pricingSnapshotRowExportDone")))
+              .catch(() => setMessage(t("pricingSnapshotRowExportEmpty")))
+          }
+        >
+          {t("pricingSnapshotRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-cross-channel-row-export"
+          onClick={() =>
+            void downloadCrossChannelDashboardRowCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("pricingCrossChannelRowExportDone")))
+              .catch(() => setMessage(t("pricingCrossChannelRowExportEmpty")))
+          }
+        >
+          {t("pricingCrossChannelRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-curve-point-export"
+          onClick={() =>
+            void downloadLatestCompetitorCurvePointCsv(locale, "listing-ml-001")
+              .then(() => setMessage(t("pricingCurvePointExportDone")))
+              .catch(() => setMessage(t("pricingCurvePointExportEmpty")))
+          }
+        >
+          {t("pricingCurvePointExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-tool-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolRowCsv(locale)
+              .then(() => setMessage(t("pricingAgentToolRowExportDone")))
+              .catch(() => setMessage(t("pricingAgentToolRowExportEmpty")))
+          }
+        >
+          {t("pricingAgentToolRowExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (
