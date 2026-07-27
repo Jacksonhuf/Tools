@@ -1608,6 +1608,34 @@
 | **实现** | 通道、竞品、就绪、Copilot、定价 `fx-rate-export` |
 | **测试** | `loop-174-177.test.ts`（`fx_rate_csv` POST，增至 4 条 POST） |
 
+### Loop 254 — 补全 Loop 178：运维/通道/竞品/就绪/Copilot Cost Sheet 行 CSV（P0-E2-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `cost-sheet-row-export`（定价页原有保留） |
+| **测试** | `loop-178-181.test.ts`（`cost_sheet_csv` POST） |
+
+### Loop 255 — 补全 Loop 179：运维/通道/就绪/Copilot/定价 竞品 Offer CSV（P2-E1-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、就绪、Copilot、定价 `competitor-offer-export`（竞品页原有保留） |
+| **测试** | `loop-178-181.test.ts`（`competitor_offer_csv` POST） |
+
+### Loop 256 — 补全 Loop 180：通道/竞品/就绪/Copilot/定价 对账告警 CSV（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `reconciliation-alert-export`（运维页原有保留） |
+| **测试** | `loop-178-181.test.ts`（`reconciliation_alert_csv` POST，增至 3 条 POST） |
+
+### Loop 257 — 补全 Loop 181：Cost Sheet / 竞品 / 对账多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 文档与 i18n 对齐；各页导出按钮与 `downloadLatestCostSheetCsv` / `downloadFirstCompetitorOfferCsv` / `downloadFirstReconciliationAlertCsv` 一致 |
+| **测试** | `loop-178-181.test.ts` |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2079,3 +2107,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.27 | 2026-07-24 | Loop 242–245 补全 Loop 166–169 version/backup/p5/shop Web 与 export POST 测 |
 | v7.28 | 2026-07-27 | Loop 246–249 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |
 | v7.29 | 2026-07-27 | Loop 250–253 补全 Loop 174–177 sku/listing/tariff/fx Web 与 export POST 测 |
+| v7.30 | 2026-07-27 | Loop 254–257 补全 Loop 178–181 cost-sheet/competitor-offer/reconciliation-alert Web 与 export POST 测 |

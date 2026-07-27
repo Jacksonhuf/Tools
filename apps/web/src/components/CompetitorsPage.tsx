@@ -55,6 +55,9 @@ import {
   downloadListingCsv,
   downloadTariffHsRateCsv,
   downloadFxRateCsv,
+  downloadLatestCostSheetCsv,
+  downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
   fetchDynamicRule,
@@ -671,6 +674,28 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorFxRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-cost-sheet-row-export"
+          onClick={() =>
+            void downloadLatestCostSheetCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("competitorCostSheetRowExportDone")))
+              .catch(() => setMessage(t("competitorCostSheetRowExportEmpty")))
+          }
+        >
+          {t("competitorCostSheetRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-reconciliation-alert-export"
+          onClick={() =>
+            void downloadFirstReconciliationAlertCsv(locale)
+              .then(() => setMessage(t("competitorReconciliationAlertExportDone")))
+              .catch(() => setMessage(t("competitorReconciliationAlertExportEmpty")))
+          }
+        >
+          {t("competitorReconciliationAlertExportCsv")}
         </button>
         <button
           type="button"
