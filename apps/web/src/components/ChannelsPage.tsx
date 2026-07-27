@@ -49,6 +49,9 @@ import {
   downloadLatestCostSheetCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadLatestListingSyncJobCsv,
+  downloadLatestDigestQueuedJobCsv,
+  downloadFirstWorkerHeartbeatCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -690,6 +693,39 @@ export function ChannelsPage() {
           }
         >
           {t("channelsReconciliationAlertExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-sync-job-export"
+          onClick={() =>
+            void downloadLatestListingSyncJobCsv(locale)
+              .then(() => setMessage(t("channelsListingSyncJobExportDone")))
+              .catch(() => setMessage(t("channelsListingSyncJobExportEmpty")))
+          }
+        >
+          {t("channelsListingSyncJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-digest-queued-job-export"
+          onClick={() =>
+            void downloadLatestDigestQueuedJobCsv(locale)
+              .then(() => setMessage(t("channelsDigestQueuedJobExportDone")))
+              .catch(() => setMessage(t("channelsDigestQueuedJobExportEmpty")))
+          }
+        >
+          {t("channelsDigestQueuedJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-worker-heartbeat-export"
+          onClick={() =>
+            void downloadFirstWorkerHeartbeatCsv(locale)
+              .then(() => setMessage(t("channelsWorkerHeartbeatExportDone")))
+              .catch(() => setMessage(t("channelsWorkerHeartbeatExportEmpty")))
+          }
+        >
+          {t("channelsWorkerHeartbeatExportCsv")}
         </button>
       </div>
 

@@ -28,6 +28,9 @@ import {
   downloadFxRateCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadLatestListingSyncJobCsv,
+  downloadLatestDigestQueuedJobCsv,
+  downloadFirstWorkerHeartbeatCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -455,6 +458,39 @@ export function PricingPage() {
           }
         >
           {t("pricingReconciliationAlertExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-listing-sync-job-export"
+          onClick={() =>
+            void downloadLatestListingSyncJobCsv(locale)
+              .then(() => setMessage(t("pricingListingSyncJobExportDone")))
+              .catch(() => setMessage(t("pricingListingSyncJobExportEmpty")))
+          }
+        >
+          {t("pricingListingSyncJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-digest-queued-job-export"
+          onClick={() =>
+            void downloadLatestDigestQueuedJobCsv(locale)
+              .then(() => setMessage(t("pricingDigestQueuedJobExportDone")))
+              .catch(() => setMessage(t("pricingDigestQueuedJobExportEmpty")))
+          }
+        >
+          {t("pricingDigestQueuedJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-worker-heartbeat-export"
+          onClick={() =>
+            void downloadFirstWorkerHeartbeatCsv(locale)
+              .then(() => setMessage(t("pricingWorkerHeartbeatExportDone")))
+              .catch(() => setMessage(t("pricingWorkerHeartbeatExportEmpty")))
+          }
+        >
+          {t("pricingWorkerHeartbeatExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

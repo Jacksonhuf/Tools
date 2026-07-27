@@ -65,6 +65,8 @@ import {
   downloadLatestCostSheetCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadLatestListingSyncJobCsv,
+  downloadFirstWorkerHeartbeatCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
@@ -879,6 +881,28 @@ export function CopilotPage() {
             }
           >
             {t("copilotReconciliationAlertExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-sync-job-export"
+            onClick={() =>
+              void downloadLatestListingSyncJobCsv(locale)
+                .then(() => setMessage(t("copilotListingSyncJobExportDone")))
+                .catch(() => setMessage(t("copilotListingSyncJobExportEmpty")))
+            }
+          >
+            {t("copilotListingSyncJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-worker-heartbeat-export"
+            onClick={() =>
+              void downloadFirstWorkerHeartbeatCsv(locale)
+                .then(() => setMessage(t("copilotWorkerHeartbeatExportDone")))
+                .catch(() => setMessage(t("copilotWorkerHeartbeatExportEmpty")))
+            }
+          >
+            {t("copilotWorkerHeartbeatExportCsv")}
           </button>
           <button
             type="button"

@@ -1636,6 +1636,34 @@
 | **实现** | 文档与 i18n 对齐；各页导出按钮与 `downloadLatestCostSheetCsv` / `downloadFirstCompetitorOfferCsv` / `downloadFirstReconciliationAlertCsv` 一致 |
 | **测试** | `loop-178-181.test.ts` |
 
+### Loop 258 — 补全 Loop 182：通道/竞品/就绪/Copilot/定价 Listing 同步作业 CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `listing-sync-job-export`（运维页原有保留） |
+| **测试** | `loop-182-185.test.ts`（`listing_sync_job_csv` POST） |
+
+### Loop 259 — 补全 Loop 183：运维/通道/竞品/就绪/定价 Digest 排队作业 CSV（P4-E1-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、定价 `digest-queued-job-export`（Copilot 页原有保留） |
+| **测试** | `loop-182-185.test.ts`（`digest_queued_job_csv` POST） |
+
+### Loop 260 — 补全 Loop 184：通道/竞品/就绪/Copilot/定价 Worker 心跳 CSV（P0-E1-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `worker-heartbeat-export`（运维页原有保留） |
+| **测试** | `loop-182-185.test.ts`（`worker_heartbeat_csv` POST，增至 3 条 POST） |
+
+### Loop 261 — 补全 Loop 185：同步 / Digest / Worker 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 文档与 i18n 对齐；各页导出按钮与 `downloadLatestListingSyncJobCsv` / `downloadLatestDigestQueuedJobCsv` / `downloadFirstWorkerHeartbeatCsv` 一致 |
+| **测试** | `loop-182-185.test.ts` |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2108,3 +2136,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.28 | 2026-07-27 | Loop 246–249 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |
 | v7.29 | 2026-07-27 | Loop 250–253 补全 Loop 174–177 sku/listing/tariff/fx Web 与 export POST 测 |
 | v7.30 | 2026-07-27 | Loop 254–257 补全 Loop 178–181 cost-sheet/competitor-offer/reconciliation-alert Web 与 export POST 测 |
+| v7.31 | 2026-07-27 | Loop 258–261 补全 Loop 182–185 listing-sync/digest-queued/worker-heartbeat Web 与 export POST 测 |

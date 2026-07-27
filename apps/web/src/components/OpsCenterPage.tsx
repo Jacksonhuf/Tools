@@ -56,6 +56,7 @@ import {
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
   downloadDigestQueuedJobsSummaryCsv,
+  downloadLatestDigestQueuedJobCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -319,6 +320,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsDigestJobsSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-queued-job-export"
+          onClick={() =>
+            void downloadLatestDigestQueuedJobCsv(locale)
+              .then(() => setMessage(t("opsDigestQueuedJobExportDone")))
+              .catch(() => setMessage(t("opsDigestQueuedJobExportEmpty")))
+          }
+        >
+          {t("opsDigestQueuedJobExportCsv")}
         </button>
         <button
           type="button"
