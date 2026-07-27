@@ -61,6 +61,10 @@ import {
   downloadFirstChannelSandboxEventCsv,
   downloadFirstDigestDeadLetterJobCsv,
   downloadFirstAgentToolAuditRowCsv,
+  downloadFirstPriceObservationCsv,
+  downloadLatestRepricingEventCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
+  downloadLatestAgentDigestDateCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -639,6 +643,50 @@ export function OpsCenterPage() {
           }
         >
           {t("opsAgentToolAuditRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-price-observation-export"
+          onClick={() =>
+            void downloadFirstPriceObservationCsv(locale, DEMO_LISTINGS[0])
+              .then(() => setMessage(t("opsPriceObservationExportDone")))
+              .catch(() => setMessage(t("opsPriceObservationExportEmpty")))
+          }
+        >
+          {t("opsPriceObservationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-event-export"
+          onClick={() =>
+            void downloadLatestRepricingEventCsv(locale, DEMO_LISTINGS[0])
+              .then(() => setMessage(t("opsRepricingEventExportDone")))
+              .catch(() => setMessage(t("opsRepricingEventExportEmpty")))
+          }
+        >
+          {t("opsRepricingEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-adjustment-batch-index-export"
+          onClick={() =>
+            void downloadLatestAdjustmentBatchIndexCsv(locale)
+              .then(() => setMessage(t("opsAdjustmentBatchIndexExportDone")))
+              .catch(() => setMessage(t("opsAdjustmentBatchIndexExportEmpty")))
+          }
+        >
+          {t("opsAdjustmentBatchIndexExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-digest-date-export"
+          onClick={() =>
+            void downloadLatestAgentDigestDateCsv(locale)
+              .then(() => setMessage(t("opsAgentDigestDateExportDone")))
+              .catch(() => setMessage(t("opsAgentDigestDateExportEmpty")))
+          }
+        >
+          {t("opsAgentDigestDateExportCsv")}
         </button>
       </div>
 

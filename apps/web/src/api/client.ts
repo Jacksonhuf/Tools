@@ -3053,6 +3053,51 @@ export async function downloadFirstAgentToolAuditRowCsv(
   await downloadAgentToolAuditRowCsv(locale, auditId);
 }
 
+export async function downloadFirstPriceObservationCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const { observations } = await fetchPriceHistory(locale, listingId, "7d");
+  const observationId = observations[0]?.id;
+  if (!observationId) {
+    throw new Error("PRICE_OBSERVATION_EMPTY");
+  }
+  await downloadPriceObservationCsv(locale, observationId);
+}
+
+export async function downloadLatestRepricingEventCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const { items } = await fetchListingRepricingEvents(locale, listingId, 1);
+  const eventId = items[0]?.id;
+  if (!eventId) {
+    throw new Error("REPRICING_EVENT_EMPTY");
+  }
+  await downloadRepricingEventCsv(locale, eventId);
+}
+
+export async function downloadLatestAdjustmentBatchIndexCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchAdjustmentBatches(locale);
+  const batchId = items[0]?.id;
+  if (!batchId) {
+    throw new Error("ADJUSTMENT_BATCH_INDEX_EMPTY");
+  }
+  await downloadAdjustmentBatchIndexCsv(locale, batchId);
+}
+
+export async function downloadLatestAgentDigestDateCsv(
+  locale: string
+): Promise<void> {
+  const { date } = await fetchDailyAgentDigest(locale);
+  if (!date) {
+    throw new Error("AGENT_DIGEST_DATE_EMPTY");
+  }
+  await downloadAgentDigestDateCsv(locale, date);
+}
+
 export async function downloadOpsWorkersStatusSummaryCsv(
   locale: string
 ): Promise<void> {

@@ -146,4 +146,75 @@ describe("export store kinds (Loop 190-193)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports repricing_event_csv", async () => {
+    resetDebounceForTests();
+    const { app, competitors, repricing } = createTestApp();
+    competitors.resetForTests?.();
+    repricing.resetForTests?.();
+    const offer = await seedOffer(app);
+    await app.request(`/api/v1/competitor-offers/${offer.id}/observations`, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ sale_price: 1500, observed_at: recentIso(3) }),
+    });
+    await app.request(`/api/v1/competitor-offers/${offer.id}/observations`, {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ sale_price: 1400, observed_at: recentIso(2) }),
+    });
+    const flush = await app.request(
+      "/api/v1/listings/listing-ml-001/repricing-events/flush",
+      { method: "POST", headers: JSON_HEADERS }
+    );
+    const flushed = (await flush.json()) as { event: { id: string } };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "repricing_event_csv",
+        repricing_event_id: flushed.event.id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports adjustment_batch_index_csv", async () => {
+    const { app } = createTestApp();
+    const created = await app.request("/api/v1/adjustment-batches", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        reason_code: "loop192-export",
+        items: [{ listing_id: "listing-ml-001", explicit_price_mxn: 1599 }],
+      }),
+    });
+    const batch = (await created.json()) as { id: string };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "adjustment_batch_index_csv",
+        batch_id: batch.id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports agent_digest_date_csv", async () => {
+    const { app } = createTestApp();
+    const meta = await app.request("/api/v1/agent/digest/daily", {
+      headers: { ...AUTH, ...TENANT, "Accept-Language": "en" },
+    });
+    const { date } = (await meta.json()) as { date: string };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "agent_digest_date_csv",
+        date,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

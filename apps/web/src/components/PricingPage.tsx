@@ -35,6 +35,10 @@ import {
   downloadFirstChannelSandboxEventCsv,
   downloadFirstDigestDeadLetterJobCsv,
   downloadFirstAgentToolAuditRowCsv,
+  downloadFirstPriceObservationCsv,
+  downloadLatestRepricingEventCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
+  downloadLatestAgentDigestDateCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -539,6 +543,50 @@ export function PricingPage() {
           }
         >
           {t("pricingAgentToolAuditRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-price-observation-export"
+          onClick={() =>
+            void downloadFirstPriceObservationCsv(locale, "listing-ml-001")
+              .then(() => setMessage(t("pricingPriceObservationExportDone")))
+              .catch(() => setMessage(t("pricingPriceObservationExportEmpty")))
+          }
+        >
+          {t("pricingPriceObservationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-repricing-event-export"
+          onClick={() =>
+            void downloadLatestRepricingEventCsv(locale, "listing-ml-001")
+              .then(() => setMessage(t("pricingRepricingEventExportDone")))
+              .catch(() => setMessage(t("pricingRepricingEventExportEmpty")))
+          }
+        >
+          {t("pricingRepricingEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-adjustment-batch-index-export"
+          onClick={() =>
+            void downloadLatestAdjustmentBatchIndexCsv(locale)
+              .then(() => setMessage(t("pricingAdjustmentBatchIndexExportDone")))
+              .catch(() => setMessage(t("pricingAdjustmentBatchIndexExportEmpty")))
+          }
+        >
+          {t("pricingAdjustmentBatchIndexExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-digest-date-export"
+          onClick={() =>
+            void downloadLatestAgentDigestDateCsv(locale)
+              .then(() => setMessage(t("pricingAgentDigestDateExportDone")))
+              .catch(() => setMessage(t("pricingAgentDigestDateExportEmpty")))
+          }
+        >
+          {t("pricingAgentDigestDateExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

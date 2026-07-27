@@ -53,6 +53,10 @@ import {
   downloadFirstChannelSandboxEventCsv,
   downloadFirstDigestDeadLetterJobCsv,
   downloadFirstAgentToolAuditRowCsv,
+  downloadFirstPriceObservationCsv,
+  downloadLatestRepricingEventCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
+  downloadLatestAgentDigestDateCsv,
   downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
@@ -561,6 +565,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessAgentToolAuditRowExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-price-observation-export"
+            onClick={() =>
+              void downloadFirstPriceObservationCsv(locale, "listing-ml-001")
+                .then(() => setMessage(t("readinessPriceObservationExportDone")))
+                .catch(() => setMessage(t("readinessPriceObservationExportEmpty")))
+            }
+          >
+            {t("readinessPriceObservationExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-repricing-event-export"
+            onClick={() =>
+              void downloadLatestRepricingEventCsv(locale, "listing-ml-001")
+                .then(() => setMessage(t("readinessRepricingEventExportDone")))
+                .catch(() => setMessage(t("readinessRepricingEventExportEmpty")))
+            }
+          >
+            {t("readinessRepricingEventExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-adjustment-batch-index-export"
+            onClick={() =>
+              void downloadLatestAdjustmentBatchIndexCsv(locale)
+                .then(() => setMessage(t("readinessAdjustmentBatchIndexExportDone")))
+                .catch(() => setMessage(t("readinessAdjustmentBatchIndexExportEmpty")))
+            }
+          >
+            {t("readinessAdjustmentBatchIndexExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-agent-digest-date-export"
+            onClick={() =>
+              void downloadLatestAgentDigestDateCsv(locale)
+                .then(() => setMessage(t("readinessAgentDigestDateExportDone")))
+                .catch(() => setMessage(t("readinessAgentDigestDateExportEmpty")))
+            }
+          >
+            {t("readinessAgentDigestDateExportCsv")}
           </button>
           <button
             type="button"

@@ -55,6 +55,10 @@ import {
   downloadLatestDigestDispatchCsv,
   downloadFirstDigestDeadLetterJobCsv,
   downloadFirstAgentToolAuditRowCsv,
+  downloadFirstPriceObservationCsv,
+  downloadLatestRepricingEventCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
+  downloadLatestAgentDigestDateCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -762,6 +766,56 @@ export function ChannelsPage() {
           }
         >
           {t("channelsAgentToolAuditRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-price-observation-export"
+          onClick={() =>
+            void downloadFirstPriceObservationCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            )
+              .then(() => setMessage(t("channelsPriceObservationExportDone")))
+              .catch(() => setMessage(t("channelsPriceObservationExportEmpty")))
+          }
+        >
+          {t("channelsPriceObservationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-event-export"
+          onClick={() =>
+            void downloadLatestRepricingEventCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            )
+              .then(() => setMessage(t("channelsRepricingEventExportDone")))
+              .catch(() => setMessage(t("channelsRepricingEventExportEmpty")))
+          }
+        >
+          {t("channelsRepricingEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-adjustment-batch-index-export"
+          onClick={() =>
+            void downloadLatestAdjustmentBatchIndexCsv(locale)
+              .then(() => setMessage(t("channelsAdjustmentBatchIndexExportDone")))
+              .catch(() => setMessage(t("channelsAdjustmentBatchIndexExportEmpty")))
+          }
+        >
+          {t("channelsAdjustmentBatchIndexExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-digest-date-export"
+          onClick={() =>
+            void downloadLatestAgentDigestDateCsv(locale)
+              .then(() => setMessage(t("channelsAgentDigestDateExportDone")))
+              .catch(() => setMessage(t("channelsAgentDigestDateExportEmpty")))
+          }
+        >
+          {t("channelsAgentDigestDateExportCsv")}
         </button>
       </div>
 
