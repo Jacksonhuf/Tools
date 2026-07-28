@@ -17,6 +17,9 @@ import {
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadDigestDeadLetterSummaryCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -142,6 +145,39 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessDigestDlqSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-sync-schedule-export"
+            onClick={() =>
+              void downloadListingSyncScheduleCsv(locale).then(() =>
+                setMessage(t("readinessListingSyncScheduleExportDone"))
+              )
+            }
+          >
+            {t("readinessListingSyncScheduleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-adjustment-approval-policy-export"
+            onClick={() =>
+              void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+                setMessage(t("readinessAdjustmentApprovalPolicyExportDone"))
+              )
+            }
+          >
+            {t("readinessAdjustmentApprovalPolicyExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-ops-workers-summary-export"
+            onClick={() =>
+              void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+                setMessage(t("readinessOpsWorkersSummaryExportDone"))
+              )
+            }
+          >
+            {t("readinessOpsWorkersSummaryExportCsv")}
           </button>
           <button
             type="button"

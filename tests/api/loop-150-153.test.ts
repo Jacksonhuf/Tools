@@ -62,4 +62,34 @@ describe("export store kinds (Loop 150-152)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports agent_milestones_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "agent_milestones_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports adjustment_approval_policy_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "adjustment_approval_policy_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports ops_workers_status_summary_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "ops_workers_status_summary_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

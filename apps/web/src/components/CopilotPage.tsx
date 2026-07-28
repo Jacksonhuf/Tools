@@ -38,6 +38,10 @@ import {
   downloadCompetitorAnchorCsv,
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
+  downloadListingSyncScheduleCsv,
+  downloadAgentMilestonesCsv,
+  downloadAdjustmentApprovalPolicyCsv,
+  downloadOpsWorkersStatusSummaryCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -533,6 +537,50 @@ export function CopilotPage() {
             }
           >
             {t("copilotChannelSandboxStatusExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-sync-schedule-export"
+            onClick={() =>
+              void downloadListingSyncScheduleCsv(locale).then(() =>
+                setMessage(t("copilotListingSyncScheduleExportDone"))
+              )
+            }
+          >
+            {t("copilotListingSyncScheduleExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-agent-milestones-export"
+            onClick={() =>
+              void downloadAgentMilestonesCsv(locale).then(() =>
+                setMessage(t("copilotAgentMilestonesExportDone"))
+              )
+            }
+          >
+            {t("copilotAgentMilestonesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-adjustment-approval-policy-export"
+            onClick={() =>
+              void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+                setMessage(t("copilotAdjustmentApprovalPolicyExportDone"))
+              )
+            }
+          >
+            {t("copilotAdjustmentApprovalPolicyExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-ops-workers-summary-export"
+            onClick={() =>
+              void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+                setMessage(t("copilotOpsWorkersSummaryExportDone"))
+              )
+            }
+          >
+            {t("copilotOpsWorkersSummaryExportCsv")}
           </button>
           <button
             type="button"
