@@ -118,6 +118,10 @@ export function PricingPage() {
     CrossChannelGuardResponse["warning"]
   >(null);
   const [costSheets, setCostSheets] = useState<CostSheetRow[]>([]);
+  const [skus, setSkus] = useState<
+    Array<{ id: string; sku_code: string; name: string; landed_cost_mxn: number }>
+  >([]);
+  const [selectedSkuId, setSelectedSkuId] = useState(DEMO_SKU);
   const [batchNo, setBatchNo] = useState("BATCH-DEMO-01");
   const [cogsAmount, setCogsAmount] = useState(1000);
   const [layerLabels, setLayerLabels] = useState<Record<string, string>>({});
@@ -132,21 +136,26 @@ export function PricingPage() {
         fetchPricingContext(locale, "AMAZON_MX"),
         fetchSkus(locale),
         fetchCrossChannelGuard(locale),
-        fetchCostSheets(locale, "demo-sku-001"),
+        fetchCostSheets(locale, selectedSkuId),
         fetchI18nGlossary(locale),
       ]);
       setContextByChannel({ MERCADO_LIBRE: ml, AMAZON_MX: amz });
       setCrossChannelWarning(xch.warning);
       setCostSheets(sheets.items);
+      setSkus(skuList.items);
+      setSelectedSkuId((prev) => {
+        if (prev && skuList.items.some((s) => s.id === prev)) return prev;
+        return skuList.items[0]?.id ?? DEMO_SKU;
+      });
+      const first = skuList.items.find((s) => s.id === selectedSkuId) ?? skuList.items[0];
+      if (first) setLandedEdit(first.landed_cost_mxn);
       setLayerLabels(
         Object.fromEntries(glossary.terms.map((term) => [term.key, term.label]))
       );
-      const first = skuList.items[0];
-      if (first) setLandedEdit(first.landed_cost_mxn);
     } catch (e) {
       setError(String(e));
     }
-  }, [locale]);
+  }, [locale, selectedSkuId]);
 
   useEffect(() => {
     void loadAll();
@@ -205,7 +214,7 @@ export function PricingPage() {
   const saveLanded = async () => {
     setError(null);
     try {
-      await patchSkuLandedCost(locale, "demo-sku-001", landedEdit);
+      await patchSkuLandedCost(locale, selectedSkuId, landedEdit);
       await loadAll();
       setMessage(t("landedSaved"));
     } catch (e) {
@@ -216,7 +225,7 @@ export function PricingPage() {
   const addCostSheet = async () => {
     setError(null);
     try {
-      await createCostSheetRow(locale, "demo-sku-001", {
+      await createCostSheetRow(locale, selectedSkuId, {
         batch_no: batchNo,
         cogs_amount: cogsAmount,
         cogs_currency: "MXN",
@@ -238,7 +247,7 @@ export function PricingPage() {
     try {
       const r = await applyLandedFromCostSheet(
         locale,
-        "demo-sku-001",
+        selectedSkuId,
         latest.id
       );
       setLandedEdit(r.sku.landed_cost_mxn);
@@ -280,7 +289,7 @@ export function PricingPage() {
           type="button"
           data-testid="pricing-sku-export"
           onClick={() =>
-            void downloadSkuCatalogCsv(locale, "demo-sku-001").then(() =>
+            void downloadSkuCatalogCsv(locale, selectedSkuId).then(() =>
               setMessage(t("skuCatalogExportDone"))
             )
           }
@@ -291,7 +300,7 @@ export function PricingPage() {
           type="button"
           data-testid="pricing-snapshot-export"
           onClick={() =>
-            void downloadPricingSnapshotCsv(locale, "demo-sku-001").then(() =>
+            void downloadPricingSnapshotCsv(locale, selectedSkuId).then(() =>
               setMessage(t("pricingSnapshotExportDone"))
             )
           }
@@ -1055,6 +1064,20 @@ export function PricingPage() {
         <h2>{t("costSheetsTitle")}</h2>
         <p className="hint">{t("costSheetsHint")}</p>
         <label>
+          {t("sku")}
+          <select
+            data-testid="pricing-sku-selector"
+            value={selectedSkuId}
+            onChange={(e) => setSelectedSkuId(e.target.value)}
+          >
+            {skus.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.sku_code} — {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           {t("costSheetBatch")}
           <input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
         </label>
@@ -1080,7 +1103,7 @@ export function PricingPage() {
           type="button"
           data-testid="cost-sheet-export"
           onClick={() =>
-            void downloadCostSheetsCsv(locale, "demo-sku-001").then(() =>
+            void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
               setMessage(t("costSheetExportDone"))
             )
           }
@@ -1094,7 +1117,7 @@ export function PricingPage() {
           onClick={() => {
             const sheet = costSheets[0];
             if (!sheet) return;
-            void downloadCostSheetCsv(locale, "demo-sku-001", sheet.id).then(() =>
+            void downloadCostSheetCsv(locale, selectedSkuId, sheet.id).then(() =>
               setMessage(t("costSheetRowExportDone"))
             );
           }}

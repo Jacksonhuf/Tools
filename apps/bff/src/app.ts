@@ -323,8 +323,8 @@ import { getWafStatus } from "./waf-middleware.js";
 import { evaluateBackupPitrStatus } from "./backup-pitr.js";
 import { createWafMiddleware } from "./waf-middleware.js";
 import { getDebounceStatus } from "./repricing/debounce.js";
-import { assertPrincipalRoles } from "./rbac-middleware.js";
-import { ROLES } from "./rbac.js";
+import { assertPrincipalRoles, principalFromContext } from "./rbac-middleware.js";
+import { principalPermissions, ROLES } from "./rbac.js";
 import { recordAuditLog } from "./audit-log.js";
 import { runDueReconciliation } from "./reconciliation-run-due.js";
 import { objectStorageStatus } from "./export-object-storage.js";
@@ -446,6 +446,16 @@ export function createApp(options: CreateAppOptions = {}) {
       debounce: getDebounceStatus(),
     })
   );
+
+  app.get("/api/v1/auth/me", (c) => {
+    const principal = principalFromContext(c);
+    return c.json({
+      subject: principal.subject,
+      tenant_id: principal.tenantId,
+      roles: principal.roles,
+      permissions: principalPermissions(principal.roles),
+    });
+  });
 
   app.get("/api/v1/production/readiness", (c) =>
     c.json({
@@ -711,6 +721,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/imports/landed-cost", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const contentType = c.req.header("content-type") ?? "";
     let csvText: string;
@@ -746,6 +757,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/imports/cost-sheets", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const contentType = c.req.header("content-type") ?? "";
     let csvText: string;
@@ -906,6 +918,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.patch("/api/v1/skus/:skuId", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as { landed_cost_mxn?: number };
     if (body.landed_cost_mxn === undefined || body.landed_cost_mxn < 0) {
@@ -934,6 +947,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.patch("/api/v1/skus/:skuId/policy", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const body = (await c.req.json()) as {
@@ -961,6 +975,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/policy/batch", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       items?: Array<{
@@ -1031,6 +1046,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/cost-sheets", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1175,6 +1191,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/adjustment-batches", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       reason_code?: string;
@@ -1284,6 +1301,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/adjustment-batches/:batchId/apply", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const batchId = c.req.param("batchId");
     const result = await applyAdjustmentBatch(
@@ -1541,6 +1559,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-hs", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1678,6 +1697,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-cost-sheet", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1730,6 +1750,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-fx", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -3861,6 +3882,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/shops/:shopId/channel-publish", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const shopId = c.req.param("shopId");
     const listingId = LISTING_ID_BY_SHOP[shopId];
@@ -3902,6 +3924,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/channel-publish/batch", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       listing_ids: string[];

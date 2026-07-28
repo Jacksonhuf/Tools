@@ -53,3 +53,23 @@ export function requirePrincipalRoles(
     throw new Error("FORBIDDEN");
   }
 }
+
+export function expandPrincipalRoles(roles: string[]): AppRole[] {
+  return [...expandRoles(roles)] as AppRole[];
+}
+
+export function principalPermissions(roles: string[]) {
+  const principal: AuthPrincipal = {
+    subject: "",
+    tenantId: "",
+    roles,
+    mode: "dev",
+  };
+  return {
+    pricing_read: principalHasRole(principal, ROLES.PRICING_READ),
+    pricing_write: principalHasRole(principal, ROLES.PRICING_WRITE),
+    channel_admin: principalHasRole(principal, ROLES.CHANNEL_ADMIN),
+    finance_approve: principalHasRole(principal, ROLES.FINANCE_APPROVE),
+    ops_read: principalHasRole(principal, ROLES.OPS_READ),
+  };
+}

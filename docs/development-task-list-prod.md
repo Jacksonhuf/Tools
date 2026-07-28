@@ -67,11 +67,18 @@
 | INFRA-06 | `docker-compose.staging.yml`（PG WAL + Redis） | ✅ |
 | X-01 | readiness 暴露 deploy/secrets/waf/backup_pitr | ✅ |
 
+## 本批已交付（Prod Wave 2）
+
+| ID | Task | 状态 |
+|----|------|------|
+| P0-E2-01 | SKU/Cost Web 生产化：`SkuCostPage` + SKU 选择器 | ✅ |
+| P0-E1-03c | `GET /auth/me` 返回 roles/permissions | ✅ |
+| P0-E1-03d | RBAC 分角色：cost/SKU 写、审批、渠道发布 | ✅ |
+| P0-E1-03e | Web 按角色隐藏审批/写价按钮 | ✅ |
+
 ## 下一批（待开发）
 
-| 波次 | 关键 Task |
-|------|-----------|
-| Wave 2 | SKU/Cost Web 生产化、审批 RBAC 分角色 |
+_生产平台主线（Wave 0–8 + Wave 2）已闭环。_
 
 完整 153 项规划见 Cloud Agent 会话记录（2026-07-28）。
 

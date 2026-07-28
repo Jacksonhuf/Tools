@@ -2636,3 +2636,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.51 | 2026-07-28 | Prod Wave 6：PG cost sheet / FX / tariff HS / digest job queue 仓储、迁移 014、readiness 驱动暴露 |
 | v7.52 | 2026-07-28 | Prod Wave 7–8：生产 LLM 门禁、k6/NFR 基线、X-03 安全扫描、GL go-live 清单与 API |
 | v7.53 | 2026-07-28 | Prod Wave 0：DEPLOY_ENV 分层、Secrets 校验、WAF 中间件、备份 PITR 脚本与 staging compose |
+| v7.54 | 2026-07-28 | Prod Wave 2：SkuCostPage、SKU 选择器、/auth/me、分角色 RBAC（BFF+Web） |

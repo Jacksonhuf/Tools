@@ -12,11 +12,14 @@ import {
   downloadAdjustmentApprovalPolicyCsv,
   type AdjustmentBatch,
 } from "../api/client";
+import { useCanApprove, useCanPricingWrite } from "../auth/AuthContext";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
 
 export function AdjustmentBatchesPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
+  const canApprove = useCanApprove();
+  const canWrite = useCanPricingWrite();
   const [batches, setBatches] = useState<AdjustmentBatch[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reason, setReason] = useState("manual");
@@ -185,13 +188,15 @@ export function AdjustmentBatchesPage() {
             />
           </label>
         </div>
-        <button
-          type="button"
-          data-testid="adjustment-create-batch"
-          onClick={() => void createBatch()}
-        >
-          {t("submitBatch")}
-        </button>
+        {canWrite && (
+          <button
+            type="button"
+            data-testid="adjustment-create-batch"
+            onClick={() => void createBatch()}
+          >
+            {t("submitBatch")}
+          </button>
+        )}
       </section>
 
       <section className="card" data-testid="adjustment-csv-import">
@@ -203,24 +208,26 @@ export function AdjustmentBatchesPage() {
           onChange={(e) => setImportCsv(e.target.value)}
           style={{ width: "100%", fontFamily: "monospace" }}
         />
-        <button
-          type="button"
-          data-testid="adjustment-csv-apply"
-          onClick={() => {
-            setError(null);
-            void applyAdjustmentPricesCsv(locale, importCsv, reason)
-              .then((r) => {
-                setMessage(
-                  `${t("batchCreatedMsg")}: ${r.batch.id} (${r.batch.status})`
-                );
-                setSelectedId(r.batch.id);
-                return load();
-              })
-              .catch((e) => setError(String(e)));
-          }}
-        >
-          {t("adjustmentCsvImportRun")}
-        </button>
+        {canWrite && (
+          <button
+            type="button"
+            data-testid="adjustment-csv-apply"
+            onClick={() => {
+              setError(null);
+              void applyAdjustmentPricesCsv(locale, importCsv, reason)
+                .then((r) => {
+                  setMessage(
+                    `${t("batchCreatedMsg")}: ${r.batch.id} (${r.batch.status})`
+                  );
+                  setSelectedId(r.batch.id);
+                  return load();
+                })
+                .catch((e) => setError(String(e)));
+            }}
+          >
+            {t("adjustmentCsvImportRun")}
+          </button>
+        )}
       </section>
 
       <section className="card">
@@ -273,7 +280,7 @@ export function AdjustmentBatchesPage() {
             >
               {t("adjustmentBatchIndexExportCsv")}
             </button>
-            {selected.status === "pending_approval" && (
+            {selected.status === "pending_approval" && canApprove && (
               <button
                 type="button"
                 className="primary"
@@ -284,7 +291,8 @@ export function AdjustmentBatchesPage() {
               </button>
             )}
             {(selected.status === "draft" ||
-              selected.status === "approved") && (
+              selected.status === "approved") &&
+              canWrite && (
               <button
                 type="button"
                 className="primary"
