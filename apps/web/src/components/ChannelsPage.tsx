@@ -14,6 +14,9 @@ import {
   downloadListingSyncOpsStatusCsv,
   downloadReconciliationAlertsDirectCsv,
   downloadAgentToolsCsv,
+  downloadRepricingBatchJobsSummaryCsv,
+  downloadListingIngestStatusCsv,
+  downloadFeatureFlagsCsv,
   downloadCompetitorAnchorCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestQueuedJobsSummaryCsv,
@@ -339,6 +342,39 @@ export function ChannelsPage() {
           }
         >
           {t("channelsAgentToolsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-batch-summary-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+              setMessage(t("channelsRepricingBatchSummaryExportDone"))
+            )
+          }
+        >
+          {t("channelsRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-listing-ingest-status-export"
+          onClick={() =>
+            void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("channelsListingIngestStatusExportDone"))
+            )
+          }
+        >
+          {t("channelsListingIngestStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-feature-flags-export"
+          onClick={() =>
+            void downloadFeatureFlagsCsv(locale).then(() =>
+              setMessage(t("channelsFeatureFlagsExportDone"))
+            )
+          }
+        >
+          {t("channelsFeatureFlagsExportCsv")}
         </button>
         <button
           type="button"

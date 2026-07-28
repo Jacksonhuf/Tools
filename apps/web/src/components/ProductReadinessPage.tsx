@@ -50,6 +50,8 @@ import {
   downloadListingSyncOpsStatusCsv,
   downloadListingSyncJobsForListingCsv,
   downloadAgentToolsCsv,
+  downloadRepricingBatchJobsSummaryCsv,
+  downloadListingIngestStatusCsv,
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
@@ -545,6 +547,28 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessAgentToolsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-repricing-batch-summary-export"
+            onClick={() =>
+              void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+                setMessage(t("readinessRepricingBatchSummaryExportDone"))
+              )
+            }
+          >
+            {t("readinessRepricingBatchSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-ingest-status-export"
+            onClick={() =>
+              void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
+                () => setMessage(t("readinessListingIngestStatusExportDone"))
+              )
+            }
+          >
+            {t("readinessListingIngestStatusExportCsv")}
           </button>
           <button
             type="button"
