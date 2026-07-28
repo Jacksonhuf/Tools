@@ -22,6 +22,19 @@
 | P0-E1-05 | `repricing-event-worker` 脚本 | ✅ |
 | X-01 | `GET /api/v1/production/readiness` | ✅ |
 
+## 本批已交付（Prod Wave 4–5）
+
+| ID | Task | 状态 |
+|----|------|------|
+| P0-E1-06 | 导出 PG 仓储 + S3 兼容对象存储（`EXPORT_S3_*`） | ✅ |
+| P0-E1-04 | Worker heartbeat PG 仓储 | ✅ |
+| P3-E3-01 | 对账定时 `POST /ops/reconciliation/run-due` | ✅ |
+| P4-E1-04 | Agent tool audit PG 仓储（迁移 013） | ✅ |
+| P3-E3-01 | Reconciliation alerts PG 仓储 | ✅ |
+| X-05 | `audit_logs` 写入（审批等关键操作） | ✅ |
+| P0-E1-03b | RBAC 门禁：审批 / 渠道写价 | ✅ |
+| P0-E1-05 | async-worker 扩展：sync + recon + repricing events | ✅ |
+
 ## 下一批（待开发）
 
 | 波次 | 关键 Task |

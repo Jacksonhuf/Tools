@@ -308,6 +308,12 @@ import { getAuthStatus, resolveAuthDriver } from "./auth.js";
 import { resolveAuthPrincipal } from "./auth-principal.js";
 import { evaluateProductionConfig } from "./production-config.js";
 import { getDebounceStatus } from "./repricing/debounce.js";
+import { assertPrincipalRoles } from "./rbac-middleware.js";
+import { ROLES } from "./rbac.js";
+import { recordAuditLog } from "./audit-log.js";
+import { runDueReconciliation } from "./reconciliation-run-due.js";
+import { objectStorageStatus } from "./export-object-storage.js";
+import { getExportStoreStatus } from "./export-file-store.js";
 import { authStatusToCsv } from "./auth-status-csv.js";
 import { getFeatureFlags, getFeatureFlagValue } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
@@ -425,7 +431,10 @@ export function createApp(options: CreateAppOptions = {}) {
       auth: getAuthStatus(),
       channels: getChannelAdapterStatus(),
       debounce: getDebounceStatus(),
+      exports: { ...getExportStoreStatus(), object_storage: objectStorageStatus() },
       catalog_driver: catalog.driver,
+      reconciliation_driver: reconciliationAlerts.driver ?? "memory",
+      agent_audit_driver: agentAudit.driver ?? "memory",
       generated_at: new Date().toISOString(),
     })
   );
@@ -1212,6 +1221,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/adjustment-batches/:batchId/approve", async (c) => {
+    assertPrincipalRoles(c, ROLES.FINANCE_APPROVE);
     const tenantId = c.get("tenantId");
     const batchId = c.req.param("batchId");
     const batch = await adjustments.getBatch(tenantId, batchId);
@@ -1227,6 +1237,13 @@ export function createApp(options: CreateAppOptions = {}) {
       "approved",
       { approved_at: new Date().toISOString() }
     );
+    await recordAuditLog({
+      tenant_id: tenantId,
+      actor_id: c.get("authSubject"),
+      action: "adjustment_batch.approve",
+      entity_type: "adjustment_batch",
+      entity_id: batchId,
+    });
     return c.json(updated);
   });
 
@@ -1899,7 +1916,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content = digestQueuedJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "worker_heartbeats_csv") {
-      const status = getAsyncWorkerStatus();
+      const status = await getAsyncWorkerStatus();
       content = workerHeartbeatsToCsv(status.workers, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "price_history_csv") {
@@ -2104,7 +2121,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "ops_workers_status_summary_csv") {
       content = opsWorkersStatusSummaryToCsv(
-        getAsyncWorkerStatus(),
+        await getAsyncWorkerStatus(),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -2401,7 +2418,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "worker_heartbeat_csv") {
       const workerId = body.worker_id ?? "repricing-batch-1";
-      const beat = getWorkerHeartbeat(workerId);
+      const beat = await getWorkerHeartbeat(workerId);
       if (!beat) {
         throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
       }
@@ -2709,7 +2726,7 @@ export function createApp(options: CreateAppOptions = {}) {
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
-    const stored = createStoredExport({
+    const stored = await createStoredExport({
       tenant_id: tenantId,
       kind,
       content_type,
@@ -2726,7 +2743,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/exports/:exportId", async (c) => {
     const tenantId = c.get("tenantId");
     const token = c.req.query("token") ?? "";
-    const row = getStoredExport(tenantId, c.req.param("exportId"), token);
+    const row = await getStoredExport(tenantId, c.req.param("exportId"), token);
     if (!row) {
       throw new HTTPException(404, { message: "EXPORT_NOT_FOUND" });
     }
@@ -2740,12 +2757,12 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.get("/api/v1/ops/workers/status", async (c) => {
-    return c.json(getAsyncWorkerStatus());
+    return c.json(await getAsyncWorkerStatus());
   });
 
   app.get("/api/v1/ops/workers/status/summary/export", async (c) => {
     const exportedAt = new Date().toISOString();
-    const status = getAsyncWorkerStatus();
+    const status = await getAsyncWorkerStatus();
     const csv = opsWorkersStatusSummaryToCsv(status, exportedAt);
     return new Response(csv, {
       headers: {
@@ -2757,7 +2774,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status/export", async (c) => {
     const exportedAt = new Date().toISOString();
-    const status = getAsyncWorkerStatus();
+    const status = await getAsyncWorkerStatus();
     const csv = workerHeartbeatsToCsv(status.workers, exportedAt);
     return new Response(csv, {
       headers: {
@@ -2769,7 +2786,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status/:workerId/export", async (c) => {
     const workerId = c.req.param("workerId");
-    const beat = getWorkerHeartbeat(workerId);
+    const beat = await getWorkerHeartbeat(workerId);
     if (!beat) {
       throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
     }
@@ -2794,8 +2811,9 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!body.worker_id?.trim()) {
       throw new HTTPException(400, { message: "WORKER_ID_REQUIRED" });
     }
-    const beat = recordWorkerHeartbeat({
+    const beat = await recordWorkerHeartbeat({
       worker_id: body.worker_id.trim(),
+      tenant_id: c.get("tenantId"),
       details: body.details,
     });
     return c.json({ ok: true, heartbeat: beat });
@@ -3763,6 +3781,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/listings/:listingId/channel-publish", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
     const body = (await c.req.json().catch(() => ({}))) as {
@@ -4519,6 +4538,23 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({
       schedule: getListingSyncSchedule(tenantId),
       runs: result.runs,
+    });
+  });
+
+  app.post("/api/v1/ops/reconciliation/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const results = await runDueReconciliation(
+      catalog,
+      shops,
+      listingAdapter,
+      reconciliationAlerts,
+      tenantId
+    );
+    return c.json({
+      tenant_id: tenantId,
+      checked: results.length,
+      results,
+      generated_at: new Date().toISOString(),
     });
   });
 

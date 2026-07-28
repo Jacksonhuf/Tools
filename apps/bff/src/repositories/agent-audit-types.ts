@@ -9,6 +9,7 @@ export interface AgentToolInvocationRecord {
 }
 
 export interface AgentToolAuditRepository {
+  readonly driver?: "memory" | "postgres";
   recordInvocation(
     input: Omit<AgentToolInvocationRecord, "id" | "created_at">
   ): Promise<AgentToolInvocationRecord>;

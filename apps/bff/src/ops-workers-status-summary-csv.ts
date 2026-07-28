@@ -1,6 +1,6 @@
 import type { getAsyncWorkerStatus } from "./worker-heartbeat.js";
 
-type OpsWorkersStatus = ReturnType<typeof getAsyncWorkerStatus>;
+type OpsWorkersStatus = Awaited<ReturnType<typeof getAsyncWorkerStatus>>;
 
 function cell(value: string | number | boolean | null | undefined): string {
   const raw = value == null ? "" : String(value);

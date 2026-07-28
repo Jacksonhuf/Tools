@@ -7,6 +7,7 @@ let seq = 0;
 const rows: AgentToolInvocationRecord[] = [];
 
 export class MemoryAgentToolAuditRepository implements AgentToolAuditRepository {
+  readonly driver = "memory" as const;
   async recordInvocation(
     input: Omit<AgentToolInvocationRecord, "id" | "created_at">
   ): Promise<AgentToolInvocationRecord> {

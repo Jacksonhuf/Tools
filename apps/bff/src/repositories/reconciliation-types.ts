@@ -12,6 +12,7 @@ export interface ReconciliationAlertRecord {
 }
 
 export interface ReconciliationAlertRepository {
+  readonly driver?: "memory" | "postgres";
   createAlert(
     input: Omit<ReconciliationAlertRecord, "id" | "created_at" | "resolved_at">
   ): Promise<ReconciliationAlertRecord>;
