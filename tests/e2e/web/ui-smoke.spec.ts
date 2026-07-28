@@ -16,7 +16,7 @@ test.describe("Web smoke", () => {
       /Pricing|Precios|定价/
     );
 
-    await page.getByRole("button", { name: /Copilot/i }).click();
+    await page.getByTestId("nav-copilot").click();
     await expect(page.getByTestId("p4-readiness")).toBeVisible({
       timeout: 20_000,
     });
@@ -39,7 +39,7 @@ test.describe("Web smoke", () => {
       page.getByRole("button", { name: /Simular ambos canales/i })
     ).toBeVisible();
 
-    await page.getByRole("button", { name: /Centro de operaciones|指挥中心|Ops/i }).click();
+    await page.getByTestId("nav-ops").click();
     await expect(page.getByTestId("repricing-queue-table")).toBeVisible({
       timeout: 15_000,
     });

@@ -524,6 +524,17 @@ export function OpsCenterPage() {
         </button>
         <button
           type="button"
+          data-testid="ops-pricing-snapshot-export"
+          onClick={() =>
+            void downloadPricingSnapshotCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsPricingSnapshotExportDone"))
+            )
+          }
+        >
+          {t("opsPricingSnapshotExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="ops-shop-export"
           onClick={() =>
             void downloadShopCsv(locale, "shop-ml-demo").then(() =>

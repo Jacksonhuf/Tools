@@ -36,6 +36,7 @@ import {
   downloadAgentReadinessCheckCsv,
   downloadProductReadinessCsv,
   downloadCompetitorAnchorCsv,
+  downloadChannelAdapterStatusCsv,
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
   downloadListingSyncScheduleCsv,
@@ -559,6 +560,17 @@ export function CopilotPage() {
             }
           >
             {t("copilotCompetitorAnchorExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-channel-adapter-export"
+            onClick={() =>
+              void downloadChannelAdapterStatusCsv(locale).then(() =>
+                setMessage(t("copilotChannelAdapterExportDone"))
+              )
+            }
+          >
+            {t("copilotChannelAdapterExportCsv")}
           </button>
           <button
             type="button"
