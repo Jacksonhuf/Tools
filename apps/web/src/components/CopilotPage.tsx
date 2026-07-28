@@ -55,6 +55,9 @@ import {
   downloadLatestQueuePriceVersionCsv,
   downloadVersionBackupCsv,
   downloadP5ReadinessCsv,
+  downloadP3ReadinessCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
@@ -753,6 +756,40 @@ export function CopilotPage() {
             }
           >
             {t("copilotShopExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-p3-readiness-export"
+            onClick={() =>
+              void downloadP3ReadinessCsv(locale).then(() =>
+                setMessage(t("copilotP3ReadinessExportDone"))
+              )
+            }
+          >
+            {t("copilotP3ReadinessExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-shared-fee-template-export"
+            onClick={() =>
+              void downloadSharedFeeTemplateCsv(
+                locale,
+                "fee-tpl-ml-electronics"
+              ).then(() => setMessage(t("copilotSharedFeeTemplateExportDone")))
+            }
+          >
+            {t("copilotSharedFeeTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-tenant-shared-fee-export"
+            onClick={() =>
+              void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+                () => setMessage(t("copilotTenantSharedFeeTemplatesExportDone"))
+              )
+            }
+          >
+            {t("copilotTenantSharedFeeTemplatesExportCsv")}
           </button>
           <button
             type="button"

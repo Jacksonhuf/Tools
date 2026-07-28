@@ -1552,6 +1552,34 @@
 | **实现** | 运维、竞品、就绪、Copilot `shop-export`（通道页原有保留） |
 | **测试** | `loop-166-169.test.ts`（`shop_csv` POST，增至 4 条 POST） |
 
+### Loop 246 — 补全 Loop 170：运维/通道/竞品/Copilot/定价 P3 就绪 CSV（P3）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、Copilot、定价 `p3-readiness-export`（就绪页原有保留） |
+| **测试** | `loop-170-173.test.ts`（`p3_readiness_csv` POST） |
+
+### Loop 247 — 补全 Loop 171：运维/通道/竞品/定价 P4 就绪 CSV（P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、定价 `p4-readiness-export`（就绪/Copilot 原有保留） |
+| **测试** | `loop-170-173.test.ts`（`p4_readiness_csv` POST） |
+
+### Loop 248 — 补全 Loop 172：运维/通道/竞品/就绪/Copilot/定价 共享费用模板 CSV（P5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot、定价 `shared-fee-template-export`（策略页原有保留） |
+| **测试** | `loop-170-173.test.ts`（`shared_fee_template_csv` POST） |
+
+### Loop 249 — 补全 Loop 173：运维/通道/竞品/就绪/Copilot/定价 租户费用模板 CSV（P5-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot、定价 `tenant-shared-fee-export` |
+| **测试** | `loop-170-173.test.ts`（`tenant_shared_fee_templates_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2021,3 +2049,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.25 | 2026-07-24 | Loop 234–237 补全 Loop 158–161 queue/shard/template/reconciliation Web 与 export POST 测 |
 | v7.26 | 2026-07-24 | Loop 238–241 补全 Loop 162–165 context/batch-job/template/copilot-session Web 与 export POST 测 |
 | v7.27 | 2026-07-24 | Loop 242–245 补全 Loop 166–169 version/backup/p5/shop Web 与 export POST 测 |
+| v7.28 | 2026-07-27 | Loop 246–249 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |

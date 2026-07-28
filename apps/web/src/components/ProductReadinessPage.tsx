@@ -37,6 +37,8 @@ import {
   downloadLatestQueuePriceVersionCsv,
   downloadVersionBackupCsv,
   downloadShopCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -367,6 +369,29 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessShopExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-shared-fee-template-export"
+            onClick={() =>
+              void downloadSharedFeeTemplateCsv(
+                locale,
+                "fee-tpl-ml-electronics"
+              ).then(() => setMessage(t("readinessSharedFeeTemplateExportDone")))
+            }
+          >
+            {t("readinessSharedFeeTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-tenant-shared-fee-export"
+            onClick={() =>
+              void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+                () => setMessage(t("readinessTenantSharedFeeTemplatesExportDone"))
+              )
+            }
+          >
+            {t("readinessTenantSharedFeeTemplatesExportCsv")}
           </button>
           <button
             type="button"

@@ -74,4 +74,24 @@ describe("export store kinds (Loop 170-173)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports p4_readiness_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "p4_readiness_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports tenant_shared_fee_templates_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "tenant_shared_fee_templates_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

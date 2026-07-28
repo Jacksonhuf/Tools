@@ -39,6 +39,10 @@ import {
   downloadLatestQueuePriceVersionCsv,
   downloadVersionBackupCsv,
   downloadP5ReadinessCsv,
+  downloadP3ReadinessCsv,
+  downloadP4ReadinessCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -565,6 +569,51 @@ export function ChannelsPage() {
           }
         >
           {t("channelsP5ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-p3-readiness-export"
+          onClick={() =>
+            void downloadP3ReadinessCsv(locale).then(() =>
+              setMessage(t("channelsP3ReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsP3ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-p4-readiness-export"
+          onClick={() =>
+            void downloadP4ReadinessCsv(locale).then(() =>
+              setMessage(t("channelsP4ReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsP4ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-shared-fee-template-export"
+          onClick={() =>
+            void downloadSharedFeeTemplateCsv(
+              locale,
+              "fee-tpl-ml-electronics"
+            ).then(() => setMessage(t("channelsSharedFeeTemplateExportDone")))
+          }
+        >
+          {t("channelsSharedFeeTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-tenant-shared-fee-export"
+          onClick={() =>
+            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+              () => setMessage(t("channelsTenantSharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("channelsTenantSharedFeeTemplatesExportCsv")}
         </button>
       </div>
 

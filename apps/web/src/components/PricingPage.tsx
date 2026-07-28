@@ -19,6 +19,10 @@ import {
   downloadLatestQueuePriceVersionCsv,
   downloadVersionBackupCsv,
   downloadP5ReadinessCsv,
+  downloadP3ReadinessCsv,
+  downloadP4ReadinessCsv,
+  downloadSharedFeeTemplateCsv,
+  downloadTenantSharedFeeTemplatesCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
   downloadI18nGlossaryTermCsv,
@@ -345,6 +349,51 @@ export function PricingPage() {
           }
         >
           {t("pricingP5ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-p3-readiness-export"
+          onClick={() =>
+            void downloadP3ReadinessCsv(locale).then(() =>
+              setMessage(t("pricingP3ReadinessExportDone"))
+            )
+          }
+        >
+          {t("pricingP3ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-p4-readiness-export"
+          onClick={() =>
+            void downloadP4ReadinessCsv(locale).then(() =>
+              setMessage(t("pricingP4ReadinessExportDone"))
+            )
+          }
+        >
+          {t("pricingP4ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-shared-fee-template-export"
+          onClick={() =>
+            void downloadSharedFeeTemplateCsv(
+              locale,
+              "fee-tpl-ml-electronics"
+            ).then(() => setMessage(t("pricingSharedFeeTemplateExportDone")))
+          }
+        >
+          {t("pricingSharedFeeTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-tenant-shared-fee-export"
+          onClick={() =>
+            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+              () => setMessage(t("pricingTenantSharedFeeTemplatesExportDone"))
+            )
+          }
+        >
+          {t("pricingTenantSharedFeeTemplatesExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (
