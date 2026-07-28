@@ -1,48 +1,30 @@
-export interface FxRateRow {
-  base: string;
-  quote: string;
-  rate: number;
-  buffer_pct: number;
-  effective_from: string;
-  source: string;
+export type { FxRateRow } from "./repositories/fx-rate-types.js";
+import type { FxRateRow } from "./repositories/fx-rate-types.js";
+import { getFxRateRepository } from "./repositories/fx-rate-index.js";
+
+export async function listFxRates(tenantId: string): Promise<FxRateRow[]> {
+  return getFxRateRepository().list(tenantId);
 }
 
-const DEFAULT_RATES: FxRateRow[] = [
-  {
-    base: "USD",
-    quote: "MXN",
-    rate: 20,
-    buffer_pct: 2,
-    effective_from: "2026-01-01T00:00:00.000Z",
-    source: "demo-table",
-  },
-];
-
-const byTenant = new Map<string, FxRateRow[]>();
-
-export function listFxRates(tenantId: string): FxRateRow[] {
-  return byTenant.get(tenantId) ?? [...DEFAULT_RATES];
+export async function upsertFxRate(
+  tenantId: string,
+  row: FxRateRow
+): Promise<FxRateRow[]> {
+  return getFxRateRepository().upsert(tenantId, row);
 }
 
-export function upsertFxRate(tenantId: string, row: FxRateRow): FxRateRow[] {
-  const list = [...listFxRates(tenantId)];
-  const idx = list.findIndex(
-    (r) => r.base === row.base && r.quote === row.quote
-  );
-  if (idx >= 0) list[idx] = row;
-  else list.push(row);
-  byTenant.set(tenantId, list);
-  return list;
-}
-
-export function getFxRate(
+export async function getFxRate(
   tenantId: string,
   base: string,
   quote: string
-): FxRateRow | undefined {
-  return listFxRates(tenantId).find((r) => r.base === base && r.quote === quote);
+): Promise<FxRateRow | undefined> {
+  return getFxRateRepository().get(tenantId, base, quote);
 }
 
 export function resetFxRatesForTests(): void {
-  byTenant.clear();
+  void getFxRateRepository().resetForTests();
+}
+
+export function getFxRateStoreStatus() {
+  return { driver: getFxRateRepository().driver };
 }

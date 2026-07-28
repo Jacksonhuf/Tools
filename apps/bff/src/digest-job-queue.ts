@@ -1,131 +1,60 @@
 import type { AppLocale } from "@mx-pricing/i18n-format";
-import type { DailyAgentDigest } from "./agent-digest-service.js";
 import { buildDailyAgentDigest } from "./agent-digest-service.js";
 import type { CatalogRepository } from "./repositories/index.js";
 import type { ReconciliationAlertRepository } from "./repositories/reconciliation-types.js";
 import type { AgentToolAuditRepository } from "./repositories/agent-audit-types.js";
 import { getDigestSchedule } from "./agent-digest-dispatch.js";
 import { deliverSmtpDigest } from "./smtp-digest-adapter.js";
+import { getDigestJobRepository } from "./repositories/digest-job-index.js";
 
-export type DigestDeliveryChannel =
-  | "email_stub"
-  | "webhook_queue"
-  | "smtp_queue";
+export type {
+  DigestDeliveryChannel,
+  DigestDeliveryStatus,
+  DigestQueuedJob,
+  DigestDeliveryResult,
+  DigestDispatchResult,
+} from "./digest-job-queue-types.js";
 
-export type DigestDeliveryStatus =
-  | "sent_stub"
-  | "webhook_accepted"
-  | "webhook_skipped"
-  | "smtp_accepted"
-  | "smtp_skipped"
-  | "smtp_stub_queued";
+import type {
+  DigestDeliveryChannel,
+  DigestDeliveryResult,
+  DigestDispatchResult,
+  DigestQueuedJob,
+} from "./digest-job-queue-types.js";
 
-export type DigestQueuedJob = {
-  job_id: string;
-  tenant_id: string;
-  locale: AppLocale;
-  date: string | null;
-  channels: DigestDeliveryChannel[];
-  status:
-    | "queued"
-    | "processing"
-    | "completed"
-    | "failed"
-    | "dead_letter";
-  attempts: number;
-  simulate_poison?: boolean;
-  created_at: string;
-  updated_at: string;
-  error: string | null;
-  result: DigestDispatchResult | null;
-};
-
-export interface DigestDeliveryResult {
-  channel: DigestDeliveryChannel;
-  status: DigestDeliveryStatus;
-  to?: string;
-  subject?: string;
-  body?: string;
-  webhook_url?: string | null;
-  smtp_host?: string | null;
-  submission_url?: string | null;
-}
-
-export interface DigestDispatchResult {
-  date: string;
-  digest: DailyAgentDigest;
-  deliveries: DigestDeliveryResult[];
-}
-
-const queue: DigestQueuedJob[] = [];
-let queueSeq = 0;
-
-export function listDigestQueuedJobs(
+export async function listDigestQueuedJobs(
   tenantId: string,
   limit = 20
-): DigestQueuedJob[] {
-  return queue
-    .filter((j) => j.tenant_id === tenantId)
-    .slice(-limit)
-    .reverse();
+): Promise<DigestQueuedJob[]> {
+  return getDigestJobRepository().list(tenantId, limit);
 }
 
-export function getDigestQueuedJob(
+export async function getDigestQueuedJob(
   tenantId: string,
   jobId: string
-): DigestQueuedJob | undefined {
-  const job = queue.find((j) => j.job_id === jobId);
-  if (!job || job.tenant_id !== tenantId) return undefined;
-  return job;
+): Promise<DigestQueuedJob | undefined> {
+  return getDigestJobRepository().get(tenantId, jobId);
 }
 
-export function listDigestDeadLetterJobs(
+export async function listDigestDeadLetterJobs(
   tenantId: string,
   limit = 20
-): DigestQueuedJob[] {
-  return queue
-    .filter((j) => j.tenant_id === tenantId && j.status === "dead_letter")
-    .slice(-limit)
-    .reverse();
+): Promise<DigestQueuedJob[]> {
+  return getDigestJobRepository().listDeadLetter(tenantId, limit);
 }
 
-export function digestQueueSummary(tenantId: string) {
-  const jobs = queue.filter((j) => j.tenant_id === tenantId);
-  return {
-    total: jobs.length,
-    queued: jobs.filter((j) => j.status === "queued").length,
-    failed: jobs.filter((j) => j.status === "failed").length,
-    dead_letter: jobs.filter((j) => j.status === "dead_letter").length,
-  };
+export async function digestQueueSummary(tenantId: string) {
+  return getDigestJobRepository().summary(tenantId);
 }
 
-export function enqueueDailyDigestJob(input: {
+export async function enqueueDailyDigestJob(input: {
   tenant_id: string;
   locale: AppLocale;
   date?: string;
   channels?: DigestDeliveryChannel[];
   simulate_poison?: boolean;
-}): DigestQueuedJob {
-  queueSeq += 1;
-  const now = new Date().toISOString();
-  const job: DigestQueuedJob = {
-    job_id: `digest-q-${queueSeq}`,
-    tenant_id: input.tenant_id,
-    locale: input.locale,
-    date: input.date?.trim() || null,
-    channels: input.channels?.length
-      ? input.channels
-      : ["email_stub", "webhook_queue"],
-    status: "queued",
-    attempts: 0,
-    simulate_poison: input.simulate_poison === true,
-    created_at: now,
-    updated_at: now,
-    error: null,
-    result: null,
-  };
-  queue.push(job);
-  return job;
+}): Promise<DigestQueuedJob> {
+  return getDigestJobRepository().enqueue(input);
 }
 
 async function deliverWebhook(
@@ -229,19 +158,15 @@ export async function processDigestQueue(
   tenantId: string,
   limit = 5
 ): Promise<{ processed: DigestQueuedJob[] }> {
+  const repo = getDigestJobRepository();
   const maxAttempts = Number(process.env.DIGEST_MAX_ATTEMPTS ?? "3");
-  const pending = queue.filter(
-    (j) =>
-      j.tenant_id === tenantId &&
-      (j.status === "queued" ||
-        (j.status === "failed" && j.attempts < maxAttempts))
-  );
-  const batch = pending.slice(0, limit);
+  const batch = await repo.listPending(tenantId, limit, maxAttempts);
   const processed: DigestQueuedJob[] = [];
 
   for (const job of batch) {
     job.status = "processing";
     job.updated_at = new Date().toISOString();
+    await repo.save(job);
     try {
       if (job.simulate_poison) {
         throw new Error("POISON_MESSAGE");
@@ -256,21 +181,20 @@ export async function processDigestQueue(
     } catch (e) {
       job.attempts += 1;
       job.error = String(e);
-      const maxAttempts = Number(process.env.DIGEST_MAX_ATTEMPTS ?? "3");
-      if (job.attempts >= maxAttempts) {
-        job.status = "dead_letter";
-      } else {
-        job.status = "failed";
-      }
+      job.status =
+        job.attempts >= maxAttempts ? "dead_letter" : "failed";
     }
     job.updated_at = new Date().toISOString();
+    await repo.save(job);
     processed.push(job);
   }
   return { processed };
 }
 
 export function resetDigestJobQueueForTests(): void {
-  queue.length = 0;
-  queueSeq = 0;
+  void getDigestJobRepository().resetForTests();
 }
 
+export function getDigestJobStoreStatus() {
+  return { driver: getDigestJobRepository().driver };
+}

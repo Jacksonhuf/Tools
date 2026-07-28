@@ -36,8 +36,8 @@ export function digestDeadLetterJobsToCsv(
 export function buildDigestDeadLetterSummary(
   tenantId: string,
   jobs: DigestQueuedJob[],
-  queueSummary: ReturnType<
-    typeof import("./digest-job-queue.js").digestQueueSummary
+  queueSummary: Awaited<
+    ReturnType<typeof import("./digest-job-queue.js").digestQueueSummary>
   >
 ) {
   return {

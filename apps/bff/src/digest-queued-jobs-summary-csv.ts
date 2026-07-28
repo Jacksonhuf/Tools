@@ -1,6 +1,8 @@
 import type { buildDigestQueuedJobsSummary } from "./digest-queued-jobs-csv.js";
 
-type DigestQueuedJobsSummary = ReturnType<typeof buildDigestQueuedJobsSummary>;
+type DigestQueuedJobsSummary = Awaited<
+  ReturnType<typeof buildDigestQueuedJobsSummary>
+>;
 
 function cell(value: string | number | null | undefined): string {
   const raw = value == null ? "" : String(value);

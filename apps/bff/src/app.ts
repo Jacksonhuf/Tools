@@ -150,7 +150,12 @@ import {
   createStoredExport,
   getStoredExport,
 } from "./export-file-store.js";
-import { getFxRate, listFxRates, upsertFxRate } from "./fx-rate-table.js";
+import {
+  getFxRate,
+  getFxRateStoreStatus,
+  listFxRates,
+  upsertFxRate,
+} from "./fx-rate-table.js";
 import { fxRatesToCsv } from "./fx-rates-csv.js";
 import { agentToolAuditToCsv } from "./agent-audit-csv.js";
 import { runDueDigestDispatch } from "./digest-run-due.js";
@@ -158,6 +163,7 @@ import { computeLandedFromFx } from "./landed-cost-fx.js";
 import { computeLandedFromHs } from "./landed-cost-hs.js";
 import {
   getTariffHsRate,
+  getTariffHsStoreStatus,
   listTariffHsRates,
   upsertTariffHsRate,
 } from "./tariff-hs-table.js";
@@ -168,6 +174,7 @@ import {
 import {
   createCostSheet,
   getCostSheet,
+  getCostSheetStoreStatus,
   listCostSheets,
 } from "./cost-sheet-store.js";
 import { computeLandedFromCostSheet } from "./landed-cost-from-sheet.js";
@@ -292,6 +299,7 @@ import {
   digestQueueSummary,
   processDigestQueue,
   resetDigestJobQueueForTests,
+  getDigestJobStoreStatus,
 } from "./digest-job-queue.js";
 import {
   getProductMilestoneStatus,
@@ -435,6 +443,10 @@ export function createApp(options: CreateAppOptions = {}) {
       catalog_driver: catalog.driver,
       reconciliation_driver: reconciliationAlerts.driver ?? "memory",
       agent_audit_driver: agentAudit.driver ?? "memory",
+      cost_sheet: getCostSheetStoreStatus(),
+      fx_rate: getFxRateStoreStatus(),
+      tariff_hs: getTariffHsStoreStatus(),
+      digest_jobs: getDigestJobStoreStatus(),
       generated_at: new Date().toISOString(),
     })
   );
@@ -952,7 +964,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    return c.json({ items: listCostSheets(tenantId, skuId) });
+    return c.json({ items: await listCostSheets(tenantId, skuId) });
   });
 
   app.get("/api/v1/skus/:skuId/cost-sheets/export", async (c) => {
@@ -963,7 +975,7 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = new Date().toISOString();
-    const csv = costSheetsToCsv(listCostSheets(tenantId, skuId), exportedAt);
+    const csv = costSheetsToCsv(await listCostSheets(tenantId, skuId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -980,7 +992,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    const sheet = getCostSheet(tenantId, skuId, sheetId);
+    const sheet = await getCostSheet(tenantId, skuId, sheetId);
     if (!sheet) {
       throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
     }
@@ -1011,7 +1023,7 @@ export function createApp(options: CreateAppOptions = {}) {
       source?: string;
     };
     try {
-      const sheet = createCostSheet(tenantId, skuId, {
+      const sheet = await createCostSheet(tenantId, skuId, {
         batch_no: body.batch_no ?? "",
         cogs_amount: body.cogs_amount ?? 0,
         cogs_currency: body.cogs_currency,
@@ -1390,13 +1402,13 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/fx-rates", async (c) => {
     const tenantId = c.get("tenantId");
-    return c.json({ items: listFxRates(tenantId) });
+    return c.json({ items: await listFxRates(tenantId) });
   });
 
   app.get("/api/v1/fx-rates/export", async (c) => {
     const tenantId = c.get("tenantId");
     const exportedAt = new Date().toISOString();
-    const csv = fxRatesToCsv(listFxRates(tenantId), exportedAt);
+    const csv = fxRatesToCsv(await listFxRates(tenantId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -1409,7 +1421,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const base = c.req.param("base").toUpperCase();
     const quote = c.req.param("quote").toUpperCase();
-    const row = getFxRate(tenantId, base, quote);
+    const row = await getFxRate(tenantId, base, quote);
     if (!row) {
       throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
     }
@@ -1434,7 +1446,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (body.rate === undefined || body.rate <= 0) {
       throw new HTTPException(400, { message: "RATE_REQUIRED" });
     }
-    const items = upsertFxRate(tenantId, {
+    const items = await upsertFxRate(tenantId, {
       base: c.req.param("base").toUpperCase(),
       quote: c.req.param("quote").toUpperCase(),
       rate: body.rate,
@@ -1447,13 +1459,13 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/tariff-hs-rates", async (c) => {
     const tenantId = c.get("tenantId");
-    return c.json({ items: listTariffHsRates(tenantId) });
+    return c.json({ items: await listTariffHsRates(tenantId) });
   });
 
   app.get("/api/v1/tariff-hs-rates/:hsCode/export", async (c) => {
     const tenantId = c.get("tenantId");
     const hsCode = decodeURIComponent(c.req.param("hsCode"));
-    const row = getTariffHsRate(tenantId, hsCode);
+    const row = await getTariffHsRate(tenantId, hsCode);
     if (!row) {
       throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
     }
@@ -1470,7 +1482,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/tariff-hs-rates/export", async (c) => {
     const tenantId = c.get("tenantId");
     const exportedAt = new Date().toISOString();
-    const csv = tariffHsRatesToCsv(listTariffHsRates(tenantId), exportedAt);
+    const csv = tariffHsRatesToCsv(await listTariffHsRates(tenantId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -1490,8 +1502,8 @@ export function createApp(options: CreateAppOptions = {}) {
     if (body.tariff_rate === undefined || body.tariff_rate < 0) {
       throw new HTTPException(400, { message: "TARIFF_RATE_REQUIRED" });
     }
-    const existing = listTariffHsRates(tenantId).find((r) => r.hs_code === hsCode);
-    const items = upsertTariffHsRate(tenantId, {
+    const existing = (await listTariffHsRates(tenantId)).find((r) => r.hs_code === hsCode);
+    const items = await upsertTariffHsRate(tenantId, {
       hs_code: hsCode,
       description: body.description ?? existing?.description ?? hsCode,
       tariff_rate: body.tariff_rate,
@@ -1519,7 +1531,7 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(400, { message: "HS_CODE_REQUIRED" });
     }
     try {
-      const { tariff, computed } = computeLandedFromHs(tenantId, hsCode, {
+      const { tariff, computed } = await computeLandedFromHs(tenantId, hsCode, {
         cogs_amount: body.cogs_amount,
         cogs_currency: body.cogs_currency,
         freight_alloc_mxn: body.freight_alloc_mxn,
@@ -1705,7 +1717,7 @@ export function createApp(options: CreateAppOptions = {}) {
       apply?: boolean;
     };
     try {
-      const computed = computeLandedFromFx(tenantId, {
+      const computed = await computeLandedFromFx(tenantId, {
         cogs_amount: body.cogs_amount,
         cogs_currency: body.cogs_currency ?? "USD",
         freight_alloc_mxn: body.freight_alloc_mxn,
@@ -1852,7 +1864,7 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
       }
       content = costSheetsToCsv(
-        listCostSheets(tenantId, skuId),
+        await listCostSheets(tenantId, skuId),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -1872,13 +1884,13 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "tariff_hs_csv") {
       content = tariffHsRatesToCsv(
-        listTariffHsRates(tenantId),
+        await listTariffHsRates(tenantId),
         new Date().toISOString()
       );
       content_type = "text/csv";
     } else if (kind === "fx_rates_csv") {
       content = fxRatesToCsv(
-        listFxRates(tenantId),
+        await listFxRates(tenantId),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -1898,7 +1910,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_dead_letter_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      const jobs = await listDigestDeadLetterJobs(tenantId, limit);
       content = digestDeadLetterJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "repricing_queue_csv") {
@@ -1912,7 +1924,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_queued_jobs_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestQueuedJobs(tenantId, limit);
+      const jobs = await listDigestQueuedJobs(tenantId, limit);
       content = digestQueuedJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "worker_heartbeats_csv") {
@@ -2060,8 +2072,8 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_queued_jobs_summary_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestQueuedJobs(tenantId, limit);
-      const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+      const jobs = await listDigestQueuedJobs(tenantId, limit);
+      const summary = await buildDigestQueuedJobsSummary(tenantId, jobs);
       content = digestQueuedJobsSummaryToCsv(
         summary,
         new Date().toISOString()
@@ -2090,11 +2102,11 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_dead_letter_summary_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      const jobs = await listDigestDeadLetterJobs(tenantId, limit);
       const summary = buildDigestDeadLetterSummary(
         tenantId,
         jobs,
-        digestQueueSummary(tenantId)
+        await digestQueueSummary(tenantId)
       );
       content = digestDeadLetterSummaryToCsv(
         summary,
@@ -2328,7 +2340,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "tariff_hs_rate_csv") {
       const hsCode = body.hs_code ?? "HS-ELECTRONICS-MX";
-      const row = getTariffHsRate(tenantId, hsCode);
+      const row = await getTariffHsRate(tenantId, hsCode);
       if (!row) {
         throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
       }
@@ -2337,7 +2349,7 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "fx_rate_csv") {
       const base = (body.fx_base ?? "USD").toUpperCase();
       const quote = (body.fx_quote ?? "MXN").toUpperCase();
-      const row = getFxRate(tenantId, base, quote);
+      const row = await getFxRate(tenantId, base, quote);
       if (!row) {
         throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
       }
@@ -2349,7 +2361,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!sheetId?.trim()) {
         throw new HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
       }
-      const sheet = getCostSheet(tenantId, skuId, sheetId.trim());
+      const sheet = await getCostSheet(tenantId, skuId, sheetId.trim());
       if (!sheet) {
         throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
       }
@@ -2410,7 +2422,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!jobId?.trim()) {
         throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
-      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job) {
         throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
       }
@@ -2457,7 +2469,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!jobId?.trim()) {
         throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
-      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job || job.status !== "dead_letter") {
         throw new HTTPException(404, {
           message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
@@ -5113,7 +5125,7 @@ export function createApp(options: CreateAppOptions = {}) {
       channels?: Array<"email_stub" | "webhook_queue" | "smtp_queue">;
       simulate_poison?: boolean;
     };
-    const job = enqueueDailyDigestJob({
+    const job = await enqueueDailyDigestJob({
       tenant_id: tenantId,
       locale,
       date: body.date,
@@ -5130,8 +5142,8 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestQueuedJobs(tenantId, limit);
-    const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
+    const summary = await buildDigestQueuedJobsSummary(tenantId, jobs);
     const csv = digestQueuedJobsSummaryToCsv(summary, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5147,8 +5159,8 @@ export function createApp(options: CreateAppOptions = {}) {
       50,
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
-    const jobs = listDigestQueuedJobs(tenantId, limit);
-    return c.json(buildDigestQueuedJobsSummary(tenantId, jobs));
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
+    return c.json(await buildDigestQueuedJobsSummary(tenantId, jobs));
   });
 
   app.get("/api/v1/agent/digest/jobs/export", async (c) => {
@@ -5158,7 +5170,7 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestQueuedJobs(tenantId, limit);
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
     const csv = digestQueuedJobsToCsv(jobs, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5172,7 +5184,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
-    return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+    return c.json({ items: await listDigestQueuedJobs(tenantId, limit) });
   });
 
   app.get("/api/v1/agent/digest/jobs/dead-letter/summary/export", async (c) => {
@@ -5182,11 +5194,11 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     const summary = buildDigestDeadLetterSummary(
       tenantId,
       jobs,
-      digestQueueSummary(tenantId)
+      await digestQueueSummary(tenantId)
     );
     const csv = digestDeadLetterSummaryToCsv(summary, exportedAt);
     return new Response(csv, {
@@ -5203,9 +5215,9 @@ export function createApp(options: CreateAppOptions = {}) {
       50,
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     return c.json(
-      buildDigestDeadLetterSummary(tenantId, jobs, digestQueueSummary(tenantId))
+      buildDigestDeadLetterSummary(tenantId, jobs, await digestQueueSummary(tenantId))
     );
   });
 
@@ -5216,7 +5228,7 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     const csv = digestDeadLetterJobsToCsv(jobs, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5229,7 +5241,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/agent/digest/jobs/dead-letter/:jobId/export", async (c) => {
     const tenantId = c.get("tenantId");
     const jobId = c.req.param("jobId");
-    const job = getDigestQueuedJob(tenantId, jobId);
+    const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job || job.status !== "dead_letter") {
       throw new HTTPException(404, {
         message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
@@ -5248,7 +5260,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/agent/digest/jobs/:jobId/export", async (c) => {
     const tenantId = c.get("tenantId");
     const jobId = c.req.param("jobId");
-    const job = getDigestQueuedJob(tenantId, jobId);
+    const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job) {
       throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
     }
@@ -5266,7 +5278,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
-    return c.json({ items: listDigestDeadLetterJobs(tenantId, limit) });
+    return c.json({ items: await listDigestDeadLetterJobs(tenantId, limit) });
   });
 
   app.post("/api/v1/agent/digest/jobs/process", async (c) => {

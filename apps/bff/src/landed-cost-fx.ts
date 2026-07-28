@@ -1,7 +1,7 @@
 import { computeLandedCost } from "@mx-pricing/pricing-engine";
 import { getFxRate } from "./fx-rate-table.js";
 
-export function computeLandedFromFx(
+export async function computeLandedFromFx(
   tenantId: string,
   input: {
     cogs_amount: number;
@@ -12,7 +12,7 @@ export function computeLandedFromFx(
   }
 ) {
   const quote = "MXN";
-  const fxRow = getFxRate(tenantId, input.cogs_currency, quote);
+  const fxRow = await getFxRate(tenantId, input.cogs_currency, quote);
   if (!fxRow) {
     throw new Error(`FX_RATE_NOT_FOUND:${input.cogs_currency}/${quote}`);
   }

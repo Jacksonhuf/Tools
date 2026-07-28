@@ -10,7 +10,7 @@ describe("computeLandedFromCostSheet USD path", () => {
   it("uses FX table for non-MXN COGS", async () => {
     resetCostSheetsForTests();
     const catalog = new MemoryCatalogRepository();
-    const sheet = createCostSheet("tenant-demo", "demo-sku-001", {
+    const sheet = await createCostSheet("tenant-demo", "demo-sku-001", {
       batch_no: "USD-1",
       cogs_amount: 100,
       cogs_currency: "USD",

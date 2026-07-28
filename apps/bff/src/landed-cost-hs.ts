@@ -1,7 +1,7 @@
 import { computeLandedCost } from "@mx-pricing/pricing-engine";
 import { getTariffHsRate } from "./tariff-hs-table.js";
 
-export function computeLandedFromHs(
+export async function computeLandedFromHs(
   tenantId: string,
   hsCode: string,
   input: {
@@ -10,7 +10,7 @@ export function computeLandedFromHs(
     freight_alloc_mxn?: number;
   }
 ) {
-  const row = getTariffHsRate(tenantId, hsCode);
+  const row = await getTariffHsRate(tenantId, hsCode);
   if (!row) {
     throw new Error(`HS_CODE_NOT_FOUND:${hsCode}`);
   }

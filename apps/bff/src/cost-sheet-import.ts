@@ -84,7 +84,7 @@ export async function applyCostSheetImport(
       continue;
     }
     try {
-      const sheet = createCostSheet(tenantId, row.sku_id, {
+      const sheet = await createCostSheet(tenantId, row.sku_id, {
         batch_no: row.batch_no,
         cogs_amount: row.cogs_amount,
         cogs_currency: row.cogs_currency,

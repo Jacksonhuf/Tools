@@ -4,7 +4,7 @@
 |------|------|
 | 关联 PRD | [PRD-mexico-cross-border-pricing.md](./PRD-mexico-cross-border-pricing.md) |
 | 基线 | [development-task-list.md](./development-task-list.md) v1.1（MVP） |
-| 状态 | Wave 1–3 首批实现已合入（见下方） |
+| 状态 | Wave 1–5 已交付；Wave 6 本批 |
 
 ## 本批已交付（Prod Wave 1–3）
 
@@ -35,15 +35,24 @@
 | P0-E1-03b | RBAC 门禁：审批 / 渠道写价 | ✅ |
 | P0-E1-05 | async-worker 扩展：sync + recon + repricing events | ✅ |
 
+## 本批已交付（Prod Wave 6）
+
+| ID | Task | 状态 |
+|----|------|------|
+| P0-E1-04c | 迁移 `014_prod_wave6_catalog_digest`（tariff 列 + digest_jobs 对齐） | ✅ |
+| P0-E1-04d | Cost sheet PG 仓储（`cost_sheets`） | ✅ |
+| P0-E1-04e | FX rate PG 仓储（`fx_rates`） | ✅ |
+| P0-E1-04f | Tariff HS PG 仓储（`tariff_rules`） | ✅ |
+| P0-E1-04g | Digest job queue PG 仓储（`digest_jobs`） | ✅ |
+| X-01 | `GET /production/readiness` 暴露 cost/fx/tariff/digest 驱动 | ✅ |
+
 ## 下一批（待开发）
 
 | 波次 | 关键 Task |
 |------|-----------|
 | Wave 0 | staging/prod 环境、Secrets、WAF、备份 PITR |
-| Wave 1 | 强制 PG 全仓储、对象存储导出、ci-int-pricing 扩展 |
 | Wave 2 | SKU/Cost Web 生产化、审批 RBAC 分角色 |
-| Wave 4–5 | 真实采集 Worker、SMTP digest、对账定时任务 |
-| Wave 6–8 | 生产 LLM、NFR k6 基线、安全扫描 X-03、上线 GL-* |
+| Wave 7–8 | 生产 LLM、NFR k6 基线、安全扫描 X-03、上线 GL-* |
 
 完整 153 项规划见 Cloud Agent 会话记录（2026-07-28）。
 
