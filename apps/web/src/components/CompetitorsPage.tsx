@@ -64,6 +64,8 @@ import {
   downloadFirstChannelSandboxEventCsv,
   downloadFirstDigestDeadLetterJobCsv,
   downloadFirstAgentToolAuditRowCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
+  downloadLatestAgentDigestDateCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
@@ -780,6 +782,28 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorAgentToolAuditRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-adjustment-batch-index-export"
+          onClick={() =>
+            void downloadLatestAdjustmentBatchIndexCsv(locale)
+              .then(() => setMessage(t("competitorAdjustmentBatchIndexExportDone")))
+              .catch(() => setMessage(t("competitorAdjustmentBatchIndexExportEmpty")))
+          }
+        >
+          {t("competitorAdjustmentBatchIndexExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-digest-date-export"
+          onClick={() =>
+            void downloadLatestAgentDigestDateCsv(locale)
+              .then(() => setMessage(t("competitorAgentDigestDateExportDone")))
+              .catch(() => setMessage(t("competitorAgentDigestDateExportEmpty")))
+          }
+        >
+          {t("competitorAgentDigestDateExportCsv")}
         </button>
         <button
           type="button"

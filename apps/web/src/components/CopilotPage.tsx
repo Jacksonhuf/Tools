@@ -68,6 +68,9 @@ import {
   downloadLatestListingSyncJobCsv,
   downloadFirstWorkerHeartbeatCsv,
   downloadFirstChannelSandboxEventCsv,
+  downloadFirstPriceObservationCsv,
+  downloadLatestRepricingEventCsv,
+  downloadLatestAdjustmentBatchIndexCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
@@ -915,6 +918,45 @@ export function CopilotPage() {
             }
           >
             {t("copilotSandboxEventExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-price-observation-export"
+            onClick={() =>
+              void downloadFirstPriceObservationCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              )
+                .then(() => setMessage(t("copilotPriceObservationExportDone")))
+                .catch(() => setMessage(t("copilotPriceObservationExportEmpty")))
+            }
+          >
+            {t("copilotPriceObservationExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-event-export"
+            onClick={() =>
+              void downloadLatestRepricingEventCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              )
+                .then(() => setMessage(t("copilotRepricingEventExportDone")))
+                .catch(() => setMessage(t("copilotRepricingEventExportEmpty")))
+            }
+          >
+            {t("copilotRepricingEventExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-adjustment-batch-index-export"
+            onClick={() =>
+              void downloadLatestAdjustmentBatchIndexCsv(locale)
+                .then(() => setMessage(t("copilotAdjustmentBatchIndexExportDone")))
+                .catch(() => setMessage(t("copilotAdjustmentBatchIndexExportEmpty")))
+            }
+          >
+            {t("copilotAdjustmentBatchIndexExportCsv")}
           </button>
           <button
             type="button"
