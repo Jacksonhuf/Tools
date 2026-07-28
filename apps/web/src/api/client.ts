@@ -3122,6 +3122,53 @@ export async function downloadFirstAgentToolRowCsv(
   await downloadAgentToolRowCsv(locale, toolName);
 }
 
+export async function downloadFirstAgentReadinessCheckCsv(
+  locale: string
+): Promise<void> {
+  const { checks } = await fetchAgentReadiness(locale);
+  const checkId = checks[0]?.id;
+  if (!checkId) {
+    throw new Error("AGENT_READINESS_CHECK_EMPTY");
+  }
+  await downloadAgentReadinessCheckCsv(locale, checkId);
+}
+
+export async function downloadFirstAgentMilestoneCsv(
+  locale: string
+): Promise<void> {
+  const { milestones } = await fetchProductReadiness(locale);
+  const milestoneId = milestones[0]?.id;
+  if (!milestoneId) {
+    throw new Error("AGENT_MILESTONE_EMPTY");
+  }
+  await downloadAgentMilestoneCsv(locale, milestoneId);
+}
+
+export async function downloadFirstProductReadinessCheckCsv(
+  locale: string
+): Promise<void> {
+  const summary = await fetchProductReadiness(locale);
+  const checkId =
+    summary.p3.checks[0]?.id ??
+    summary.p4.checks[0]?.id ??
+    summary.p5.checks[0]?.id;
+  if (!checkId) {
+    throw new Error("PRODUCT_READINESS_CHECK_EMPTY");
+  }
+  await downloadProductReadinessCheckCsv(locale, checkId);
+}
+
+export async function downloadFirstFeatureFlagCsv(
+  locale: string
+): Promise<void> {
+  const flags = await fetchFeatureFlags(locale);
+  const flagKey = Object.keys(flags).find((k) => k !== "generated_at");
+  if (!flagKey) {
+    throw new Error("FEATURE_FLAG_EMPTY");
+  }
+  await downloadFeatureFlagCsv(locale, flagKey);
+}
+
 export async function downloadOpsWorkersStatusSummaryCsv(
   locale: string
 ): Promise<void> {

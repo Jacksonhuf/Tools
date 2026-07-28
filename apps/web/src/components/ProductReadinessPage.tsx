@@ -61,6 +61,7 @@ import {
   downloadCrossChannelDashboardRowCsv,
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
+  downloadFirstAgentReadinessCheckCsv,
   downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
@@ -661,6 +662,17 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessAgentToolRowExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-agent-readiness-check-export"
+            onClick={() =>
+              void downloadFirstAgentReadinessCheckCsv(locale)
+                .then(() => setMessage(t("readinessAgentReadinessCheckExportDone")))
+                .catch(() => setMessage(t("readinessAgentReadinessCheckExportEmpty")))
+            }
+          >
+            {t("readinessAgentReadinessCheckExportCsv")}
           </button>
           <button
             type="button"

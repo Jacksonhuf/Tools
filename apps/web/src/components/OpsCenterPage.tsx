@@ -68,6 +68,10 @@ import {
   downloadCrossChannelDashboardRowCsv,
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
+  downloadFirstAgentReadinessCheckCsv,
+  downloadFirstAgentMilestoneCsv,
+  downloadFirstProductReadinessCheckCsv,
+  downloadFirstFeatureFlagCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -723,6 +727,50 @@ export function OpsCenterPage() {
           }
         >
           {t("opsAgentToolRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-readiness-check-export"
+          onClick={() =>
+            void downloadFirstAgentReadinessCheckCsv(locale)
+              .then(() => setMessage(t("opsAgentReadinessCheckExportDone")))
+              .catch(() => setMessage(t("opsAgentReadinessCheckExportEmpty")))
+          }
+        >
+          {t("opsAgentReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-milestone-export"
+          onClick={() =>
+            void downloadFirstAgentMilestoneCsv(locale)
+              .then(() => setMessage(t("opsAgentMilestoneExportDone")))
+              .catch(() => setMessage(t("opsAgentMilestoneExportEmpty")))
+          }
+        >
+          {t("opsAgentMilestoneExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-product-readiness-check-export"
+          onClick={() =>
+            void downloadFirstProductReadinessCheckCsv(locale)
+              .then(() => setMessage(t("opsProductReadinessCheckExportDone")))
+              .catch(() => setMessage(t("opsProductReadinessCheckExportEmpty")))
+          }
+        >
+          {t("opsProductReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-feature-flag-export"
+          onClick={() =>
+            void downloadFirstFeatureFlagCsv(locale)
+              .then(() => setMessage(t("opsFeatureFlagExportDone")))
+              .catch(() => setMessage(t("opsFeatureFlagExportEmpty")))
+          }
+        >
+          {t("opsFeatureFlagExportCsv")}
         </button>
       </div>
 

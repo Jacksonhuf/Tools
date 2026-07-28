@@ -69,6 +69,10 @@ import {
   downloadPricingSnapshotRowCsv,
   downloadCrossChannelDashboardRowCsv,
   downloadFirstAgentToolRowCsv,
+  downloadFirstAgentReadinessCheckCsv,
+  downloadFirstAgentMilestoneCsv,
+  downloadFirstProductReadinessCheckCsv,
+  downloadFirstFeatureFlagCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
@@ -844,6 +848,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorAgentToolRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-readiness-check-export"
+          onClick={() =>
+            void downloadFirstAgentReadinessCheckCsv(locale)
+              .then(() => setMessage(t("competitorAgentReadinessCheckExportDone")))
+              .catch(() => setMessage(t("competitorAgentReadinessCheckExportEmpty")))
+          }
+        >
+          {t("competitorAgentReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-milestone-export"
+          onClick={() =>
+            void downloadFirstAgentMilestoneCsv(locale)
+              .then(() => setMessage(t("competitorAgentMilestoneExportDone")))
+              .catch(() => setMessage(t("competitorAgentMilestoneExportEmpty")))
+          }
+        >
+          {t("competitorAgentMilestoneExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-product-readiness-check-export"
+          onClick={() =>
+            void downloadFirstProductReadinessCheckCsv(locale)
+              .then(() => setMessage(t("competitorProductReadinessCheckExportDone")))
+              .catch(() => setMessage(t("competitorProductReadinessCheckExportEmpty")))
+          }
+        >
+          {t("competitorProductReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-feature-flag-export"
+          onClick={() =>
+            void downloadFirstFeatureFlagCsv(locale)
+              .then(() => setMessage(t("competitorFeatureFlagExportDone")))
+              .catch(() => setMessage(t("competitorFeatureFlagExportEmpty")))
+          }
+        >
+          {t("competitorFeatureFlagExportCsv")}
         </button>
         <button
           type="button"

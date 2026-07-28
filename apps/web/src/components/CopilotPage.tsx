@@ -74,6 +74,9 @@ import {
   downloadPricingSnapshotRowCsv,
   downloadCrossChannelDashboardRowCsv,
   downloadLatestCompetitorCurvePointCsv,
+  downloadFirstAgentMilestoneCsv,
+  downloadFirstProductReadinessCheckCsv,
+  downloadFirstFeatureFlagCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
@@ -1000,6 +1003,39 @@ export function CopilotPage() {
             }
           >
             {t("copilotCurvePointExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-agent-milestone-export"
+            onClick={() =>
+              void downloadFirstAgentMilestoneCsv(locale)
+                .then(() => setMessage(t("copilotAgentMilestoneExportDone")))
+                .catch(() => setMessage(t("copilotAgentMilestoneExportEmpty")))
+            }
+          >
+            {t("copilotAgentMilestoneExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-product-readiness-check-export"
+            onClick={() =>
+              void downloadFirstProductReadinessCheckCsv(locale)
+                .then(() => setMessage(t("copilotProductReadinessCheckExportDone")))
+                .catch(() => setMessage(t("copilotProductReadinessCheckExportEmpty")))
+            }
+          >
+            {t("copilotProductReadinessCheckExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-feature-flag-export"
+            onClick={() =>
+              void downloadFirstFeatureFlagCsv(locale)
+                .then(() => setMessage(t("copilotFeatureFlagExportDone")))
+                .catch(() => setMessage(t("copilotFeatureFlagExportEmpty")))
+            }
+          >
+            {t("copilotFeatureFlagExportCsv")}
           </button>
           <button
             type="button"

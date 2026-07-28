@@ -43,6 +43,10 @@ import {
   downloadCrossChannelDashboardRowCsv,
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
+  downloadFirstAgentReadinessCheckCsv,
+  downloadFirstAgentMilestoneCsv,
+  downloadFirstProductReadinessCheckCsv,
+  downloadFirstFeatureFlagCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -639,6 +643,50 @@ export function PricingPage() {
           }
         >
           {t("pricingAgentToolRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-readiness-check-export"
+          onClick={() =>
+            void downloadFirstAgentReadinessCheckCsv(locale)
+              .then(() => setMessage(t("pricingAgentReadinessCheckExportDone")))
+              .catch(() => setMessage(t("pricingAgentReadinessCheckExportEmpty")))
+          }
+        >
+          {t("pricingAgentReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-milestone-export"
+          onClick={() =>
+            void downloadFirstAgentMilestoneCsv(locale)
+              .then(() => setMessage(t("pricingAgentMilestoneExportDone")))
+              .catch(() => setMessage(t("pricingAgentMilestoneExportEmpty")))
+          }
+        >
+          {t("pricingAgentMilestoneExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-product-readiness-check-export"
+          onClick={() =>
+            void downloadFirstProductReadinessCheckCsv(locale)
+              .then(() => setMessage(t("pricingProductReadinessCheckExportDone")))
+              .catch(() => setMessage(t("pricingProductReadinessCheckExportEmpty")))
+          }
+        >
+          {t("pricingProductReadinessCheckExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-feature-flag-export"
+          onClick={() =>
+            void downloadFirstFeatureFlagCsv(locale)
+              .then(() => setMessage(t("pricingFeatureFlagExportDone")))
+              .catch(() => setMessage(t("pricingFeatureFlagExportEmpty")))
+          }
+        >
+          {t("pricingFeatureFlagExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

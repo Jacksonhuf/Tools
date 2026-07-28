@@ -1748,6 +1748,34 @@
 | **实现** | 运维、通道、竞品、就绪、定价 `agent-tool-row-export`（Copilot 页原有保留）；文档与 i18n 对齐 |
 | **测试** | `loop-194-197.test.ts`（`agent_tool_row_csv` POST，增至 4 条 POST） |
 
+### Loop 274 — 补全 Loop 198：运维/通道/竞品/就绪/定价 Agent 就绪检查 CSV（P4-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、定价 `agent-readiness-check-export`（Copilot 页原有保留） |
+| **测试** | `loop-198-201.test.ts`（`agent_readiness_check_csv` POST） |
+
+### Loop 275 — 补全 Loop 199：运维/通道/竞品/Copilot/定价 里程碑行 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、Copilot、定价 `agent-milestone-export`（就绪页原有保留） |
+| **测试** | `loop-198-201.test.ts`（`agent_milestone_csv` POST） |
+
+### Loop 276 — 补全 Loop 200：运维/通道/竞品/Copilot/定价 产品就绪检查 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、Copilot、定价 `product-readiness-check-export`（就绪页原有保留） |
+| **测试** | `loop-198-201.test.ts`（`product_readiness_check_csv` POST） |
+
+### Loop 277 — 补全 Loop 201：运维/通道/竞品/Copilot/定价 特性开关行 CSV + 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、Copilot、定价 `feature-flag-export`（就绪页原有保留）；文档与 i18n 对齐 |
+| **测试** | `loop-198-201.test.ts`（`feature_flag_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2224,3 +2252,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.32 | 2026-07-27 | Loop 262–265 补全 Loop 186–189 digest-dispatch/sandbox/dead-letter/tool-audit Web 与 export POST 测 |
 | v7.33 | 2026-07-27 | Loop 266–269 补全 Loop 190–193 price-observation/repricing-event/adjustment-index/digest-date Web 与 export POST 测 |
 | v7.34 | 2026-07-27 | Loop 270–273 补全 Loop 194–197 pricing-row/cross-channel/curve-point/agent-tool Web 与 export POST 测 |
+| v7.35 | 2026-07-27 | Loop 274–277 补全 Loop 198–201 readiness-check/milestone/product-check/feature-flag Web 与 export POST 测 |
