@@ -65,6 +65,9 @@ import {
   downloadLatestRepricingEventCsv,
   downloadLatestAdjustmentBatchIndexCsv,
   downloadLatestAgentDigestDateCsv,
+  downloadCrossChannelDashboardRowCsv,
+  downloadLatestCompetitorCurvePointCsv,
+  downloadFirstAgentToolRowCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -687,6 +690,39 @@ export function OpsCenterPage() {
           }
         >
           {t("opsAgentDigestDateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-cross-channel-row-export"
+          onClick={() =>
+            void downloadCrossChannelDashboardRowCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("opsCrossChannelRowExportDone")))
+              .catch(() => setMessage(t("opsCrossChannelRowExportEmpty")))
+          }
+        >
+          {t("opsCrossChannelRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-curve-point-export"
+          onClick={() =>
+            void downloadLatestCompetitorCurvePointCsv(locale, DEMO_LISTINGS[0])
+              .then(() => setMessage(t("opsCurvePointExportDone")))
+              .catch(() => setMessage(t("opsCurvePointExportEmpty")))
+          }
+        >
+          {t("opsCurvePointExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-tool-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolRowCsv(locale)
+              .then(() => setMessage(t("opsAgentToolRowExportDone")))
+              .catch(() => setMessage(t("opsAgentToolRowExportEmpty")))
+          }
+        >
+          {t("opsAgentToolRowExportCsv")}
         </button>
       </div>
 

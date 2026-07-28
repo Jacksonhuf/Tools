@@ -66,6 +66,9 @@ import {
   downloadFirstAgentToolAuditRowCsv,
   downloadLatestAdjustmentBatchIndexCsv,
   downloadLatestAgentDigestDateCsv,
+  downloadPricingSnapshotRowCsv,
+  downloadCrossChannelDashboardRowCsv,
+  downloadFirstAgentToolRowCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
@@ -804,6 +807,43 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorAgentDigestDateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-pricing-row-export"
+          onClick={() =>
+            void downloadPricingSnapshotRowCsv(
+              locale,
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then(() => setMessage(t("competitorPricingRowExportDone")))
+              .catch(() => setMessage(t("competitorPricingRowExportEmpty")))
+          }
+        >
+          {t("competitorPricingRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-cross-channel-row-export"
+          onClick={() =>
+            void downloadCrossChannelDashboardRowCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("competitorCrossChannelRowExportDone")))
+              .catch(() => setMessage(t("competitorCrossChannelRowExportEmpty")))
+          }
+        >
+          {t("competitorCrossChannelRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-tool-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolRowCsv(locale)
+              .then(() => setMessage(t("competitorAgentToolRowExportDone")))
+              .catch(() => setMessage(t("competitorAgentToolRowExportEmpty")))
+          }
+        >
+          {t("competitorAgentToolRowExportCsv")}
         </button>
         <button
           type="button"
