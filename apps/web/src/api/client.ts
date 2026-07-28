@@ -32,6 +32,25 @@ export async function fetchSkus(locale: string) {
   }>;
 }
 
+export interface AuthMeResponse {
+  subject: string;
+  tenant_id: string;
+  roles: string[];
+  permissions: {
+    pricing_read: boolean;
+    pricing_write: boolean;
+    channel_admin: boolean;
+    finance_approve: boolean;
+    ops_read: boolean;
+  };
+}
+
+export async function fetchAuthMe(locale: string): Promise<AuthMeResponse> {
+  const res = await fetch(`/api/v1/auth/me`, { headers: headers(locale) });
+  if (!res.ok) throw new Error(`auth-me ${res.status}`);
+  return res.json() as Promise<AuthMeResponse>;
+}
+
 export async function downloadSkusCatalogCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/skus/export`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`skus-export ${res.status}`);
@@ -346,6 +365,45 @@ export async function applyLandedFromCostSheet(
     computed: { landed_cost_mxn: number };
     sku: { landed_cost_mxn: number };
   }>;
+}
+
+export async function applyLandedFromFx(
+  locale: string,
+  skuId: string,
+  body: {
+    cogs_amount: number;
+    cogs_currency?: string;
+    freight_alloc_mxn?: number;
+    apply?: boolean;
+  }
+) {
+  const res = await fetch(
+    `/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-fx`,
+    {
+      method: "POST",
+      headers: headers(locale),
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) throw new Error(`landed-from-fx ${res.status}`);
+  return res.json() as Promise<{
+    computed: { landed_cost_mxn: number };
+    sku: { landed_cost_mxn: number };
+  }>;
+}
+
+export async function downloadCostSheetsTemplate(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/imports/cost-sheets/template`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`cost-sheets-template ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "cost-sheets-template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function fetchPricingContext(locale: string, channel: Channel) {

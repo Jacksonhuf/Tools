@@ -9,6 +9,7 @@ const alerts: ReconciliationAlertRecord[] = [];
 export class MemoryReconciliationAlertRepository
   implements ReconciliationAlertRepository
 {
+  readonly driver = "memory" as const;
   async createAlert(
     input: Omit<ReconciliationAlertRecord, "id" | "created_at" | "resolved_at">
   ): Promise<ReconciliationAlertRecord> {

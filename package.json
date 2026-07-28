@@ -14,6 +14,12 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
     "test:golden": "vitest run tests/golden/golden.test.ts",
+    "test:nfr": "vitest run tests/nfr/",
+    "nfr:baseline": "node scripts/nfr/node-load-baseline.mjs",
+    "security:scan": "node scripts/security/scan-secrets.mjs",
+    "secrets:validate": "node scripts/secrets/validate-env.mjs",
+    "backup:dump": "node scripts/backup/pg-backup.mjs",
+    "backup:drill": "node scripts/backup/pg-restore-drill.mjs",
     "test:api": "vitest run tests/api/bff.test.ts",
     "build": "npm run build -w @mx-pricing/pricing-engine && npm run build -w @mx-pricing/i18n-format && npm run build -w @mx-pricing/channel-adapters && npm run build -w @mx-pricing/db && npm run build -w @mx-pricing/bff && npm run build -w @mx-pricing/web",
     "build:vercel": "npm run build",
@@ -25,7 +31,8 @@
     "dev:bff": "npm run start -w @mx-pricing/bff",
     "dev:channel-gateway": "node tools/channel-gateway-sidecar/server.mjs",
     "repricing-batch:worker": "node tools/repricing-batch-worker/run.mjs",
-    "dev:async-worker": "node tools/async-worker/run.mjs"
+    "dev:async-worker": "node tools/async-worker/run.mjs",
+    "repricing-event:worker": "node tools/repricing-event-worker/run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

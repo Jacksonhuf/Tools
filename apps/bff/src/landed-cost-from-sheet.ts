@@ -10,7 +10,7 @@ export async function computeLandedFromCostSheet(
   sheetId: string,
   options?: { hs_code?: string }
 ) {
-  const sheet = getCostSheet(tenantId, skuId, sheetId);
+  const sheet = await getCostSheet(tenantId, skuId, sheetId);
   if (!sheet) {
     throw new Error("COST_SHEET_NOT_FOUND");
   }
@@ -24,14 +24,14 @@ export async function computeLandedFromCostSheet(
     if (!hsCode) {
       throw new Error("HS_CODE_REQUIRED");
     }
-    const { tariff, computed } = computeLandedFromHs(tenantId, hsCode, {
+    const { tariff, computed } = await computeLandedFromHs(tenantId, hsCode, {
       cogs_amount: sheet.cogs_amount,
       cogs_currency: "MXN",
       freight_alloc_mxn: sheet.freight_alloc_mxn,
     });
     return { cost_sheet: sheet, tariff, computed };
   }
-  const computed = computeLandedFromFx(tenantId, {
+  const computed = await computeLandedFromFx(tenantId, {
     cogs_amount: sheet.cogs_amount,
     cogs_currency: currency,
     freight_alloc_mxn: sheet.freight_alloc_mxn,

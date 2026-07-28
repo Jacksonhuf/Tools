@@ -66,7 +66,7 @@ export async function notifyObservationChange(
   ) {
     return;
   }
-  recordCompetitorPriceChange({
+  await recordCompetitorPriceChange({
     listing_id: input.listing_id,
     channel: input.channel,
     offer_id: input.offer_id,
@@ -82,7 +82,7 @@ export async function flushListingDebounce(
   tenantId: string,
   listingId: string
 ): Promise<RepricingEventRecord | null> {
-  const payload = flushDebounce(listingId);
+  const payload = await flushDebounce(listingId);
   if (!payload) {
     return null;
   }

@@ -3,16 +3,23 @@ import { runMigrations, seedDemoData } from "@mx-pricing/db";
 import { createApp } from "./app.js";
 import { createCatalogRepository } from "./repositories/index.js";
 
+import { evaluateProductionConfig, assertProductionBoot } from "./production-config.js";
+import { getPublishIdempotencyRepository } from "./repositories/publish-idempotency-index.js";
+
 async function main() {
+  assertProductionBoot();
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
     await runMigrations(databaseUrl);
     await seedDemoData(databaseUrl);
     console.log("PostgreSQL migrations and seed complete");
+  } else if (evaluateProductionConfig().production_mode) {
+    throw new Error("DATABASE_URL is required in production mode");
   } else {
     console.log("DATABASE_URL not set — using in-memory catalog");
   }
   createCatalogRepository();
+  getPublishIdempotencyRepository();
   const port = Number(process.env.PORT ?? 3000);
   const app = createApp();
   serve({ fetch: app.fetch, port }, () => {

@@ -9,9 +9,12 @@ import { CopilotPage } from "./components/CopilotPage";
 import { ProductReadinessPage } from "./components/ProductReadinessPage";
 import { CrossChannelDashboardPage } from "./components/CrossChannelDashboardPage";
 import { PolicyConfigPage } from "./components/PolicyConfigPage";
+import { SkuCostPage } from "./components/SkuCostPage";
+import { AuthProvider } from "./auth/AuthProvider";
 
 type Tab =
   | "pricing"
+  | "skuCost"
   | "adjustments"
   | "channels"
   | "competitors"
@@ -26,6 +29,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>("pricing");
 
   return (
+    <AuthProvider locale={i18n.language}>
     <div data-testid="app-shell">
       <header className="header">
         <h1>{t("appTitle")}</h1>
@@ -47,6 +51,14 @@ export function App() {
           data-testid="nav-pricing"
         >
           {t("navPricing")}
+        </button>
+        <button
+          type="button"
+          className={tab === "skuCost" ? "active" : ""}
+          onClick={() => setTab("skuCost")}
+          data-testid="nav-sku-cost"
+        >
+          {t("navSkuCost")}
         </button>
         <button
           type="button"
@@ -115,6 +127,8 @@ export function App() {
       </nav>
       {tab === "pricing" ? (
         <PricingPage />
+      ) : tab === "skuCost" ? (
+        <SkuCostPage />
       ) : tab === "adjustments" ? (
         <AdjustmentBatchesPage />
       ) : tab === "channels" ? (
@@ -133,5 +147,6 @@ export function App() {
         <CopilotPage />
       )}
     </div>
+    </AuthProvider>
   );
 }

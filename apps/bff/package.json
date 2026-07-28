@@ -14,7 +14,8 @@
     "@mx-pricing/i18n-format": "*",
     "@mx-pricing/pricing-engine": "*",
     "hono": "^4.6.12",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

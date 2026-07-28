@@ -1,0 +1,31 @@
+# Staging / production services for local integration testing.
+# Usage: docker compose -f docker-compose.staging.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mx
+      POSTGRES_PASSWORD: mx_staging_secret
+      POSTGRES_DB: mx_pricing_staging
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+      - ./backups/wal-archive:/var/lib/postgresql/wal-archive
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=test ! -f /var/lib/postgresql/wal-archive/%f && cp %p /var/lib/postgresql/wal-archive/%f
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+volumes:
+  pgdata_staging:

@@ -57,6 +57,7 @@ export async function reconcileListingChannelPrice(
       shop_id: shopId,
       channel: shop.channel,
       external_seller_id: shop.external_seller_id,
+      access_token: token,
     },
     input.external_ref
   );

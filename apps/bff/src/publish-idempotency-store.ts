@@ -1,16 +1,14 @@
-import type { SalesChannel } from "@mx-pricing/channel-adapters";
+import type { StoredPublishOutcome } from "./publish-idempotency-types.js";
+import {
+  getPublishIdempotencyRepository,
+  setPublishIdempotencyRepository,
+} from "./repositories/publish-idempotency-index.js";
 
-export type StoredPublishOutcome =
-  | {
-      publish_status: "published";
-      channel_price_mxn: number;
-      version_id: string;
-      retried?: boolean;
-      channel: SalesChannel;
-    }
-  | { publish_status: "failed"; error_code: string; rule_frozen?: boolean };
-
-const records = new Map<string, StoredPublishOutcome>();
+export type { StoredPublishOutcome } from "./publish-idempotency-types.js";
+export {
+  getPublishIdempotencyRepository,
+  setPublishIdempotencyRepository,
+};
 
 export function buildPublishIdempotencyKey(
   tenantId: string,
@@ -20,19 +18,20 @@ export function buildPublishIdempotencyKey(
   return `${tenantId}:${listingId}:${idempotencyKey}`;
 }
 
-export function getStoredPublishOutcome(
+export async function getStoredPublishOutcome(
   compositeKey: string
-): StoredPublishOutcome | undefined {
-  return records.get(compositeKey);
+): Promise<StoredPublishOutcome | undefined> {
+  return getPublishIdempotencyRepository().get(compositeKey);
 }
 
-export function storePublishOutcome(
+export async function storePublishOutcome(
   compositeKey: string,
+  tenantId: string,
   outcome: StoredPublishOutcome
-): void {
-  records.set(compositeKey, outcome);
+): Promise<void> {
+  await getPublishIdempotencyRepository().set(compositeKey, tenantId, outcome);
 }
 
-export function resetPublishIdempotencyForTests(): void {
-  records.clear();
+export async function resetPublishIdempotencyForTests(): Promise<void> {
+  await getPublishIdempotencyRepository().resetForTests();
 }

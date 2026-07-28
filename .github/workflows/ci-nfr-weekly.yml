@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  nfr-weekly-smoke:
+  nfr-weekly:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,11 +16,31 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Vitest baseline (TC-NFR-PERF-002 scaffold)
-        run: npm test
-      - name: NFR timing scaffold
-        run: npm test -- tests/nfr/pricing-timing.test.ts
-      - name: Record placeholder metrics
+      - name: Golden gate (GL-*)
+        run: npm run test:golden
+      - name: Vitest NFR scaffold
+        run: npm test -- tests/nfr/
+      - name: Node load baseline (TC-NFR-PERF-001 scaffold)
+        run: node scripts/nfr/node-load-baseline.mjs
+        env:
+          NFR_VUS: "20"
+          NFR_REQUESTS_PER_VU: "3"
+          NFR_SKIP_BFF_START: "0"
+      - uses: grafana/setup-k6-action@v1
+      - name: Start BFF for k6
         run: |
-          echo "repricing_lag_seconds=0" >> "$GITHUB_STEP_SUMMARY"
-          echo "pricing_calc_duration_ms=placeholder" >> "$GITHUB_STEP_SUMMARY"
+          npm run start -w @mx-pricing/bff &
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:3000/health && break
+            sleep 1
+          done
+      - name: k6 pricing-context baseline
+        run: k6 run scripts/k6/pricing-context.js
+        env:
+          K6_VUS: "30"
+          K6_DURATION: "15s"
+          BFF_BASE_URL: http://127.0.0.1:3000
+      - name: Record summary
+        run: |
+          echo "k6_pricing_context_p95_threshold_ms=3000" >> "$GITHUB_STEP_SUMMARY"
+          echo "node_load_baseline=passed" >> "$GITHUB_STEP_SUMMARY"

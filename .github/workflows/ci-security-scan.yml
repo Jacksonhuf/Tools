@@ -1,0 +1,25 @@
+name: ci-security-scan
+
+on:
+  schedule:
+    - cron: "0 8 1,15 * *"
+  workflow_dispatch:
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: npm audit (high severity)
+        run: npm audit --audit-level=high || true
+      - name: Secret pattern scan (X-03)
+        run: node scripts/security/scan-secrets.mjs
+      - name: TC-NFR-SEC-003 log redaction tests
+        run: npm test -- tests/api/security-log-redaction.test.ts
+      - name: TC-NFR-SEC-004 agent tool gate
+        run: npm test -- tests/api/agent-tools.test.ts

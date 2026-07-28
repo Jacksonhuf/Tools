@@ -24,11 +24,8 @@ import {
   buildAdjustmentBatchInput,
   previewAdjustmentBatch,
 } from "./adjustment-service.js";
-import {
-  completeOAuthMock,
-  shopPublicView,
-  startOAuth,
-} from "./channel-oauth.js";
+import { completeOAuthMock, shopPublicView, startOAuth } from "./channel-oauth.js";
+import { completeOAuthWithCode } from "./channel-oauth-exchange.js";
 import {
   MockChannelListingAdapter,
   MockChannelPublishAdapter,
@@ -153,7 +150,12 @@ import {
   createStoredExport,
   getStoredExport,
 } from "./export-file-store.js";
-import { getFxRate, listFxRates, upsertFxRate } from "./fx-rate-table.js";
+import {
+  getFxRate,
+  getFxRateStoreStatus,
+  listFxRates,
+  upsertFxRate,
+} from "./fx-rate-table.js";
 import { fxRatesToCsv } from "./fx-rates-csv.js";
 import { agentToolAuditToCsv } from "./agent-audit-csv.js";
 import { runDueDigestDispatch } from "./digest-run-due.js";
@@ -161,6 +163,7 @@ import { computeLandedFromFx } from "./landed-cost-fx.js";
 import { computeLandedFromHs } from "./landed-cost-hs.js";
 import {
   getTariffHsRate,
+  getTariffHsStoreStatus,
   listTariffHsRates,
   upsertTariffHsRate,
 } from "./tariff-hs-table.js";
@@ -171,6 +174,7 @@ import {
 import {
   createCostSheet,
   getCostSheet,
+  getCostSheetStoreStatus,
   listCostSheets,
 } from "./cost-sheet-store.js";
 import { computeLandedFromCostSheet } from "./landed-cost-from-sheet.js";
@@ -295,6 +299,7 @@ import {
   digestQueueSummary,
   processDigestQueue,
   resetDigestJobQueueForTests,
+  getDigestJobStoreStatus,
 } from "./digest-job-queue.js";
 import {
   getProductMilestoneStatus,
@@ -307,7 +312,23 @@ import {
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
 } from "./repositories/agent-audit-index.js";
-import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
+import { getAuthStatus, resolveAuthDriver } from "./auth.js";
+import { resolveAuthPrincipal } from "./auth-principal.js";
+import { evaluateProductionConfig } from "./production-config.js";
+import { evaluateProductionLlm } from "./production-llm.js";
+import { evaluateGoLiveReadiness } from "./go-live-readiness.js";
+import { getDeployEnvironmentStatus } from "./deploy-environment.js";
+import { evaluateSecretsStatus } from "./secrets-registry.js";
+import { getWafStatus } from "./waf-middleware.js";
+import { evaluateBackupPitrStatus } from "./backup-pitr.js";
+import { createWafMiddleware } from "./waf-middleware.js";
+import { getDebounceStatus } from "./repricing/debounce.js";
+import { assertPrincipalRoles, principalFromContext } from "./rbac-middleware.js";
+import { principalPermissions, ROLES } from "./rbac.js";
+import { recordAuditLog } from "./audit-log.js";
+import { runDueReconciliation } from "./reconciliation-run-due.js";
+import { objectStorageStatus } from "./export-object-storage.js";
+import { getExportStoreStatus } from "./export-file-store.js";
 import { authStatusToCsv } from "./auth-status-csv.js";
 import { getFeatureFlags, getFeatureFlagValue } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
@@ -332,6 +353,7 @@ export type AppEnv = {
     tenantId: string;
     locale: AppLocale;
     authSubject: string;
+    authRoles: string[];
   };
 };
 
@@ -369,14 +391,21 @@ export function createApp(options: CreateAppOptions = {}) {
   const publishAdapter =
     options.publishAdapter ?? createChannelPublishAdapter();
   const app = new Hono<AppEnv>();
+  const deployStatus = getDeployEnvironmentStatus();
+  const corsOrigins =
+    deployStatus.cors_origins.length > 0
+      ? deployStatus.cors_origins
+      : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
   app.use(
     "*",
     cors({
-      origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+      origin: corsOrigins,
       allowHeaders: ["Authorization", "Content-Type", "X-Tenant-Id", "Accept-Language"],
     })
   );
+
+  app.use("*", createWafMiddleware());
 
   app.use("*", async (c, next) => {
     if (c.req.method === "OPTIONS" || c.req.path === "/health") {
@@ -388,13 +417,16 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(401, { message: "UNAUTHORIZED" });
     }
     const token = auth.slice("Bearer ".length);
-    const result = await validateBearerTokenAsync(token);
+    const headerTenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
+    const driver = resolveAuthDriver();
+    const result = await resolveAuthPrincipal(token, headerTenantId, driver);
     if (!result.ok) {
-      throw new HTTPException(401, { message: result.code });
+      const status = result.code === "TENANT_MISMATCH" ? 403 : 401;
+      throw new HTTPException(status, { message: result.code });
     }
-    const tenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
-    c.set("tenantId", tenantId);
-    c.set("authSubject", result.subject);
+    c.set("tenantId", result.principal.tenantId);
+    c.set("authSubject", result.principal.subject);
+    c.set("authRoles", result.principal.roles);
     c.set("locale", parseAcceptLanguage(c.req.header("Accept-Language")));
     await next();
   });
@@ -407,7 +439,51 @@ export function createApp(options: CreateAppOptions = {}) {
     })
   );
 
-  app.get("/api/v1/auth/status", (c) => c.json(getAuthStatus()));
+  app.get("/api/v1/auth/status", (c) =>
+    c.json({
+      ...getAuthStatus(),
+      production: evaluateProductionConfig(),
+      debounce: getDebounceStatus(),
+    })
+  );
+
+  app.get("/api/v1/auth/me", (c) => {
+    const principal = principalFromContext(c);
+    return c.json({
+      subject: principal.subject,
+      tenant_id: principal.tenantId,
+      roles: principal.roles,
+      permissions: principalPermissions(principal.roles),
+    });
+  });
+
+  app.get("/api/v1/production/readiness", (c) =>
+    c.json({
+      production: evaluateProductionConfig(),
+      auth: getAuthStatus(),
+      channels: getChannelAdapterStatus(),
+      debounce: getDebounceStatus(),
+      exports: { ...getExportStoreStatus(), object_storage: objectStorageStatus() },
+      catalog_driver: catalog.driver,
+      reconciliation_driver: reconciliationAlerts.driver ?? "memory",
+      agent_audit_driver: agentAudit.driver ?? "memory",
+      cost_sheet: getCostSheetStoreStatus(),
+      fx_rate: getFxRateStoreStatus(),
+      tariff_hs: getTariffHsStoreStatus(),
+      digest_jobs: getDigestJobStoreStatus(),
+      rule_compiler: getRuleCompilerStatus(),
+      production_llm: evaluateProductionLlm(),
+      deploy: deployStatus,
+      secrets: evaluateSecretsStatus(),
+      waf: getWafStatus(),
+      backup_pitr: evaluateBackupPitrStatus(),
+      generated_at: new Date().toISOString(),
+    })
+  );
+
+  app.get("/api/v1/production/go-live", (c) =>
+    c.json(evaluateGoLiveReadiness())
+  );
 
   app.get("/api/v1/auth/status/export", async (c) => {
     const exportedAt = new Date().toISOString();
@@ -645,6 +721,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/imports/landed-cost", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const contentType = c.req.header("content-type") ?? "";
     let csvText: string;
@@ -680,6 +757,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/imports/cost-sheets", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const contentType = c.req.header("content-type") ?? "";
     let csvText: string;
@@ -840,6 +918,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.patch("/api/v1/skus/:skuId", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as { landed_cost_mxn?: number };
     if (body.landed_cost_mxn === undefined || body.landed_cost_mxn < 0) {
@@ -868,6 +947,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.patch("/api/v1/skus/:skuId/policy", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const body = (await c.req.json()) as {
@@ -895,6 +975,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/policy/batch", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       items?: Array<{
@@ -922,7 +1003,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    return c.json({ items: listCostSheets(tenantId, skuId) });
+    return c.json({ items: await listCostSheets(tenantId, skuId) });
   });
 
   app.get("/api/v1/skus/:skuId/cost-sheets/export", async (c) => {
@@ -933,7 +1014,7 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = new Date().toISOString();
-    const csv = costSheetsToCsv(listCostSheets(tenantId, skuId), exportedAt);
+    const csv = costSheetsToCsv(await listCostSheets(tenantId, skuId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -950,7 +1031,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!sku) {
       throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
     }
-    const sheet = getCostSheet(tenantId, skuId, sheetId);
+    const sheet = await getCostSheet(tenantId, skuId, sheetId);
     if (!sheet) {
       throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
     }
@@ -965,6 +1046,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/cost-sheets", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -981,7 +1063,7 @@ export function createApp(options: CreateAppOptions = {}) {
       source?: string;
     };
     try {
-      const sheet = createCostSheet(tenantId, skuId, {
+      const sheet = await createCostSheet(tenantId, skuId, {
         batch_no: body.batch_no ?? "",
         cogs_amount: body.cogs_amount ?? 0,
         cogs_currency: body.cogs_currency,
@@ -1109,6 +1191,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/adjustment-batches", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       reason_code?: string;
@@ -1191,6 +1274,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/adjustment-batches/:batchId/approve", async (c) => {
+    assertPrincipalRoles(c, ROLES.FINANCE_APPROVE);
     const tenantId = c.get("tenantId");
     const batchId = c.req.param("batchId");
     const batch = await adjustments.getBatch(tenantId, batchId);
@@ -1206,10 +1290,18 @@ export function createApp(options: CreateAppOptions = {}) {
       "approved",
       { approved_at: new Date().toISOString() }
     );
+    await recordAuditLog({
+      tenant_id: tenantId,
+      actor_id: c.get("authSubject"),
+      action: "adjustment_batch.approve",
+      entity_type: "adjustment_batch",
+      entity_id: batchId,
+    });
     return c.json(updated);
   });
 
   app.post("/api/v1/adjustment-batches/:batchId/apply", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const batchId = c.req.param("batchId");
     const result = await applyAdjustmentBatch(
@@ -1350,15 +1442,19 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json(validateVersionBackupSnapshot(body.snapshot));
   });
 
+  app.get("/api/v1/ops/backup/status", (c) =>
+    c.json(evaluateBackupPitrStatus())
+  );
+
   app.get("/api/v1/fx-rates", async (c) => {
     const tenantId = c.get("tenantId");
-    return c.json({ items: listFxRates(tenantId) });
+    return c.json({ items: await listFxRates(tenantId) });
   });
 
   app.get("/api/v1/fx-rates/export", async (c) => {
     const tenantId = c.get("tenantId");
     const exportedAt = new Date().toISOString();
-    const csv = fxRatesToCsv(listFxRates(tenantId), exportedAt);
+    const csv = fxRatesToCsv(await listFxRates(tenantId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -1371,7 +1467,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const base = c.req.param("base").toUpperCase();
     const quote = c.req.param("quote").toUpperCase();
-    const row = getFxRate(tenantId, base, quote);
+    const row = await getFxRate(tenantId, base, quote);
     if (!row) {
       throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
     }
@@ -1396,7 +1492,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (body.rate === undefined || body.rate <= 0) {
       throw new HTTPException(400, { message: "RATE_REQUIRED" });
     }
-    const items = upsertFxRate(tenantId, {
+    const items = await upsertFxRate(tenantId, {
       base: c.req.param("base").toUpperCase(),
       quote: c.req.param("quote").toUpperCase(),
       rate: body.rate,
@@ -1409,13 +1505,13 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/tariff-hs-rates", async (c) => {
     const tenantId = c.get("tenantId");
-    return c.json({ items: listTariffHsRates(tenantId) });
+    return c.json({ items: await listTariffHsRates(tenantId) });
   });
 
   app.get("/api/v1/tariff-hs-rates/:hsCode/export", async (c) => {
     const tenantId = c.get("tenantId");
     const hsCode = decodeURIComponent(c.req.param("hsCode"));
-    const row = getTariffHsRate(tenantId, hsCode);
+    const row = await getTariffHsRate(tenantId, hsCode);
     if (!row) {
       throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
     }
@@ -1432,7 +1528,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/tariff-hs-rates/export", async (c) => {
     const tenantId = c.get("tenantId");
     const exportedAt = new Date().toISOString();
-    const csv = tariffHsRatesToCsv(listTariffHsRates(tenantId), exportedAt);
+    const csv = tariffHsRatesToCsv(await listTariffHsRates(tenantId), exportedAt);
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -1452,8 +1548,8 @@ export function createApp(options: CreateAppOptions = {}) {
     if (body.tariff_rate === undefined || body.tariff_rate < 0) {
       throw new HTTPException(400, { message: "TARIFF_RATE_REQUIRED" });
     }
-    const existing = listTariffHsRates(tenantId).find((r) => r.hs_code === hsCode);
-    const items = upsertTariffHsRate(tenantId, {
+    const existing = (await listTariffHsRates(tenantId)).find((r) => r.hs_code === hsCode);
+    const items = await upsertTariffHsRate(tenantId, {
       hs_code: hsCode,
       description: body.description ?? existing?.description ?? hsCode,
       tariff_rate: body.tariff_rate,
@@ -1463,6 +1559,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-hs", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1481,7 +1578,7 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(400, { message: "HS_CODE_REQUIRED" });
     }
     try {
-      const { tariff, computed } = computeLandedFromHs(tenantId, hsCode, {
+      const { tariff, computed } = await computeLandedFromHs(tenantId, hsCode, {
         cogs_amount: body.cogs_amount,
         cogs_currency: body.cogs_currency,
         freight_alloc_mxn: body.freight_alloc_mxn,
@@ -1600,6 +1697,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-cost-sheet", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1652,6 +1750,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/skus/:skuId/landed-cost/from-fx", async (c) => {
+    assertPrincipalRoles(c, ROLES.PRICING_WRITE);
     const tenantId = c.get("tenantId");
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
@@ -1667,7 +1766,7 @@ export function createApp(options: CreateAppOptions = {}) {
       apply?: boolean;
     };
     try {
-      const computed = computeLandedFromFx(tenantId, {
+      const computed = await computeLandedFromFx(tenantId, {
         cogs_amount: body.cogs_amount,
         cogs_currency: body.cogs_currency ?? "USD",
         freight_alloc_mxn: body.freight_alloc_mxn,
@@ -1814,7 +1913,7 @@ export function createApp(options: CreateAppOptions = {}) {
         throw new HTTPException(404, { message: "SKU_NOT_FOUND" });
       }
       content = costSheetsToCsv(
-        listCostSheets(tenantId, skuId),
+        await listCostSheets(tenantId, skuId),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -1834,13 +1933,13 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "tariff_hs_csv") {
       content = tariffHsRatesToCsv(
-        listTariffHsRates(tenantId),
+        await listTariffHsRates(tenantId),
         new Date().toISOString()
       );
       content_type = "text/csv";
     } else if (kind === "fx_rates_csv") {
       content = fxRatesToCsv(
-        listFxRates(tenantId),
+        await listFxRates(tenantId),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -1860,7 +1959,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_dead_letter_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      const jobs = await listDigestDeadLetterJobs(tenantId, limit);
       content = digestDeadLetterJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "repricing_queue_csv") {
@@ -1874,11 +1973,11 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_queued_jobs_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestQueuedJobs(tenantId, limit);
+      const jobs = await listDigestQueuedJobs(tenantId, limit);
       content = digestQueuedJobsToCsv(jobs, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "worker_heartbeats_csv") {
-      const status = getAsyncWorkerStatus();
+      const status = await getAsyncWorkerStatus();
       content = workerHeartbeatsToCsv(status.workers, new Date().toISOString());
       content_type = "text/csv";
     } else if (kind === "price_history_csv") {
@@ -2022,8 +2121,8 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_queued_jobs_summary_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestQueuedJobs(tenantId, limit);
-      const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+      const jobs = await listDigestQueuedJobs(tenantId, limit);
+      const summary = await buildDigestQueuedJobsSummary(tenantId, jobs);
       content = digestQueuedJobsSummaryToCsv(
         summary,
         new Date().toISOString()
@@ -2052,11 +2151,11 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "digest_dead_letter_summary_csv") {
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
-      const jobs = listDigestDeadLetterJobs(tenantId, limit);
+      const jobs = await listDigestDeadLetterJobs(tenantId, limit);
       const summary = buildDigestDeadLetterSummary(
         tenantId,
         jobs,
-        digestQueueSummary(tenantId)
+        await digestQueueSummary(tenantId)
       );
       content = digestDeadLetterSummaryToCsv(
         summary,
@@ -2083,7 +2182,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "ops_workers_status_summary_csv") {
       content = opsWorkersStatusSummaryToCsv(
-        getAsyncWorkerStatus(),
+        await getAsyncWorkerStatus(),
         new Date().toISOString()
       );
       content_type = "text/csv";
@@ -2290,7 +2389,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "tariff_hs_rate_csv") {
       const hsCode = body.hs_code ?? "HS-ELECTRONICS-MX";
-      const row = getTariffHsRate(tenantId, hsCode);
+      const row = await getTariffHsRate(tenantId, hsCode);
       if (!row) {
         throw new HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
       }
@@ -2299,7 +2398,7 @@ export function createApp(options: CreateAppOptions = {}) {
     } else if (kind === "fx_rate_csv") {
       const base = (body.fx_base ?? "USD").toUpperCase();
       const quote = (body.fx_quote ?? "MXN").toUpperCase();
-      const row = getFxRate(tenantId, base, quote);
+      const row = await getFxRate(tenantId, base, quote);
       if (!row) {
         throw new HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
       }
@@ -2311,7 +2410,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!sheetId?.trim()) {
         throw new HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
       }
-      const sheet = getCostSheet(tenantId, skuId, sheetId.trim());
+      const sheet = await getCostSheet(tenantId, skuId, sheetId.trim());
       if (!sheet) {
         throw new HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
       }
@@ -2372,7 +2471,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!jobId?.trim()) {
         throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
-      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job) {
         throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
       }
@@ -2380,7 +2479,7 @@ export function createApp(options: CreateAppOptions = {}) {
       content_type = "text/csv";
     } else if (kind === "worker_heartbeat_csv") {
       const workerId = body.worker_id ?? "repricing-batch-1";
-      const beat = getWorkerHeartbeat(workerId);
+      const beat = await getWorkerHeartbeat(workerId);
       if (!beat) {
         throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
       }
@@ -2419,7 +2518,7 @@ export function createApp(options: CreateAppOptions = {}) {
       if (!jobId?.trim()) {
         throw new HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
-      const job = getDigestQueuedJob(tenantId, jobId.trim());
+      const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job || job.status !== "dead_letter") {
         throw new HTTPException(404, {
           message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
@@ -2688,7 +2787,7 @@ export function createApp(options: CreateAppOptions = {}) {
     } else {
       throw new HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
-    const stored = createStoredExport({
+    const stored = await createStoredExport({
       tenant_id: tenantId,
       kind,
       content_type,
@@ -2705,7 +2804,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/exports/:exportId", async (c) => {
     const tenantId = c.get("tenantId");
     const token = c.req.query("token") ?? "";
-    const row = getStoredExport(tenantId, c.req.param("exportId"), token);
+    const row = await getStoredExport(tenantId, c.req.param("exportId"), token);
     if (!row) {
       throw new HTTPException(404, { message: "EXPORT_NOT_FOUND" });
     }
@@ -2719,12 +2818,12 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.get("/api/v1/ops/workers/status", async (c) => {
-    return c.json(getAsyncWorkerStatus());
+    return c.json(await getAsyncWorkerStatus());
   });
 
   app.get("/api/v1/ops/workers/status/summary/export", async (c) => {
     const exportedAt = new Date().toISOString();
-    const status = getAsyncWorkerStatus();
+    const status = await getAsyncWorkerStatus();
     const csv = opsWorkersStatusSummaryToCsv(status, exportedAt);
     return new Response(csv, {
       headers: {
@@ -2736,7 +2835,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status/export", async (c) => {
     const exportedAt = new Date().toISOString();
-    const status = getAsyncWorkerStatus();
+    const status = await getAsyncWorkerStatus();
     const csv = workerHeartbeatsToCsv(status.workers, exportedAt);
     return new Response(csv, {
       headers: {
@@ -2748,7 +2847,7 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/ops/workers/status/:workerId/export", async (c) => {
     const workerId = c.req.param("workerId");
-    const beat = getWorkerHeartbeat(workerId);
+    const beat = await getWorkerHeartbeat(workerId);
     if (!beat) {
       throw new HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
     }
@@ -2773,8 +2872,9 @@ export function createApp(options: CreateAppOptions = {}) {
     if (!body.worker_id?.trim()) {
       throw new HTTPException(400, { message: "WORKER_ID_REQUIRED" });
     }
-    const beat = recordWorkerHeartbeat({
+    const beat = await recordWorkerHeartbeat({
       worker_id: body.worker_id.trim(),
+      tenant_id: c.get("tenantId"),
       details: body.details,
     });
     return c.json({ ok: true, heartbeat: beat });
@@ -2990,6 +3090,45 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({
       ...result,
       shop: shop ? shopPublicView(shop) : null,
+    });
+  });
+
+  app.post("/api/v1/shops/:shopId/oauth/callback", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const shop = await shops.getShop(tenantId, shopId);
+    if (!shop) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    const body = (await c.req.json().catch(() => ({}))) as {
+      code?: string;
+      state?: string;
+    };
+    if (!body.code?.trim()) {
+      return c.json({ error: "CODE_REQUIRED" }, 400);
+    }
+    const result = await completeOAuthWithCode(
+      shops,
+      tenantId,
+      shopId,
+      shop.channel,
+      body.code.trim(),
+      body.state
+    );
+    if ("error" in result) {
+      const status =
+        result.error === "SHOP_NOT_FOUND"
+          ? 404
+          : result.error.includes("NOT_CONFIGURED")
+            ? 503
+            : 400;
+      return c.json({ error: result.error }, status);
+    }
+    const updated = await shops.getShop(tenantId, shopId);
+    return c.json({
+      ...result,
+      shop: updated ? shopPublicView(updated) : null,
+      mode: "production_oauth",
     });
   });
 
@@ -3703,6 +3842,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/listings/:listingId/channel-publish", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
     const body = (await c.req.json().catch(() => ({}))) as {
@@ -3742,6 +3882,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/shops/:shopId/channel-publish", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const shopId = c.req.param("shopId");
     const listingId = LISTING_ID_BY_SHOP[shopId];
@@ -3783,6 +3924,7 @@ export function createApp(options: CreateAppOptions = {}) {
   });
 
   app.post("/api/v1/channel-publish/batch", async (c) => {
+    assertPrincipalRoles(c, [ROLES.CHANNEL_ADMIN, ROLES.PRICING_WRITE]);
     const tenantId = c.get("tenantId");
     const body = (await c.req.json()) as {
       listing_ids: string[];
@@ -4462,6 +4604,23 @@ export function createApp(options: CreateAppOptions = {}) {
     });
   });
 
+  app.post("/api/v1/ops/reconciliation/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const results = await runDueReconciliation(
+      catalog,
+      shops,
+      listingAdapter,
+      reconciliationAlerts,
+      tenantId
+    );
+    return c.json({
+      tenant_id: tenantId,
+      checked: results.length,
+      results,
+      generated_at: new Date().toISOString(),
+    });
+  });
+
   app.get("/api/v1/listings/:listingId/sync/jobs/export", async (c) => {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
@@ -5017,7 +5176,7 @@ export function createApp(options: CreateAppOptions = {}) {
       channels?: Array<"email_stub" | "webhook_queue" | "smtp_queue">;
       simulate_poison?: boolean;
     };
-    const job = enqueueDailyDigestJob({
+    const job = await enqueueDailyDigestJob({
       tenant_id: tenantId,
       locale,
       date: body.date,
@@ -5034,8 +5193,8 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestQueuedJobs(tenantId, limit);
-    const summary = buildDigestQueuedJobsSummary(tenantId, jobs);
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
+    const summary = await buildDigestQueuedJobsSummary(tenantId, jobs);
     const csv = digestQueuedJobsSummaryToCsv(summary, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5051,8 +5210,8 @@ export function createApp(options: CreateAppOptions = {}) {
       50,
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
-    const jobs = listDigestQueuedJobs(tenantId, limit);
-    return c.json(buildDigestQueuedJobsSummary(tenantId, jobs));
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
+    return c.json(await buildDigestQueuedJobsSummary(tenantId, jobs));
   });
 
   app.get("/api/v1/agent/digest/jobs/export", async (c) => {
@@ -5062,7 +5221,7 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestQueuedJobs(tenantId, limit);
+    const jobs = await listDigestQueuedJobs(tenantId, limit);
     const csv = digestQueuedJobsToCsv(jobs, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5076,7 +5235,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
-    return c.json({ items: listDigestQueuedJobs(tenantId, limit) });
+    return c.json({ items: await listDigestQueuedJobs(tenantId, limit) });
   });
 
   app.get("/api/v1/agent/digest/jobs/dead-letter/summary/export", async (c) => {
@@ -5086,11 +5245,11 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     const summary = buildDigestDeadLetterSummary(
       tenantId,
       jobs,
-      digestQueueSummary(tenantId)
+      await digestQueueSummary(tenantId)
     );
     const csv = digestDeadLetterSummaryToCsv(summary, exportedAt);
     return new Response(csv, {
@@ -5107,9 +5266,9 @@ export function createApp(options: CreateAppOptions = {}) {
       50,
       Math.max(1, Number(c.req.query("limit") ?? "20") || 20)
     );
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     return c.json(
-      buildDigestDeadLetterSummary(tenantId, jobs, digestQueueSummary(tenantId))
+      buildDigestDeadLetterSummary(tenantId, jobs, await digestQueueSummary(tenantId))
     );
   });
 
@@ -5120,7 +5279,7 @@ export function createApp(options: CreateAppOptions = {}) {
       Math.max(1, Number(c.req.query("limit") ?? "50") || 50)
     );
     const exportedAt = new Date().toISOString();
-    const jobs = listDigestDeadLetterJobs(tenantId, limit);
+    const jobs = await listDigestDeadLetterJobs(tenantId, limit);
     const csv = digestDeadLetterJobsToCsv(jobs, exportedAt);
     return new Response(csv, {
       headers: {
@@ -5133,7 +5292,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/agent/digest/jobs/dead-letter/:jobId/export", async (c) => {
     const tenantId = c.get("tenantId");
     const jobId = c.req.param("jobId");
-    const job = getDigestQueuedJob(tenantId, jobId);
+    const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job || job.status !== "dead_letter") {
       throw new HTTPException(404, {
         message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND",
@@ -5152,7 +5311,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.get("/api/v1/agent/digest/jobs/:jobId/export", async (c) => {
     const tenantId = c.get("tenantId");
     const jobId = c.req.param("jobId");
-    const job = getDigestQueuedJob(tenantId, jobId);
+    const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job) {
       throw new HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
     }
@@ -5170,7 +5329,7 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const limitRaw = c.req.query("limit");
     const limit = limitRaw ? Math.min(50, Math.max(1, Number(limitRaw))) : 20;
-    return c.json({ items: listDigestDeadLetterJobs(tenantId, limit) });
+    return c.json({ items: await listDigestDeadLetterJobs(tenantId, limit) });
   });
 
   app.post("/api/v1/agent/digest/jobs/process", async (c) => {

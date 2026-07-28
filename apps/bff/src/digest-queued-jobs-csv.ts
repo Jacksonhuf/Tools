@@ -34,13 +34,13 @@ export function digestQueuedJobsToCsv(
   return `${lines.join("\n")}\n`;
 }
 
-export function buildDigestQueuedJobsSummary(
+export async function buildDigestQueuedJobsSummary(
   tenantId: string,
   jobs: DigestQueuedJob[]
 ) {
   return {
     tenant_id: tenantId,
-    queue: digestQueueSummary(tenantId),
+    queue: await digestQueueSummary(tenantId),
     sampled: jobs.length,
     items: jobs.map((j) => ({
       job_id: j.job_id,

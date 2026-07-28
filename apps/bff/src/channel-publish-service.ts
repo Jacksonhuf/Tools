@@ -40,18 +40,19 @@ export type PublishListingFailure = {
   idempotent_replay?: boolean;
 };
 
-function rememberIdempotent(
+async function rememberIdempotent(
   tenantId: string,
   listingId: string,
   idempotencyKey: string | undefined,
   outcome: PublishListingSuccess | PublishListingFailure
-): PublishListingSuccess | PublishListingFailure {
+): Promise<PublishListingSuccess | PublishListingFailure> {
   if (!idempotencyKey) {
     return outcome;
   }
   const { idempotent_replay: _drop, ...stored } = outcome;
-  storePublishOutcome(
+  await storePublishOutcome(
     buildPublishIdempotencyKey(tenantId, listingId, idempotencyKey),
+    tenantId,
     stored
   );
   return outcome;
@@ -72,7 +73,7 @@ export async function publishListingPrice(
   }
 ): Promise<PublishListingSuccess | PublishListingFailure> {
   if (options.idempotency_key) {
-    const cached = getStoredPublishOutcome(
+    const cached = await getStoredPublishOutcome(
       buildPublishIdempotencyKey(
         tenantId,
         listingId,
@@ -92,14 +93,14 @@ export async function publishListingPrice(
   const shopId = SHOP_BY_CHANNEL[channel];
   const shop = await shops.getShop(tenantId, shopId);
   if (!shop || shop.auth_status !== "connected") {
-    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+    return await rememberIdempotent(tenantId, listingId, options.idempotency_key, {
       publish_status: "failed",
       error_code: "AUTH_REQUIRED",
     });
   }
   const token = await shops.getAccessToken(shopId);
   if (!token) {
-    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+    return await rememberIdempotent(tenantId, listingId, options.idempotency_key, {
       publish_status: "failed",
       error_code: "AUTH_EXPIRED",
     });
@@ -117,7 +118,7 @@ export async function publishListingPrice(
       if (versionId) {
         await catalog.setVersionChannelPublishStatus(versionId, "skipped");
       }
-      return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+      return await rememberIdempotent(tenantId, listingId, options.idempotency_key, {
         publish_status: "failed",
         error_code: "NO_ACTIVE_VERSION",
       });
@@ -131,6 +132,7 @@ export async function publishListingPrice(
     shop_id: shopId,
     channel,
     external_seller_id: shop.external_seller_id!,
+    access_token: token,
   };
 
   let result = await publisher.publishPrice({
@@ -163,7 +165,7 @@ export async function publishListingPrice(
     if (versionId) {
       await catalog.setVersionChannelPublishStatus(versionId, "failed");
     }
-    return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+    return await rememberIdempotent(tenantId, listingId, options.idempotency_key, {
       publish_status: "failed",
       error_code: result.error_code ?? "PUBLISH_FAILED",
       rule_frozen: result.error_code === "CHANNEL_REJECTED",
@@ -189,7 +191,7 @@ export async function publishListingPrice(
     });
   }
 
-  return rememberIdempotent(tenantId, listingId, options.idempotency_key, {
+  return await rememberIdempotent(tenantId, listingId, options.idempotency_key, {
     publish_status: "published",
     channel_price_mxn: result.channel_price_mxn ?? priceMxn,
     version_id: versionId,

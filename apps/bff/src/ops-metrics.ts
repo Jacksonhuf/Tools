@@ -17,10 +17,10 @@ export async function buildOpsMetricsSnapshot(
 ) {
   const sandbox = getChannelSandboxStatus();
   const adapters = getChannelAdapterStatus();
-  const digestJobs = listDigestQueuedJobs(tenantId);
+  const digestJobs = await listDigestQueuedJobs(tenantId);
   const digestQueued = digestJobs.filter((j) => j.status === "queued").length;
   const digestFailed = digestJobs.filter((j) => j.status === "failed").length;
-  const digestSummary = digestQueueSummary(tenantId);
+  const digestSummary = await digestQueueSummary(tenantId);
   const repricingBatch = await repricingBatchQueueSummary(tenantId);
 
   return {

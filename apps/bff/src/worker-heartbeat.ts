@@ -1,54 +1,46 @@
-export interface WorkerHeartbeat {
+import type { WorkerHeartbeat } from "./worker-heartbeat-types.js";
+import { getWorkerHeartbeatRepository } from "./repositories/worker-heartbeat-index.js";
+
+export type { WorkerHeartbeat } from "./worker-heartbeat-types.js";
+
+export async function recordWorkerHeartbeat(input: {
   worker_id: string;
-  reported_at: string;
+  tenant_id?: string;
   details?: Record<string, unknown>;
+}): Promise<WorkerHeartbeat> {
+  return getWorkerHeartbeatRepository().record(input);
 }
 
-const heartbeats = new Map<string, WorkerHeartbeat>();
-
-export function recordWorkerHeartbeat(input: {
-  worker_id: string;
-  details?: Record<string, unknown>;
-}): WorkerHeartbeat {
-  const entry: WorkerHeartbeat = {
-    worker_id: input.worker_id,
-    reported_at: new Date().toISOString(),
-    details: input.details,
-  };
-  heartbeats.set(input.worker_id, entry);
-  return entry;
+export async function listWorkerHeartbeats(): Promise<WorkerHeartbeat[]> {
+  return getWorkerHeartbeatRepository().list();
 }
 
-export function listWorkerHeartbeats(): WorkerHeartbeat[] {
-  return [...heartbeats.values()].sort((a, b) =>
-    b.reported_at.localeCompare(a.reported_at)
-  );
-}
-
-export function getWorkerHeartbeat(
+export async function getWorkerHeartbeat(
   workerId: string
-): WorkerHeartbeat | undefined {
-  return heartbeats.get(workerId);
+): Promise<WorkerHeartbeat | undefined> {
+  const beats = await listWorkerHeartbeats();
+  return beats.find((b) => b.worker_id === workerId);
 }
 
-export function getAsyncWorkerStatus() {
-  const beats = listWorkerHeartbeats();
+export async function getAsyncWorkerStatus() {
+  const beats = await listWorkerHeartbeats();
   const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");
   const now = Date.now();
   return {
+    driver: getWorkerHeartbeatRepository().driver,
     workers: beats.map((b) => ({
       ...b,
-      stale:
-        now - new Date(b.reported_at).getTime() > staleSec * 1000,
+      stale: now - new Date(b.reported_at).getTime() > staleSec * 1000,
     })),
     scripts: {
       repricing_batch: "npm run repricing-batch:worker",
       async_queue: "npm run dev:async-worker",
+      repricing_event: "npm run repricing-event:worker",
     },
     generated_at: new Date().toISOString(),
   };
 }
 
 export function resetWorkerHeartbeatsForTests(): void {
-  heartbeats.clear();
+  void getWorkerHeartbeatRepository().resetForTests();
 }

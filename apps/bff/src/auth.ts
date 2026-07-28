@@ -5,6 +5,8 @@ import {
   jwtDriverReady,
 } from "./auth-jwt-integration.js";
 
+import { evaluateProductionConfig } from "./production-config.js";
+
 export type AuthDriver = "dev" | "oidc_stub" | "oidc_jwt";
 
 const DRIVER_ALIASES: Record<string, AuthDriver> = {
@@ -37,7 +39,11 @@ export function getAuthStatus() {
           ? "JWT via HS256 secret and/or JWKS RS256 (Loop 43–46)."
           : "OIDC stub accepts dev-token or Bearer tokens prefixed with oidc-stub.",
   };
-  return { ...base, ...jwtAuthStatusExtras() };
+  return {
+    ...base,
+    ...jwtAuthStatusExtras(),
+    production: evaluateProductionConfig(),
+  };
 }
 
 export type AuthValidationResult =

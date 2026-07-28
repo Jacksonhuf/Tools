@@ -45,9 +45,9 @@ describe("adjustmentApprovalPolicyToCsv", () => {
 });
 
 describe("opsWorkersStatusSummaryToCsv", () => {
-  it("includes worker_count", () => {
+  it("includes worker_count", async () => {
     const csv = opsWorkersStatusSummaryToCsv(
-      getAsyncWorkerStatus(),
+      await getAsyncWorkerStatus(),
       "2026-07-22T12:00:00.000Z"
     );
     expect(csv).toContain("worker_count");

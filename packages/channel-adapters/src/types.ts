@@ -13,6 +13,8 @@ export interface ChannelShopRef {
   shop_id: string;
   channel: SalesChannel;
   external_seller_id: string;
+  /** Required for live Mercado Libre / Amazon adapters */
+  access_token?: string;
 }
 
 export interface ListingPullAdapter {
