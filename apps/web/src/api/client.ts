@@ -2965,6 +2965,39 @@ export async function downloadWorkerHeartbeatCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadLatestListingSyncJobCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchListingSyncJobs(locale, 1);
+  const jobId = items[0]?.id;
+  if (!jobId) {
+    throw new Error("LISTING_SYNC_JOB_EMPTY");
+  }
+  await downloadListingSyncJobCsv(locale, jobId);
+}
+
+export async function downloadLatestDigestQueuedJobCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchDigestQueuedJobsSummary(locale, 1);
+  const jobId = items[0]?.job_id;
+  if (!jobId) {
+    throw new Error("DIGEST_QUEUED_JOB_EMPTY");
+  }
+  await downloadDigestQueuedJobCsv(locale, jobId);
+}
+
+export async function downloadFirstWorkerHeartbeatCsv(
+  locale: string
+): Promise<void> {
+  const { workers } = await fetchWorkerStatus(locale);
+  const workerId = workers[0]?.worker_id;
+  if (!workerId) {
+    throw new Error("WORKER_HEARTBEAT_EMPTY");
+  }
+  await downloadWorkerHeartbeatCsv(locale, workerId);
+}
+
 export async function downloadOpsWorkersStatusSummaryCsv(
   locale: string
 ): Promise<void> {

@@ -84,6 +84,35 @@ describe("worker heartbeat CSV (Loop 184)", () => {
 });
 
 describe("export store kinds (Loop 182-184)", () => {
+  it("POST /exports listing_sync_job_csv", async () => {
+    resetListingSyncJobsForTests();
+    const { app, listingAdapter } = createTestApp();
+    await app.request("/api/v1/shops/shop-ml-demo/oauth/mock-complete", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({}),
+    });
+    listingAdapter.priceByRef.set("MLM123456", 1640);
+    await app.request("/api/v1/listings/listing-ml-001/sync", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ external_ref: "MLM123456" }),
+    });
+    const list = await app.request("/api/v1/ops/listing-sync/jobs?limit=1", {
+      headers: { ...AUTH, ...TENANT },
+    });
+    const { items } = (await list.json()) as { items: Array<{ id: string }> };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "listing_sync_job_csv",
+        sync_job_id: items[0].id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
   it("POST /exports digest_queued_job_csv", async () => {
     resetDigestJobQueueForTests();
     const { app } = createTestApp();
@@ -99,6 +128,25 @@ describe("export store kinds (Loop 182-184)", () => {
       body: JSON.stringify({
         kind: "digest_queued_job_csv",
         digest_job_id: job.job_id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports worker_heartbeat_csv", async () => {
+    resetWorkerHeartbeatsForTests();
+    const { app } = createTestApp();
+    await app.request("/api/v1/ops/workers/heartbeat", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ worker_id: "async-worker-export-184" }),
+    });
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "worker_heartbeat_csv",
+        worker_id: "async-worker-export-184",
       }),
     });
     expect(post.status).toBe(200);

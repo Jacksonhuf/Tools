@@ -46,6 +46,9 @@ import {
   downloadLatestCostSheetCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadLatestListingSyncJobCsv,
+  downloadLatestDigestQueuedJobCsv,
+  downloadFirstWorkerHeartbeatCsv,
   downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
@@ -477,6 +480,39 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessReconciliationAlertExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-sync-job-export"
+            onClick={() =>
+              void downloadLatestListingSyncJobCsv(locale)
+                .then(() => setMessage(t("readinessListingSyncJobExportDone")))
+                .catch(() => setMessage(t("readinessListingSyncJobExportEmpty")))
+            }
+          >
+            {t("readinessListingSyncJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-digest-queued-job-export"
+            onClick={() =>
+              void downloadLatestDigestQueuedJobCsv(locale)
+                .then(() => setMessage(t("readinessDigestQueuedJobExportDone")))
+                .catch(() => setMessage(t("readinessDigestQueuedJobExportEmpty")))
+            }
+          >
+            {t("readinessDigestQueuedJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-worker-heartbeat-export"
+            onClick={() =>
+              void downloadFirstWorkerHeartbeatCsv(locale)
+                .then(() => setMessage(t("readinessWorkerHeartbeatExportDone")))
+                .catch(() => setMessage(t("readinessWorkerHeartbeatExportEmpty")))
+            }
+          >
+            {t("readinessWorkerHeartbeatExportCsv")}
           </button>
           <button
             type="button"
