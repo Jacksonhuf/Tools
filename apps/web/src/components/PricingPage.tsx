@@ -51,8 +51,12 @@ import {
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
   downloadFirstAgentReadinessCheckCsv,
+  downloadAgentReadinessCsv,
   downloadFirstAgentMilestoneCsv,
+  downloadAgentMilestonesCsv,
   downloadFirstProductReadinessCheckCsv,
+  downloadProductReadinessCsv,
+  downloadCompetitorAnchorCsv,
   downloadFirstFeatureFlagCsv,
   downloadNotificationTemplatesCsv,
   downloadFirstNotificationTemplateCsv,
@@ -560,6 +564,50 @@ export function PricingPage() {
           }
         >
           {t("pricingFeatureFlagsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-readiness-export"
+          onClick={() =>
+            void downloadAgentReadinessCsv(locale).then(() =>
+              setMessage(t("pricingAgentReadinessExportDone"))
+            )
+          }
+        >
+          {t("pricingAgentReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-competitor-anchor-export"
+          onClick={() =>
+            void downloadCompetitorAnchorCsv(locale, "listing-ml-001").then(() =>
+              setMessage(t("pricingCompetitorAnchorExportDone"))
+            )
+          }
+        >
+          {t("pricingCompetitorAnchorExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-product-readiness-export"
+          onClick={() =>
+            void downloadProductReadinessCsv(locale).then(() =>
+              setMessage(t("pricingProductReadinessExportDone"))
+            )
+          }
+        >
+          {t("pricingProductReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-milestones-export"
+          onClick={() =>
+            void downloadAgentMilestonesCsv(locale).then(() =>
+              setMessage(t("pricingAgentMilestonesExportDone"))
+            )
+          }
+        >
+          {t("pricingAgentMilestonesExportCsv")}
         </button>
         <button
           type="button"

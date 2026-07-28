@@ -1860,6 +1860,34 @@
 | **实现** | 上述三导出在通道/竞品/就绪/定价页补齐；文档与 i18n 对齐 |
 | **测试** | `loop-134-137.test.ts`（3 条 export POST） |
 
+### Loop 290 — 补全 Loop 138：通道/定价 Agent 就绪 CSV（P4-E1）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、定价 `agent-readiness-export`（运维/竞品/就绪/Copilot 页原有保留） |
+| **测试** | `loop-138-141.test.ts`（`agent_readiness_csv` POST） |
+
+### Loop 291 — 补全 Loop 139：运维/定价/通道 ML 竞品锚点 CSV（P2-E1-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、定价 `competitor-anchor-export`；通道 `competitor-anchor-ml-export`（竞品/就绪/Copilot 页原有保留）；`listing-ml-001` |
+| **测试** | `loop-138-141.test.ts`（`competitor_anchor_csv` POST） |
+
+### Loop 292 — 补全 Loop 140：通道/竞品/定价 产品就绪 CSV（P3/P4/P5）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、定价 `product-readiness-export`（运维/Copilot/就绪页原有保留） |
+| **测试** | `loop-138-141.test.ts`（`product_readiness_csv` POST） |
+
+### Loop 293 — 补全 Loop 141：定价 里程碑汇总 CSV + 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `agent-milestones-export`（运维/通道/竞品/Copilot/就绪页原有保留）；文档与 i18n 对齐 |
+| **测试** | `loop-138-141.test.ts`（`agent_milestones_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2340,3 +2368,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.36 | 2026-07-28 | Loop 278–281 补全 Loop 202–205 i18n-glossary/glossary-term/notification-templates/template-row Web 与 export POST 测 |
 | v7.37 | 2026-07-28 | Loop 282–285 补全 Loop 130–133 reconciliation-direct/sync-ops/listing-amz/agent-tools Web 与 export POST 测 |
 | v7.38 | 2026-07-28 | Loop 286–289 补全 Loop 134–137 repricing-batch-summary/ingest-status/feature-flags Web 与 export POST 测 |
+| v7.39 | 2026-07-28 | Loop 290–293 补全 Loop 138–141 agent-readiness/competitor-anchor/product-readiness/milestones Web 与 export POST 测 |

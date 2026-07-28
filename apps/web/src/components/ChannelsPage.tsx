@@ -24,6 +24,8 @@ import {
   downloadDigestDeadLetterSummaryCsv,
   downloadListingSyncScheduleCsv,
   downloadAgentMilestonesCsv,
+  downloadAgentReadinessCsv,
+  downloadProductReadinessCsv,
   downloadAdjustmentApprovalPolicyCsv,
   downloadOpsWorkersStatusSummaryCsv,
   DEMO_SKU,
@@ -378,6 +380,28 @@ export function ChannelsPage() {
         </button>
         <button
           type="button"
+          data-testid="channels-agent-readiness-export"
+          onClick={() =>
+            void downloadAgentReadinessCsv(locale).then(() =>
+              setMessage(t("channelsAgentReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsAgentReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-competitor-anchor-ml-export"
+          onClick={() =>
+            void downloadCompetitorAnchorCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("channelsCompetitorAnchorMlExportDone"))
+            )
+          }
+        >
+          {t("channelsCompetitorAnchorMlExportCsv")}
+        </button>
+        <button
+          type="button"
           data-testid="channels-competitor-anchor-amz-export"
           onClick={() =>
             void downloadCompetitorAnchorCsv(locale, "listing-amz-001").then(
@@ -452,6 +476,17 @@ export function ChannelsPage() {
           }
         >
           {t("channelsAgentMilestonesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-product-readiness-export"
+          onClick={() =>
+            void downloadProductReadinessCsv(locale).then(() =>
+              setMessage(t("channelsProductReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsProductReadinessExportCsv")}
         </button>
         <button
           type="button"

@@ -21,6 +21,7 @@ import {
   downloadListingIngestStatusCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadAgentReadinessCsv,
+  downloadProductReadinessCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestQueuedJobsSummaryCsv,
@@ -340,6 +341,17 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorAgentReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-product-readiness-export"
+          onClick={() =>
+            void downloadProductReadinessCsv(locale).then(() =>
+              setMessage(t("competitorProductReadinessExportDone"))
+            )
+          }
+        >
+          {t("competitorProductReadinessExportCsv")}
         </button>
         <button
           type="button"
