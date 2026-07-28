@@ -40,10 +40,13 @@ Edge WAF (Cloudflare / AWS WAF) should be configured separately for DDoS and bot
 
 ## Staging stack
 
+See [staging-deploy-runbook.md](./staging-deploy-runbook.md) for the full post-merge flow.
+
 ```bash
-docker compose -f docker-compose.staging.yml up -d
-npm run db:migrate
-DEPLOY_ENV=staging DATABASE_URL=postgresql://mx:mx_staging_secret@localhost:5433/mx_pricing_staging npm run dev:bff
+npm run staging:bootstrap
+export $(grep -v '^#' config/env.staging.example | xargs)
+npm run dev:bff
+npm run staging:smoke
 ```
 
 ## Readiness APIs
