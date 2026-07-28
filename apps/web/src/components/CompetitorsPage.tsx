@@ -57,6 +57,10 @@ import {
   downloadFxRateCsv,
   downloadLatestCostSheetCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertsDirectCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadListingSyncJobsForListingCsv,
+  downloadAgentToolsCsv,
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
@@ -716,6 +720,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorReconciliationAlertExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-reconciliation-direct-export"
+          onClick={() =>
+            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+              setMessage(t("competitorReconciliationDirectExportDone"))
+            )
+          }
+        >
+          {t("competitorReconciliationDirectExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-listing-sync-ops-export"
+          onClick={() =>
+            void downloadListingSyncOpsStatusCsv(locale).then(() =>
+              setMessage(t("competitorListingSyncOpsExportDone"))
+            )
+          }
+        >
+          {t("competitorListingSyncOpsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-listing-sync-amz-export"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-amz-001"
+            ).then(() => setMessage(t("competitorListingSyncAmzExportDone")))}
+        >
+          {t("competitorListingSyncAmzExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-agent-tools-export"
+          onClick={() =>
+            void downloadAgentToolsCsv(locale).then(() =>
+              setMessage(t("competitorAgentToolsExportDone"))
+            )
+          }
+        >
+          {t("competitorAgentToolsExportCsv")}
         </button>
         <button
           type="button"

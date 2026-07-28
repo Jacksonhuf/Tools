@@ -13,6 +13,7 @@ import {
   downloadListingSyncJobsForListingCsv,
   downloadListingSyncOpsStatusCsv,
   downloadReconciliationAlertsDirectCsv,
+  downloadAgentToolsCsv,
   downloadCompetitorAnchorCsv,
   downloadRuleCompilerStatusCsv,
   downloadDigestQueuedJobsSummaryCsv,
@@ -327,6 +328,17 @@ export function ChannelsPage() {
           }
         >
           {t("channelsReconciliationDirectExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-agent-tools-export"
+          onClick={() =>
+            void downloadAgentToolsCsv(locale).then(() =>
+              setMessage(t("channelsAgentToolsExportDone"))
+            )
+          }
+        >
+          {t("channelsAgentToolsExportCsv")}
         </button>
         <button
           type="button"

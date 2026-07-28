@@ -1804,6 +1804,34 @@
 | **实现** | 通道、竞品、就绪、Copilot、定价 `notification-template-export`（运维页原有保留）；`downloadFirstNotificationTemplateCsv` |
 | **测试** | `loop-202-205.test.ts`（`notification_template_csv` POST，增至 4 条 POST） |
 
+### Loop 282 — 补全 Loop 130：竞品/就绪/Copilot/定价 对账直链 CSV（P3-E3-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 竞品、就绪、Copilot、定价 `reconciliation-direct-export`（通道/运维页原有保留） |
+| **测试** | `loop-130-133.test.ts`（`reconciliation_alerts_csv` POST） |
+
+### Loop 283 — 补全 Loop 131：竞品/就绪/Copilot/定价 同步运维状态 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 竞品、就绪、Copilot、定价 `listing-sync-ops-export`（通道/运维页原有保留） |
+| **测试** | `loop-130-133.test.ts`（`listing_sync_ops_status_csv` POST） |
+
+### Loop 284 — 补全 Loop 132：运维/竞品/就绪/Copilot/定价 Amazon Listing 同步作业 CSV（P1-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、竞品、就绪、Copilot、定价 `listing-sync-amz-export`（通道页原有保留）；`listing-amz-001` |
+| **测试** | `loop-130-133.test.ts`（`listing_sync_jobs_listing_csv` POST） |
+
+### Loop 285 — 补全 Loop 133：通道/竞品/就绪/定价 Agent 工具目录 CSV（P4-E1-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、定价 `agent-tools-export`（运维/Copilot 页原有保留）；文档与 i18n 对齐 |
+| **测试** | `loop-130-133.test.ts`（`agent_tools_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2282,3 +2310,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.34 | 2026-07-27 | Loop 270–273 补全 Loop 194–197 pricing-row/cross-channel/curve-point/agent-tool Web 与 export POST 测 |
 | v7.35 | 2026-07-27 | Loop 274–277 补全 Loop 198–201 readiness-check/milestone/product-check/feature-flag Web 与 export POST 测 |
 | v7.36 | 2026-07-28 | Loop 278–281 补全 Loop 202–205 i18n-glossary/glossary-term/notification-templates/template-row Web 与 export POST 测 |
+| v7.37 | 2026-07-28 | Loop 282–285 补全 Loop 130–133 reconciliation-direct/sync-ops/listing-amz/agent-tools Web 与 export POST 测 |
