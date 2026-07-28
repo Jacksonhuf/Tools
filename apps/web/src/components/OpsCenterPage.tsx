@@ -72,6 +72,8 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadI18nGlossaryCsv,
+  downloadFirstI18nGlossaryTermCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -771,6 +773,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsFeatureFlagExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-i18n-glossary-export"
+          onClick={() =>
+            void downloadI18nGlossaryCsv(locale)
+              .then(() => setMessage(t("opsI18nGlossaryExportDone")))
+              .catch(() => setMessage(t("opsI18nGlossaryExportEmpty")))
+          }
+        >
+          {t("opsI18nGlossaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-i18n-glossary-term-export"
+          onClick={() =>
+            void downloadFirstI18nGlossaryTermCsv(locale)
+              .then(() => setMessage(t("opsI18nGlossaryTermExportDone")))
+              .catch(() => setMessage(t("opsI18nGlossaryTermExportEmpty")))
+          }
+        >
+          {t("opsI18nGlossaryTermExportCsv")}
         </button>
       </div>
 

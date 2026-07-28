@@ -80,6 +80,18 @@ describe("export store kinds (Loop 202-205)", () => {
     resetStoredExportsForTests();
   });
 
+  it("POST /exports i18n_glossary_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "i18n_glossary_csv",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
   it("POST /exports i18n_glossary_term_csv", async () => {
     const { app } = createTestApp();
     const post = await app.request("/api/v1/exports", {
@@ -88,6 +100,18 @@ describe("export store kinds (Loop 202-205)", () => {
       body: JSON.stringify({
         kind: "i18n_glossary_term_csv",
         term_key: "LIST_PRICE",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports notification_templates_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "notification_templates_csv",
       }),
     });
     expect(post.status).toBe(200);

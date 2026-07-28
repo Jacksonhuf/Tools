@@ -77,6 +77,10 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadI18nGlossaryCsv,
+  downloadFirstI18nGlossaryTermCsv,
+  downloadNotificationTemplatesCsv,
+  downloadFirstNotificationTemplateCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
@@ -1036,6 +1040,50 @@ export function CopilotPage() {
             }
           >
             {t("copilotFeatureFlagExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-i18n-glossary-export"
+            onClick={() =>
+              void downloadI18nGlossaryCsv(locale)
+                .then(() => setMessage(t("copilotI18nGlossaryExportDone")))
+                .catch(() => setMessage(t("copilotI18nGlossaryExportEmpty")))
+            }
+          >
+            {t("copilotI18nGlossaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-i18n-glossary-term-export"
+            onClick={() =>
+              void downloadFirstI18nGlossaryTermCsv(locale)
+                .then(() => setMessage(t("copilotI18nGlossaryTermExportDone")))
+                .catch(() => setMessage(t("copilotI18nGlossaryTermExportEmpty")))
+            }
+          >
+            {t("copilotI18nGlossaryTermExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-notification-templates-export"
+            onClick={() =>
+              void downloadNotificationTemplatesCsv(locale)
+                .then(() => setMessage(t("copilotNotificationTemplatesExportDone")))
+                .catch(() => setMessage(t("copilotNotificationTemplatesExportEmpty")))
+            }
+          >
+            {t("copilotNotificationTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-notification-template-export"
+            onClick={() =>
+              void downloadFirstNotificationTemplateCsv(locale)
+                .then(() => setMessage(t("copilotNotificationTemplateExportDone")))
+                .catch(() => setMessage(t("copilotNotificationTemplateExportEmpty")))
+            }
+          >
+            {t("copilotNotificationTemplateExportCsv")}
           </button>
           <button
             type="button"

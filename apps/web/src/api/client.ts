@@ -2036,6 +2036,17 @@ export async function downloadNotificationTemplateCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function fetchNotificationTemplates(locale: string) {
+  const res = await fetch(`/api/v1/notifications/templates`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-templates ${res.status}`);
+  return res.json() as Promise<{
+    locale: string;
+    templates: Array<{ id: string; event_class: string }>;
+  }>;
+}
+
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/auth/status/export`, {
     headers: headers(locale),
@@ -3167,6 +3178,30 @@ export async function downloadFirstFeatureFlagCsv(
     throw new Error("FEATURE_FLAG_EMPTY");
   }
   await downloadFeatureFlagCsv(locale, flagKey);
+}
+
+export async function downloadFirstI18nGlossaryTermCsv(
+  locale: string,
+  preferredKey = "LANDED"
+): Promise<void> {
+  const { terms } = await fetchI18nGlossary(locale);
+  const termKey =
+    terms.find((t) => t.key === preferredKey)?.key ?? terms[0]?.key;
+  if (!termKey) {
+    throw new Error("I18N_GLOSSARY_TERM_EMPTY");
+  }
+  await downloadI18nGlossaryTermCsv(locale, termKey);
+}
+
+export async function downloadFirstNotificationTemplateCsv(
+  locale: string
+): Promise<void> {
+  const { templates } = await fetchNotificationTemplates(locale);
+  const templateId = templates[0]?.id;
+  if (!templateId) {
+    throw new Error("NOTIFICATION_TEMPLATE_EMPTY");
+  }
+  await downloadNotificationTemplateCsv(locale, templateId);
 }
 
 export async function downloadOpsWorkersStatusSummaryCsv(

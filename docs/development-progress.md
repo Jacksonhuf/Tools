@@ -1776,6 +1776,34 @@
 | **实现** | 运维、通道、竞品、Copilot、定价 `feature-flag-export`（就绪页原有保留）；文档与 i18n 对齐 |
 | **测试** | `loop-198-201.test.ts`（`feature_flag_csv` POST，增至 4 条 POST） |
 
+### Loop 278 — 补全 Loop 202：运维/通道/竞品/就绪/Copilot i18n 术语表 CSV（P0-E7-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `i18n-glossary-export`（定价页原有保留）；`downloadI18nGlossaryCsv` |
+| **测试** | `loop-202-205.test.ts`（`i18n_glossary_csv` POST） |
+
+### Loop 279 — 补全 Loop 203：运维/通道/竞品/就绪/Copilot 单条术语 CSV（P0-E7-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `i18n-glossary-term-export`（定价页原有保留）；`downloadFirstI18nGlossaryTermCsv`（首选 `LANDED`） |
+| **测试** | `loop-202-205.test.ts`（`i18n_glossary_term_csv` POST） |
+
+### Loop 280 — 补全 Loop 204：通道/竞品/就绪/Copilot/定价 通知模板汇总 CSV（P2-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `notification-templates-export`（运维页原有保留）；`downloadNotificationTemplatesCsv` |
+| **测试** | `loop-202-205.test.ts`（`notification_templates_csv` POST） |
+
+### Loop 281 — 补全 Loop 205：通道/竞品/就绪/Copilot/定价 单条通知模板 CSV（P2-E3-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `notification-template-export`（运维页原有保留）；`downloadFirstNotificationTemplateCsv` |
+| **测试** | `loop-202-205.test.ts`（`notification_template_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2253,3 +2281,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.33 | 2026-07-27 | Loop 266–269 补全 Loop 190–193 price-observation/repricing-event/adjustment-index/digest-date Web 与 export POST 测 |
 | v7.34 | 2026-07-27 | Loop 270–273 补全 Loop 194–197 pricing-row/cross-channel/curve-point/agent-tool Web 与 export POST 测 |
 | v7.35 | 2026-07-27 | Loop 274–277 补全 Loop 198–201 readiness-check/milestone/product-check/feature-flag Web 与 export POST 测 |
+| v7.36 | 2026-07-28 | Loop 278–281 补全 Loop 202–205 i18n-glossary/glossary-term/notification-templates/template-row Web 与 export POST 测 |

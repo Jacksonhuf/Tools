@@ -47,6 +47,8 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadNotificationTemplatesCsv,
+  downloadFirstNotificationTemplateCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -687,6 +689,28 @@ export function PricingPage() {
           }
         >
           {t("pricingFeatureFlagExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-notification-templates-export"
+          onClick={() =>
+            void downloadNotificationTemplatesCsv(locale)
+              .then(() => setMessage(t("pricingNotificationTemplatesExportDone")))
+              .catch(() => setMessage(t("pricingNotificationTemplatesExportEmpty")))
+          }
+        >
+          {t("pricingNotificationTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-notification-template-export"
+          onClick={() =>
+            void downloadFirstNotificationTemplateCsv(locale)
+              .then(() => setMessage(t("pricingNotificationTemplateExportDone")))
+              .catch(() => setMessage(t("pricingNotificationTemplateExportEmpty")))
+          }
+        >
+          {t("pricingNotificationTemplateExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (
