@@ -13,6 +13,7 @@ import {
   downloadAgentReadinessCsv,
   downloadCompetitorAnchorCsv,
   downloadDigestQueuedJobsSummaryCsv,
+  downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadAuthStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -154,6 +155,17 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessDigestJobsSummaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-channel-adapter-export"
+            onClick={() =>
+              void downloadChannelAdapterStatusCsv(locale).then(() =>
+                setMessage(t("readinessChannelAdapterExportDone"))
+              )
+            }
+          >
+            {t("readinessChannelAdapterExportCsv")}
           </button>
           <button
             type="button"

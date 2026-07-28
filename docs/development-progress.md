@@ -1888,6 +1888,259 @@
 | **实现** | 定价 `agent-milestones-export`（运维/通道/竞品/Copilot/就绪页原有保留）；文档与 i18n 对齐 |
 | **测试** | `loop-138-141.test.ts`（`agent_milestones_csv` POST，增至 4 条 POST） |
 
+### Loop 294 — 补全 Loop 142：定价 Digest 队列汇总 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `digest-jobs-summary-export` |
+| **测试** | `loop-142-145.test.ts`（`digest_queued_jobs_summary_csv` POST） |
+
+### Loop 295 — 补全 Loop 143：就绪/Copilot/定价 渠道适配器 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 就绪、Copilot、定价 `channel-adapter-export` |
+| **测试** | `loop-142-145.test.ts`（`channel_adapters_status_csv` POST） |
+
+### Loop 296 — 补全 Loop 144：定价 规则编译器 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `rule-compiler-export` |
+| **测试** | `loop-142-145.test.ts` |
+
+### Loop 297 — 补全 Loop 145：Digest/适配器/编译器多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 上述导出在定价/就绪/Copilot 页补齐；文档与 i18n 对齐 |
+| **测试** | `loop-142-145.test.ts` |
+
+### Loop 298 — 补全 Loop 146：定价 认证状态 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `auth-export` |
+| **测试** | `loop-146-149.test.ts`（`auth_status_csv` POST） |
+
+### Loop 299 — 补全 Loop 147：定价 沙箱状态 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `channel-sandbox-status-export` |
+| **测试** | `loop-146-149.test.ts` |
+
+### Loop 300 — 补全 Loop 148：定价 Digest 死信汇总 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `digest-dlq-summary-export` |
+| **测试** | `loop-146-149.test.ts`（`digest_dead_letter_summary_csv` POST） |
+
+### Loop 301 — 补全 Loop 149：认证/沙箱/死信多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价页补齐；文档与 i18n 对齐 |
+| **测试** | `loop-146-149.test.ts` |
+
+### Loop 302 — 补全 Loop 150：定价 同步计划 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `listing-sync-schedule-export` |
+| **测试** | `loop-150-153.test.ts`（`listing_sync_schedule_csv` POST） |
+
+### Loop 303 — 补全 Loop 151：就绪 里程碑汇总 CSV 对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 就绪页保留 `milestones-export`；多页对齐 |
+| **测试** | `loop-150-153.test.ts` |
+
+### Loop 304 — 补全 Loop 152：定价 审批策略 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `adjustment-approval-policy-export` |
+| **测试** | `loop-150-153.test.ts`（`adjustment_approval_policy_csv` POST） |
+
+### Loop 305 — 补全 Loop 153：定价 Worker 汇总 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `ops-workers-summary-export` |
+| **测试** | `loop-150-153.test.ts`（`ops_workers_status_summary_csv` POST） |
+
+### Loop 306 — 补全 Loop 154：运维 定价快照 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维 `pricing-snapshot-export`（通道/竞品/就绪/Copilot/定价已有） |
+| **测试** | `loop-154-157.test.ts`（`pricing_snapshot_csv` POST） |
+
+### Loop 307 — 补全 Loop 155：跨渠道 Guard 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `cross-channel-guard-export`；文档对齐 |
+| **测试** | `loop-154-157.test.ts` |
+
+### Loop 308 — 补全 Loop 156：定价 Digest 计划 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `digest-schedule-export` |
+| **测试** | `loop-154-157.test.ts`（`digest_schedule_csv` POST） |
+
+### Loop 309 — 补全 Loop 157：动态调价规则多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 竞品页按 Loop 233 设计保留排除；定价/运维/通道/就绪/Copilot 已有 |
+| **测试** | `loop-154-157.test.ts` |
+
+### Loop 310 — 补全 Loop 158：定价 SKU 重算队列 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `repricing-queue-sku-export` |
+| **测试** | `loop-158-161.test.ts`（`repricing_queue_sku_csv` POST） |
+
+### Loop 311 — 补全 Loop 159：定价 重算分片计划 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `repricing-batch-shard-plan-export` |
+| **测试** | `loop-158-161.test.ts` |
+
+### Loop 312 — 补全 Loop 160：定价 SKU 类目模板 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `sku-category-template-export` |
+| **测试** | `loop-158-161.test.ts` |
+
+### Loop 313 — 补全 Loop 161：定价 对账报表 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `reconciliation-report-export` |
+| **测试** | `loop-158-161.test.ts`（`reconciliation_alerts_csv` POST） |
+
+### Loop 314 — 补全 Loop 162：定价上下文多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `pricing-context-export`；文档对齐 |
+| **测试** | `loop-162-165.test.ts`（`pricing_context_csv` POST） |
+
+### Loop 315 — 补全 Loop 163：重算批作业多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `repricing-batch-job-export`；文档对齐 |
+| **测试** | `loop-162-165.test.ts`（`repricing_batch_job_csv` POST） |
+
+### Loop 316 — 补全 Loop 164：类目模板多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `category-rule-template-export`；文档对齐 |
+| **测试** | `loop-162-165.test.ts`（`category_rule_template_csv` POST） |
+
+### Loop 317 — 补全 Loop 165：Copilot 会话多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `copilot-session-export`；文档对齐 |
+| **测试** | `loop-162-165.test.ts`（`copilot_session_csv` POST） |
+
+### Loop 318 — 补全 Loop 166：Price Version 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `price-version-export`；文档对齐 |
+| **测试** | `loop-166-169.test.ts`（`price_version_csv` POST） |
+
+### Loop 319 — 补全 Loop 167：Version 备份多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `version-backup-csv`；文档对齐 |
+| **测试** | `loop-166-169.test.ts`（`version_backup_rows_csv` POST） |
+
+### Loop 320 — 补全 Loop 168：P5 就绪多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `p5-readiness-export`；文档对齐 |
+| **测试** | `loop-166-169.test.ts`（`p5_readiness_csv` POST） |
+
+### Loop 321 — 补全 Loop 169：定价 单店铺 CSV
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 定价 `shop-export` |
+| **测试** | `loop-166-169.test.ts`（`shop_csv` POST） |
+
+### Loop 322 — 补全 Loop 170：P3 就绪多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `p3-readiness-export`；文档对齐 |
+| **测试** | `loop-170-173.test.ts`（`p3_readiness_csv` POST） |
+
+### Loop 323 — 补全 Loop 171：P4 就绪多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `p4-readiness-export`；文档对齐 |
+| **测试** | `loop-170-173.test.ts`（`p4_readiness_csv` POST） |
+
+### Loop 324 — 补全 Loop 172：共享费用模板多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `shared-fee-template-export`；文档对齐 |
+| **测试** | `loop-170-173.test.ts`（`shared_fee_template_csv` POST） |
+
+### Loop 325 — 补全 Loop 173：租户费用模板多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `tenant-shared-fee-export`；文档对齐 |
+| **测试** | `loop-170-173.test.ts`（`tenant_shared_fee_templates_csv` POST） |
+
+### Loop 326 — 补全 Loop 174：SKU 目录行多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `sku-export`/`sku-catalog`；文档对齐 |
+| **测试** | `loop-174-177.test.ts`（`sku_catalog_csv` POST） |
+
+### Loop 327 — 补全 Loop 175：Listing 多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `listing-export`；文档对齐 |
+| **测试** | `loop-174-177.test.ts`（`listing_csv` POST） |
+
+### Loop 328 — 补全 Loop 176：HS 关税行多页对齐
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `tariff-rate-export`；文档对齐 |
+| **测试** | `loop-174-177.test.ts`（`tariff_hs_rate_csv` POST） |
+
+### Loop 329 — 补全 Loop 177：FX 汇率行多页对齐 + 206+ 补全收尾
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 全页已有 `fx-rate-export`；文档与 i18n 对齐 |
+| **测试** | `loop-174-177.test.ts`（`fx_rate_csv` POST） |
+
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2369,3 +2622,12 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.37 | 2026-07-28 | Loop 282–285 补全 Loop 130–133 reconciliation-direct/sync-ops/listing-amz/agent-tools Web 与 export POST 测 |
 | v7.38 | 2026-07-28 | Loop 286–289 补全 Loop 134–137 repricing-batch-summary/ingest-status/feature-flags Web 与 export POST 测 |
 | v7.39 | 2026-07-28 | Loop 290–293 补全 Loop 138–141 agent-readiness/competitor-anchor/product-readiness/milestones Web 与 export POST 测 |
+| v7.40 | 2026-07-28 | Loop 294–297 补全 Loop 142–145 digest/adapter/compiler Web 与 export POST 测 |
+| v7.41 | 2026-07-28 | Loop 298–301 补全 Loop 146–149 auth/sandbox/dlq Web 与 export POST 测 |
+| v7.42 | 2026-07-28 | Loop 302–305 补全 Loop 150–153 sync-schedule/policy/workers Web 与 export POST 测 |
+| v7.43 | 2026-07-28 | Loop 306–309 补全 Loop 154–157 pricing-snapshot/digest-schedule/dynamic-rule Web 与 export POST 测 |
+| v7.44 | 2026-07-28 | Loop 310–313 补全 Loop 158–161 repricing-queue/shard/template/reconciliation Web 与 export POST 测 |
+| v7.45 | 2026-07-28 | Loop 314–317 补全 Loop 162–165 context/batch-job/template/session Web 与 export POST 测 |
+| v7.46 | 2026-07-28 | Loop 318–321 补全 Loop 166–169 version/backup/p5/shop Web 与 export POST 测 |
+| v7.47 | 2026-07-28 | Loop 322–325 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |
+| v7.48 | 2026-07-28 | Loop 326–329 补全 Loop 174–177 sku/listing/tariff/fx Web 与 export POST 测 |
