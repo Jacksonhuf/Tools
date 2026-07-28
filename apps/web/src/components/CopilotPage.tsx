@@ -49,6 +49,9 @@ import {
   downloadRepricingBatchShardPlanCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadReconciliationAlertsReportCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
   downloadListingIngestStatusCsv,
@@ -666,6 +669,42 @@ export function CopilotPage() {
             }
           >
             {t("copilotReconciliationReportExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-pricing-context-export"
+            onClick={() =>
+              void downloadPricingContextCsv(
+                locale,
+                selected.channel,
+                DEMO_SKU
+              ).then(() => setMessage(t("copilotPricingContextExportDone")))
+            }
+          >
+            {t("copilotPricingContextExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-repricing-batch-job-export"
+            onClick={() =>
+              void downloadLatestRepricingBatchJobCsv(locale)
+                .then(() => setMessage(t("copilotRepricingBatchJobExportDone")))
+                .catch(() => setMessage(t("copilotRepricingBatchJobExportEmpty")))
+            }
+          >
+            {t("copilotRepricingBatchJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-category-rule-template-export"
+            onClick={() =>
+              void downloadCategoryRuleTemplateCsv(
+                locale,
+                "cat-electronics-mx"
+              ).then(() => setMessage(t("copilotCategoryRuleTemplateExportDone")))
+            }
+          >
+            {t("copilotCategoryRuleTemplateExportCsv")}
           </button>
           <button
             type="button"

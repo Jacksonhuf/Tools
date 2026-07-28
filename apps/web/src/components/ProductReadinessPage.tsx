@@ -29,6 +29,11 @@ import {
   downloadRepricingBatchShardPlanCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadReconciliationAlertsReportCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -276,6 +281,56 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessReconciliationReportExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-pricing-context-export"
+            onClick={() =>
+              void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+                () => setMessage(t("readinessPricingContextExportDone"))
+              )
+            }
+          >
+            {t("readinessPricingContextExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-repricing-batch-job-export"
+            onClick={() =>
+              void downloadLatestRepricingBatchJobCsv(locale)
+                .then(() => setMessage(t("readinessRepricingBatchJobExportDone")))
+                .catch(() => setMessage(t("readinessRepricingBatchJobExportEmpty")))
+            }
+          >
+            {t("readinessRepricingBatchJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-category-rule-template-export"
+            onClick={() =>
+              void downloadCategoryRuleTemplateCsv(
+                locale,
+                "cat-electronics-mx"
+              ).then(() => setMessage(t("readinessCategoryRuleTemplateExportDone")))
+            }
+          >
+            {t("readinessCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-copilot-session-export"
+            onClick={() =>
+              void createCopilotSession(
+                locale,
+                "listing-ml-001",
+                DEMO_SKU,
+                "MERCADO_LIBRE"
+              )
+                .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+                .then(() => setMessage(t("readinessCopilotSessionExportDone")))
+            }
+          >
+            {t("readinessCopilotSessionExportCsv")}
           </button>
           <button
             type="button"

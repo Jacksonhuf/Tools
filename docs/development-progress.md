@@ -1496,6 +1496,34 @@
 | **实现** | 通道、竞品、就绪、Copilot `reconciliation-report-export` |
 | **测试** | `loop-158-161.test.ts`（`reconciliation_alerts_csv` POST，增至 4 条 POST） |
 
+### Loop 238 — 补全 Loop 162：运维/通道/竞品/就绪/Copilot/策略 定价上下文 CSV（P0-E4-07）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot、策略 `pricing-context-export`（定价页原有保留） |
+| **测试** | `loop-162-165.test.ts`（`pricing_context_csv` POST） |
+
+### Loop 239 — 补全 Loop 163：通道/竞品/就绪/Copilot/定价/策略 重算批作业 CSV（P5-05）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价、策略 `repricing-batch-job-export` |
+| **测试** | `loop-162-165.test.ts`（`repricing_batch_job_csv` POST） |
+
+### Loop 240 — 补全 Loop 164：运维/通道/竞品/就绪/Copilot/定价 类目模板单条 CSV（P5-02）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot、定价 `category-rule-template-export`（策略页原有保留） |
+| **测试** | `loop-162-165.test.ts`（`category_rule_template_csv` POST） |
+
+### Loop 241 — 补全 Loop 165：运维/通道/竞品/就绪/定价/策略 Copilot 会话 CSV（P4）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、定价、策略 `copilot-session-export`（Copilot 页原有保留） |
+| **测试** | `loop-162-165.test.ts`（`copilot_session_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -1963,3 +1991,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.23 | 2026-07-24 | Loop 226–229 补全 Loop 150–153 sync/milestones/policy/workers Web 与 export POST 测 |
 | v7.24 | 2026-07-24 | Loop 230–233 补全 Loop 154–157 pricing/guard/digest/dynamic-rule Web 与 export POST 测 |
 | v7.25 | 2026-07-24 | Loop 234–237 补全 Loop 158–161 queue/shard/template/reconciliation Web 与 export POST 测 |
+| v7.26 | 2026-07-24 | Loop 238–241 补全 Loop 162–165 context/batch-job/template/copilot-session Web 与 export POST 测 |

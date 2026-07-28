@@ -31,6 +31,11 @@ import {
   downloadRepricingBatchShardPlanCsv,
   downloadSkuCategoryRuleTemplateCsv,
   downloadReconciliationAlertsReportCsv,
+  downloadPricingContextCsv,
+  downloadLatestRepricingBatchJobCsv,
+  downloadCategoryRuleTemplateCsv,
+  createCopilotSession,
+  downloadCopilotSessionCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -474,6 +479,56 @@ export function ChannelsPage() {
           }
         >
           {t("channelsReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-pricing-context-export"
+          onClick={() =>
+            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+              () => setMessage(t("channelsPricingContextExportDone"))
+            )
+          }
+        >
+          {t("channelsPricingContextExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("channelsRepricingBatchJobExportDone")))
+              .catch(() => setMessage(t("channelsRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("channelsRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-category-rule-template-export"
+          onClick={() =>
+            void downloadCategoryRuleTemplateCsv(
+              locale,
+              "cat-electronics-mx"
+            ).then(() => setMessage(t("channelsCategoryRuleTemplateExportDone")))
+          }
+        >
+          {t("channelsCategoryRuleTemplateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-copilot-session-export"
+          onClick={() =>
+            void createCopilotSession(
+              locale,
+              "listing-ml-001",
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            )
+              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+              .then(() => setMessage(t("channelsCopilotSessionExportDone")))
+          }
+        >
+          {t("channelsCopilotSessionExportCsv")}
         </button>
       </div>
 
