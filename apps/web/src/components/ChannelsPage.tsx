@@ -67,6 +67,10 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadI18nGlossaryCsv,
+  downloadFirstI18nGlossaryTermCsv,
+  downloadNotificationTemplatesCsv,
+  downloadFirstNotificationTemplateCsv,
   downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
@@ -919,6 +923,50 @@ export function ChannelsPage() {
           }
         >
           {t("channelsFeatureFlagExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-i18n-glossary-export"
+          onClick={() =>
+            void downloadI18nGlossaryCsv(locale)
+              .then(() => setMessage(t("channelsI18nGlossaryExportDone")))
+              .catch(() => setMessage(t("channelsI18nGlossaryExportEmpty")))
+          }
+        >
+          {t("channelsI18nGlossaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-i18n-glossary-term-export"
+          onClick={() =>
+            void downloadFirstI18nGlossaryTermCsv(locale)
+              .then(() => setMessage(t("channelsI18nGlossaryTermExportDone")))
+              .catch(() => setMessage(t("channelsI18nGlossaryTermExportEmpty")))
+          }
+        >
+          {t("channelsI18nGlossaryTermExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-notification-templates-export"
+          onClick={() =>
+            void downloadNotificationTemplatesCsv(locale)
+              .then(() => setMessage(t("channelsNotificationTemplatesExportDone")))
+              .catch(() => setMessage(t("channelsNotificationTemplatesExportEmpty")))
+          }
+        >
+          {t("channelsNotificationTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-notification-template-export"
+          onClick={() =>
+            void downloadFirstNotificationTemplateCsv(locale)
+              .then(() => setMessage(t("channelsNotificationTemplateExportDone")))
+              .catch(() => setMessage(t("channelsNotificationTemplateExportEmpty")))
+          }
+        >
+          {t("channelsNotificationTemplateExportCsv")}
         </button>
       </div>
 

@@ -73,6 +73,10 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadI18nGlossaryCsv,
+  downloadFirstI18nGlossaryTermCsv,
+  downloadNotificationTemplatesCsv,
+  downloadFirstNotificationTemplateCsv,
   downloadReconciliationAlertCsv,
   downloadShopCsv,
   fetchIngestStatus,
@@ -892,6 +896,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorFeatureFlagExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-i18n-glossary-export"
+          onClick={() =>
+            void downloadI18nGlossaryCsv(locale)
+              .then(() => setMessage(t("competitorI18nGlossaryExportDone")))
+              .catch(() => setMessage(t("competitorI18nGlossaryExportEmpty")))
+          }
+        >
+          {t("competitorI18nGlossaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-i18n-glossary-term-export"
+          onClick={() =>
+            void downloadFirstI18nGlossaryTermCsv(locale)
+              .then(() => setMessage(t("competitorI18nGlossaryTermExportDone")))
+              .catch(() => setMessage(t("competitorI18nGlossaryTermExportEmpty")))
+          }
+        >
+          {t("competitorI18nGlossaryTermExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-notification-templates-export"
+          onClick={() =>
+            void downloadNotificationTemplatesCsv(locale)
+              .then(() => setMessage(t("competitorNotificationTemplatesExportDone")))
+              .catch(() => setMessage(t("competitorNotificationTemplatesExportEmpty")))
+          }
+        >
+          {t("competitorNotificationTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-notification-template-export"
+          onClick={() =>
+            void downloadFirstNotificationTemplateCsv(locale)
+              .then(() => setMessage(t("competitorNotificationTemplateExportDone")))
+              .catch(() => setMessage(t("competitorNotificationTemplateExportEmpty")))
+          }
+        >
+          {t("competitorNotificationTemplateExportCsv")}
         </button>
         <button
           type="button"

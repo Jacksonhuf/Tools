@@ -62,6 +62,10 @@ import {
   downloadLatestCompetitorCurvePointCsv,
   downloadFirstAgentToolRowCsv,
   downloadFirstAgentReadinessCheckCsv,
+  downloadI18nGlossaryCsv,
+  downloadFirstI18nGlossaryTermCsv,
+  downloadNotificationTemplatesCsv,
+  downloadFirstNotificationTemplateCsv,
   downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
@@ -673,6 +677,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessAgentReadinessCheckExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-i18n-glossary-export"
+            onClick={() =>
+              void downloadI18nGlossaryCsv(locale)
+                .then(() => setMessage(t("readinessI18nGlossaryExportDone")))
+                .catch(() => setMessage(t("readinessI18nGlossaryExportEmpty")))
+            }
+          >
+            {t("readinessI18nGlossaryExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-i18n-glossary-term-export"
+            onClick={() =>
+              void downloadFirstI18nGlossaryTermCsv(locale)
+                .then(() => setMessage(t("readinessI18nGlossaryTermExportDone")))
+                .catch(() => setMessage(t("readinessI18nGlossaryTermExportEmpty")))
+            }
+          >
+            {t("readinessI18nGlossaryTermExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-notification-templates-export"
+            onClick={() =>
+              void downloadNotificationTemplatesCsv(locale)
+                .then(() => setMessage(t("readinessNotificationTemplatesExportDone")))
+                .catch(() => setMessage(t("readinessNotificationTemplatesExportEmpty")))
+            }
+          >
+            {t("readinessNotificationTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-notification-template-export"
+            onClick={() =>
+              void downloadFirstNotificationTemplateCsv(locale)
+                .then(() => setMessage(t("readinessNotificationTemplateExportDone")))
+                .catch(() => setMessage(t("readinessNotificationTemplateExportEmpty")))
+            }
+          >
+            {t("readinessNotificationTemplateExportCsv")}
           </button>
           <button
             type="button"
