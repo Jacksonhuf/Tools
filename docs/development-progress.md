@@ -1580,6 +1580,34 @@
 | **实现** | 运维、通道、竞品、就绪、Copilot、定价 `tenant-shared-fee-export` |
 | **测试** | `loop-170-173.test.ts`（`tenant_shared_fee_templates_csv` POST，增至 4 条 POST） |
 
+### Loop 250 — 补全 Loop 174：运维/通道/竞品/就绪/Copilot SKU 目录行 CSV（P0-E2-01）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、通道、竞品、就绪、Copilot `sku-catalog-export`（定价页原有保留） |
+| **测试** | `loop-174-177.test.ts`（`sku_catalog_csv` POST） |
+
+### Loop 251 — 补全 Loop 175：运维/竞品/就绪/Copilot/定价 Listing CSV（P1-E2）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 运维、竞品、就绪、Copilot、定价 `listing-export`（通道页原有保留） |
+| **测试** | `loop-174-177.test.ts`（`listing_csv` POST） |
+
+### Loop 252 — 补全 Loop 176：通道/竞品/就绪/Copilot/定价 HS 关税行 CSV（P0-E2-04）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `tariff-rate-export`（运维原有保留） |
+| **测试** | `loop-174-177.test.ts`（`tariff_hs_rate_csv` POST） |
+
+### Loop 253 — 补全 Loop 177：通道/竞品/就绪/Copilot/定价 FX 汇率行 CSV（P0-E2-03）
+
+| 项 | 内容 |
+|----|------|
+| **实现** | 通道、竞品、就绪、Copilot、定价 `fx-rate-export` |
+| **测试** | `loop-174-177.test.ts`（`fx_rate_csv` POST，增至 4 条 POST） |
+
 ### Loop 154 — 定价快照专用导出路径（P0/P5）
 
 | 项 | 内容 |
@@ -2050,3 +2078,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.26 | 2026-07-24 | Loop 238–241 补全 Loop 162–165 context/batch-job/template/copilot-session Web 与 export POST 测 |
 | v7.27 | 2026-07-24 | Loop 242–245 补全 Loop 166–169 version/backup/p5/shop Web 与 export POST 测 |
 | v7.28 | 2026-07-27 | Loop 246–249 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |
+| v7.29 | 2026-07-27 | Loop 250–253 补全 Loop 174–177 sku/listing/tariff/fx Web 与 export POST 测 |

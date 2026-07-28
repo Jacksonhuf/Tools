@@ -23,6 +23,9 @@ import {
   downloadP4ReadinessCsv,
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
+  downloadListingCsv,
+  downloadTariffHsRateCsv,
+  downloadFxRateCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
   downloadI18nGlossaryTermCsv,
@@ -394,6 +397,39 @@ export function PricingPage() {
           }
         >
           {t("pricingTenantSharedFeeTemplatesExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-listing-export"
+          onClick={() =>
+            void downloadListingCsv(locale, "listing-ml-001").then(() =>
+              setMessage(t("pricingListingExportDone"))
+            )
+          }
+        >
+          {t("pricingListingExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-tariff-rate-export"
+          onClick={() =>
+            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
+              setMessage(t("pricingTariffRateExportDone"))
+            )
+          }
+        >
+          {t("pricingTariffRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-fx-rate-export"
+          onClick={() =>
+            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+              setMessage(t("pricingFxRateExportDone"))
+            )
+          }
+        >
+          {t("pricingFxRateExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

@@ -77,4 +77,30 @@ describe("export store kinds (Loop 174-177)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports listing_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "listing_csv",
+        listing_id: "listing-ml-001",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports tariff_hs_rate_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "tariff_hs_rate_csv",
+        hs_code: "HS-ELECTRONICS-MX",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });
