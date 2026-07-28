@@ -32,6 +32,9 @@ import {
   downloadListingSyncOpsStatusCsv,
   downloadListingSyncJobsForListingCsv,
   downloadAgentToolsCsv,
+  downloadRepricingBatchJobsSummaryCsv,
+  downloadListingIngestStatusCsv,
+  downloadFeatureFlagsCsv,
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
@@ -524,6 +527,39 @@ export function PricingPage() {
           }
         >
           {t("pricingAgentToolsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-repricing-batch-summary-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+              setMessage(t("pricingRepricingBatchSummaryExportDone"))
+            )
+          }
+        >
+          {t("pricingRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-listing-ingest-status-export"
+          onClick={() =>
+            void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("pricingListingIngestStatusExportDone"))
+            )
+          }
+        >
+          {t("pricingListingIngestStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-feature-flags-export"
+          onClick={() =>
+            void downloadFeatureFlagsCsv(locale).then(() =>
+              setMessage(t("pricingFeatureFlagsExportDone"))
+            )
+          }
+        >
+          {t("pricingFeatureFlagsExportCsv")}
         </button>
         <button
           type="button"

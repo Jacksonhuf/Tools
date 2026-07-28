@@ -77,6 +77,7 @@ import {
   downloadFirstAgentMilestoneCsv,
   downloadFirstProductReadinessCheckCsv,
   downloadFirstFeatureFlagCsv,
+  downloadFeatureFlagsCsv,
   downloadI18nGlossaryCsv,
   downloadFirstI18nGlossaryTermCsv,
   downloadNotificationTemplatesCsv,
@@ -317,6 +318,17 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-feature-flags-export"
+          onClick={() =>
+            void downloadFeatureFlagsCsv(locale).then(() =>
+              setMessage(t("competitorFeatureFlagsExportDone"))
+            )
+          }
+        >
+          {t("competitorFeatureFlagsExportCsv")}
         </button>
         <button
           type="button"
