@@ -57,6 +57,10 @@ import {
   downloadNotificationTemplateCsv,
   downloadDigestQueuedJobsSummaryCsv,
   downloadLatestDigestQueuedJobCsv,
+  downloadLatestDigestDispatchCsv,
+  downloadFirstChannelSandboxEventCsv,
+  downloadFirstDigestDeadLetterJobCsv,
+  downloadFirstAgentToolAuditRowCsv,
   downloadChannelAdapterStatusCsv,
   downloadRuleCompilerStatusCsv,
   downloadChannelSandboxStatusCsv,
@@ -591,6 +595,50 @@ export function OpsCenterPage() {
           }
         >
           {t("opsCompetitorOfferExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-dispatch-export"
+          onClick={() =>
+            void downloadLatestDigestDispatchCsv(locale)
+              .then(() => setMessage(t("opsDigestDispatchExportDone")))
+              .catch(() => setMessage(t("opsDigestDispatchExportEmpty")))
+          }
+        >
+          {t("opsDigestDispatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-sandbox-event-export"
+          onClick={() =>
+            void downloadFirstChannelSandboxEventCsv(locale)
+              .then(() => setMessage(t("opsSandboxEventExportDone")))
+              .catch(() => setMessage(t("opsSandboxEventExportEmpty")))
+          }
+        >
+          {t("opsSandboxEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-digest-dead-letter-job-export"
+          onClick={() =>
+            void downloadFirstDigestDeadLetterJobCsv(locale)
+              .then(() => setMessage(t("opsDigestDeadLetterJobExportDone")))
+              .catch(() => setMessage(t("opsDigestDeadLetterJobExportEmpty")))
+          }
+        >
+          {t("opsDigestDeadLetterJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-agent-tool-audit-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolAuditRowCsv(locale)
+              .then(() => setMessage(t("opsAgentToolAuditRowExportDone")))
+              .catch(() => setMessage(t("opsAgentToolAuditRowExportEmpty")))
+          }
+        >
+          {t("opsAgentToolAuditRowExportCsv")}
         </button>
       </div>
 

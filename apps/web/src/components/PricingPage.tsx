@@ -31,6 +31,10 @@ import {
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
+  downloadLatestDigestDispatchCsv,
+  downloadFirstChannelSandboxEventCsv,
+  downloadFirstDigestDeadLetterJobCsv,
+  downloadFirstAgentToolAuditRowCsv,
   downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
@@ -491,6 +495,50 @@ export function PricingPage() {
           }
         >
           {t("pricingWorkerHeartbeatExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-digest-dispatch-export"
+          onClick={() =>
+            void downloadLatestDigestDispatchCsv(locale)
+              .then(() => setMessage(t("pricingDigestDispatchExportDone")))
+              .catch(() => setMessage(t("pricingDigestDispatchExportEmpty")))
+          }
+        >
+          {t("pricingDigestDispatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-sandbox-event-export"
+          onClick={() =>
+            void downloadFirstChannelSandboxEventCsv(locale)
+              .then(() => setMessage(t("pricingSandboxEventExportDone")))
+              .catch(() => setMessage(t("pricingSandboxEventExportEmpty")))
+          }
+        >
+          {t("pricingSandboxEventExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-digest-dead-letter-job-export"
+          onClick={() =>
+            void downloadFirstDigestDeadLetterJobCsv(locale)
+              .then(() => setMessage(t("pricingDigestDeadLetterJobExportDone")))
+              .catch(() => setMessage(t("pricingDigestDeadLetterJobExportEmpty")))
+          }
+        >
+          {t("pricingDigestDeadLetterJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-tool-audit-row-export"
+          onClick={() =>
+            void downloadFirstAgentToolAuditRowCsv(locale)
+              .then(() => setMessage(t("pricingAgentToolAuditRowExportDone")))
+              .catch(() => setMessage(t("pricingAgentToolAuditRowExportEmpty")))
+          }
+        >
+          {t("pricingAgentToolAuditRowExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (
