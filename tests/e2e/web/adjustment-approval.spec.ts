@@ -23,7 +23,7 @@ test.describe("Adjustment approval E2E", () => {
 
   test("create pending_approval batch, approve, apply", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Adjustments|调价|Lotes de ajuste/i }).click();
+    await page.getByTestId("nav-adjustments").click();
     await expect(page.getByTestId("adjustment-batches-page")).toBeVisible({
       timeout: 15_000,
     });

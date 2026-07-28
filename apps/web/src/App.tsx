@@ -44,6 +44,7 @@ export function App() {
           type="button"
           className={tab === "pricing" ? "active" : ""}
           onClick={() => setTab("pricing")}
+          data-testid="nav-pricing"
         >
           {t("navPricing")}
         </button>
@@ -51,6 +52,7 @@ export function App() {
           type="button"
           className={tab === "adjustments" ? "active" : ""}
           onClick={() => setTab("adjustments")}
+          data-testid="nav-adjustments"
         >
           {t("navAdjustments")}
         </button>
@@ -66,6 +68,7 @@ export function App() {
           type="button"
           className={tab === "competitors" ? "active" : ""}
           onClick={() => setTab("competitors")}
+          data-testid="nav-competitors"
         >
           {t("navCompetitors")}
         </button>
@@ -81,6 +84,7 @@ export function App() {
           type="button"
           className={tab === "ops" ? "active" : ""}
           onClick={() => setTab("ops")}
+          data-testid="nav-ops"
         >
           {t("navOps")}
         </button>
@@ -88,6 +92,7 @@ export function App() {
           type="button"
           className={tab === "copilot" ? "active" : ""}
           onClick={() => setTab("copilot")}
+          data-testid="nav-copilot"
         >
           {t("navCopilot")}
         </button>
