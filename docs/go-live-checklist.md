@@ -2,6 +2,14 @@
 
 Production release gate tying golden tests, NFR baselines, security scans, and readiness APIs.
 
+## Infrastructure (Wave 0)
+
+See [infra-environments.md](./infra-environments.md) and [backup-pitr-runbook.md](./backup-pitr-runbook.md).
+
+- [ ] `DEPLOY_ENV=production` with secrets validated (`npm run secrets:validate`)
+- [ ] WAF enabled (`WAF_ENABLED=true`)
+- [ ] Backup/PITR configured (`GET /api/v1/ops/backup/status` green)
+
 ## API gates
 
 | Endpoint | Purpose |

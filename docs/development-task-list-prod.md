@@ -4,7 +4,7 @@
 |------|------|
 | 关联 PRD | [PRD-mexico-cross-border-pricing.md](./PRD-mexico-cross-border-pricing.md) |
 | 基线 | [development-task-list.md](./development-task-list.md) v1.1（MVP） |
-| 状态 | Wave 1–6 已交付；Wave 7–8 本批 |
+| 状态 | Wave 1–8 已交付；Wave 0 本批 |
 
 ## 本批已交付（Prod Wave 1–3）
 
@@ -56,11 +56,21 @@
 | TC-NFR-SEC-003 | 日志脱敏 `sanitizeForLog` + 自动化测试 | ✅ |
 | GL-* | `GET /production/go-live` + `docs/go-live-checklist.md` | ✅ |
 
+## 本批已交付（Prod Wave 0）
+
+| ID | Task | 状态 |
+|----|------|------|
+| INFRA-01 | `DEPLOY_ENV` 环境分层（dev/staging/production） | ✅ |
+| INFRA-02 | Secrets 注册表 + `scripts/secrets/validate-env.mjs` | ✅ |
+| INFRA-03 | WAF 中间件（限流/安全头/IP 名单/路径拦截） | ✅ |
+| INFRA-05 | 备份 PITR：`pg-backup` / `pg-restore-drill` + `ci-backup-drill` | ✅ |
+| INFRA-06 | `docker-compose.staging.yml`（PG WAL + Redis） | ✅ |
+| X-01 | readiness 暴露 deploy/secrets/waf/backup_pitr | ✅ |
+
 ## 下一批（待开发）
 
 | 波次 | 关键 Task |
 |------|-----------|
-| Wave 0 | staging/prod 环境、Secrets、WAF、备份 PITR |
 | Wave 2 | SKU/Cost Web 生产化、审批 RBAC 分角色 |
 
 完整 153 项规划见 Cloud Agent 会话记录（2026-07-28）。
@@ -68,6 +78,7 @@
 ## 生产环境变量速查
 
 ```bash
+DEPLOY_ENV=production
 PRODUCTION_MODE=true
 DATABASE_URL=postgresql://...
 AUTH_DRIVER=oidc_jwt

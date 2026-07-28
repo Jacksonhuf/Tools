@@ -1,0 +1,45 @@
+name: ci-backup-drill
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  backup-drill:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mx
+          POSTGRES_PASSWORD: mx
+          POSTGRES_DB: mx_pricing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mx -d mx_pricing"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: npm ci && npm run build
+      - name: Seed database
+        run: npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://mx:mx@localhost:5432/mx_pricing
+      - name: Logical backup
+        run: node scripts/backup/pg-backup.mjs
+        env:
+          DATABASE_URL: postgresql://mx:mx@localhost:5432/mx_pricing
+          BACKUP_OUTPUT_DIR: ./backups
+      - name: Restore drill validation
+        run: |
+          DUMP=$(ls -1 backups/*.sql | head -1)
+          node scripts/backup/pg-restore-drill.mjs "$DUMP"

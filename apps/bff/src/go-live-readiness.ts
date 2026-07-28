@@ -5,6 +5,9 @@ import { evaluateAgentReadiness } from "./agent-readiness.js";
 import { evaluateProductionConfig } from "./production-config.js";
 import { evaluateProductionLlm } from "./production-llm.js";
 import { getRuleCompilerStatus } from "./rule-compiler-adapter.js";
+import { evaluateSecretsStatus } from "./secrets-registry.js";
+import { getWafStatus } from "./waf-middleware.js";
+import { evaluateBackupPitrStatus } from "./backup-pitr.js";
 
 export interface GoLiveCheck {
   id: string;
@@ -44,6 +47,9 @@ export function evaluateGoLiveReadiness(): {
   const agent = evaluateAgentReadiness();
   const compiler = getRuleCompilerStatus();
   const goldenCount = goldenFixtureCount();
+  const secrets = evaluateSecretsStatus();
+  const backup = evaluateBackupPitrStatus();
+  const waf = getWafStatus();
 
   const checks: GoLiveCheck[] = [
     {
@@ -82,6 +88,26 @@ export function evaluateGoLiveReadiness(): {
       id: "NFR-K6-BASELINE",
       passed: true,
       detail: "scripts/k6 baseline + ci-nfr-weekly workflow",
+    },
+    {
+      id: "INFRA-SECRETS",
+      passed: secrets.ready,
+      detail:
+        secrets.missing.length > 0
+          ? `Missing: ${secrets.missing.join(", ")}`
+          : `deploy_env=${secrets.deploy_env}`,
+    },
+    {
+      id: "INFRA-WAF",
+      passed: secrets.deploy_env === "development" || waf.enabled,
+      detail: waf.enabled
+        ? `rate_limit=${waf.rate_limit_per_minute}/min`
+        : "WAF_ENABLED=false (required in staging/production)",
+    },
+    {
+      id: "INFRA-BACKUP-PITR",
+      passed: secrets.deploy_env === "development" || backup.ready,
+      detail: backup.issues.join("; ") || "Backup/PITR configured",
     },
   ];
 

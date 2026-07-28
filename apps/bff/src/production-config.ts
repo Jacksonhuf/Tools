@@ -1,7 +1,9 @@
 import { resolveRuleCompilerDriver } from "./rule-compiler-adapter.js";
+import { resolveDeployEnvironment } from "./deploy-environment.js";
 
 export interface ProductionConfigStatus {
   production_mode: boolean;
+  deploy_env: string;
   database_required: boolean;
   database_configured: boolean;
   auth_driver: string;
@@ -19,7 +21,8 @@ export function isProductionMode(): boolean {
 }
 
 export function evaluateProductionConfig(): ProductionConfigStatus {
-  const production_mode = isProductionMode();
+  const deploy_env = resolveDeployEnvironment();
+  const production_mode = isProductionMode() || deploy_env === "production";
   const database_configured = Boolean(process.env.DATABASE_URL?.trim());
   const auth_driver = (process.env.AUTH_DRIVER ?? "dev").trim().toLowerCase();
   const redis_configured = Boolean(process.env.REDIS_URL?.trim());
@@ -32,30 +35,37 @@ export function evaluateProductionConfig(): ProductionConfigStatus {
     (auth_driver === "dev" || auth_driver === "oidc_stub");
   const issues: string[] = [];
 
-  if (production_mode) {
-    if (!database_configured) {
-      issues.push("DATABASE_URL is required in production mode");
+  if (production_mode || deploy_env === "staging") {
+    if (!database_configured && deploy_env !== "development") {
+      issues.push("DATABASE_URL is required in staging/production");
     }
-    if (auth_driver !== "oidc_jwt" && auth_driver !== "jwt") {
-      issues.push("AUTH_DRIVER must be oidc_jwt in production mode");
-    }
-    if (!process.env.OIDC_JWT_HS256_SECRET?.trim() && !process.env.OIDC_JWKS_URL?.trim() && !process.env.OIDC_JWKS_JSON?.trim()) {
-      issues.push("JWT validation must be configured (HS256 secret or JWKS)");
-    }
-    if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
-      issues.push("SHOP_CREDENTIAL_ENCRYPTION_KEY is required in production mode");
-    }
-    if (resolveRuleCompilerDriver() === "llm_http") {
-      if (!process.env.RULE_COMPILER_LLM_ENDPOINT?.trim()) {
-        issues.push(
-          "RULE_COMPILER_LLM_ENDPOINT is required for llm_http in production"
-        );
+    if (deploy_env === "production" || production_mode) {
+      if (auth_driver !== "oidc_jwt" && auth_driver !== "jwt") {
+        issues.push("AUTH_DRIVER must be oidc_jwt in production mode");
+      }
+      if (!process.env.OIDC_JWT_HS256_SECRET?.trim() && !process.env.OIDC_JWKS_URL?.trim() && !process.env.OIDC_JWKS_JSON?.trim()) {
+        issues.push("JWT validation must be configured (HS256 secret or JWKS)");
+      }
+      if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
+        issues.push("SHOP_CREDENTIAL_ENCRYPTION_KEY is required in production mode");
+      }
+      if (resolveRuleCompilerDriver() === "llm_http") {
+        if (!process.env.RULE_COMPILER_LLM_ENDPOINT?.trim()) {
+          issues.push(
+            "RULE_COMPILER_LLM_ENDPOINT is required for llm_http in production"
+          );
+        }
+      }
+    } else if (deploy_env === "staging") {
+      if (auth_driver === "dev") {
+        issues.push("AUTH_DRIVER should not be dev in staging");
       }
     }
   }
 
   return {
     production_mode,
+    deploy_env,
     database_required: production_mode,
     database_configured,
     auth_driver,

@@ -317,6 +317,11 @@ import { resolveAuthPrincipal } from "./auth-principal.js";
 import { evaluateProductionConfig } from "./production-config.js";
 import { evaluateProductionLlm } from "./production-llm.js";
 import { evaluateGoLiveReadiness } from "./go-live-readiness.js";
+import { getDeployEnvironmentStatus } from "./deploy-environment.js";
+import { evaluateSecretsStatus } from "./secrets-registry.js";
+import { getWafStatus } from "./waf-middleware.js";
+import { evaluateBackupPitrStatus } from "./backup-pitr.js";
+import { createWafMiddleware } from "./waf-middleware.js";
 import { getDebounceStatus } from "./repricing/debounce.js";
 import { assertPrincipalRoles } from "./rbac-middleware.js";
 import { ROLES } from "./rbac.js";
@@ -386,14 +391,21 @@ export function createApp(options: CreateAppOptions = {}) {
   const publishAdapter =
     options.publishAdapter ?? createChannelPublishAdapter();
   const app = new Hono<AppEnv>();
+  const deployStatus = getDeployEnvironmentStatus();
+  const corsOrigins =
+    deployStatus.cors_origins.length > 0
+      ? deployStatus.cors_origins
+      : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
   app.use(
     "*",
     cors({
-      origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+      origin: corsOrigins,
       allowHeaders: ["Authorization", "Content-Type", "X-Tenant-Id", "Accept-Language"],
     })
   );
+
+  app.use("*", createWafMiddleware());
 
   app.use("*", async (c, next) => {
     if (c.req.method === "OPTIONS" || c.req.path === "/health") {
@@ -451,6 +463,10 @@ export function createApp(options: CreateAppOptions = {}) {
       digest_jobs: getDigestJobStoreStatus(),
       rule_compiler: getRuleCompilerStatus(),
       production_llm: evaluateProductionLlm(),
+      deploy: deployStatus,
+      secrets: evaluateSecretsStatus(),
+      waf: getWafStatus(),
+      backup_pitr: evaluateBackupPitrStatus(),
       generated_at: new Date().toISOString(),
     })
   );
@@ -1407,6 +1423,10 @@ export function createApp(options: CreateAppOptions = {}) {
     }
     return c.json(validateVersionBackupSnapshot(body.snapshot));
   });
+
+  app.get("/api/v1/ops/backup/status", (c) =>
+    c.json(evaluateBackupPitrStatus())
+  );
 
   app.get("/api/v1/fx-rates", async (c) => {
     const tenantId = c.get("tenantId");
