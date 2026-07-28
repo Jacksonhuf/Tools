@@ -65,6 +65,9 @@ import {
   downloadLatestCostSheetCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertsDirectCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadListingSyncJobsForListingCsv,
   downloadLatestListingSyncJobCsv,
   downloadFirstWorkerHeartbeatCsv,
   downloadFirstChannelSandboxEventCsv,
@@ -895,6 +898,39 @@ export function CopilotPage() {
             }
           >
             {t("copilotReconciliationAlertExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-reconciliation-direct-export"
+            onClick={() =>
+              void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+                setMessage(t("copilotReconciliationDirectExportDone"))
+              )
+            }
+          >
+            {t("copilotReconciliationDirectExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-sync-ops-export"
+            onClick={() =>
+              void downloadListingSyncOpsStatusCsv(locale).then(() =>
+                setMessage(t("copilotListingSyncOpsExportDone"))
+              )
+            }
+          >
+            {t("copilotListingSyncOpsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-listing-sync-amz-export"
+            onClick={() =>
+              void downloadListingSyncJobsForListingCsv(
+                locale,
+                "listing-amz-001"
+              ).then(() => setMessage(t("copilotListingSyncAmzExportDone")))}
+          >
+            {t("copilotListingSyncAmzExportCsv")}
           </button>
           <button
             type="button"

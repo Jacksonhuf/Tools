@@ -46,6 +46,10 @@ import {
   downloadLatestCostSheetCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertsDirectCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadListingSyncJobsForListingCsv,
+  downloadAgentToolsCsv,
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
@@ -497,6 +501,50 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessReconciliationAlertExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-reconciliation-direct-export"
+            onClick={() =>
+              void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+                setMessage(t("readinessReconciliationDirectExportDone"))
+              )
+            }
+          >
+            {t("readinessReconciliationDirectExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-sync-ops-export"
+            onClick={() =>
+              void downloadListingSyncOpsStatusCsv(locale).then(() =>
+                setMessage(t("readinessListingSyncOpsExportDone"))
+              )
+            }
+          >
+            {t("readinessListingSyncOpsExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-listing-sync-amz-export"
+            onClick={() =>
+              void downloadListingSyncJobsForListingCsv(
+                locale,
+                "listing-amz-001"
+              ).then(() => setMessage(t("readinessListingSyncAmzExportDone")))}
+          >
+            {t("readinessListingSyncAmzExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-agent-tools-export"
+            onClick={() =>
+              void downloadAgentToolsCsv(locale).then(() =>
+                setMessage(t("readinessAgentToolsExportDone"))
+              )
+            }
+          >
+            {t("readinessAgentToolsExportCsv")}
           </button>
           <button
             type="button"

@@ -19,6 +19,7 @@ import {
   fetchListingSyncJobs,
   fetchListingSyncOpsStatus,
   downloadListingSyncJobsCsv,
+  downloadListingSyncJobsForListingCsv,
   downloadListingSyncJobCsv,
   downloadListingSyncOpsStatusCsv,
   downloadListingSyncScheduleCsv,
@@ -1054,6 +1055,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsListingSyncStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-amz-export"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-amz-001"
+            ).then(() => setMessage(t("opsListingSyncAmzExportDone")))}
+        >
+          {t("opsListingSyncAmzExportCsv")}
         </button>
         <button
           type="button"

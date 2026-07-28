@@ -28,6 +28,10 @@ import {
   downloadFxRateCsv,
   downloadFirstCompetitorOfferCsv,
   downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertsDirectCsv,
+  downloadListingSyncOpsStatusCsv,
+  downloadListingSyncJobsForListingCsv,
+  downloadAgentToolsCsv,
   downloadLatestListingSyncJobCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadFirstWorkerHeartbeatCsv,
@@ -476,6 +480,50 @@ export function PricingPage() {
           }
         >
           {t("pricingReconciliationAlertExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-reconciliation-direct-export"
+          onClick={() =>
+            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+              setMessage(t("pricingReconciliationDirectExportDone"))
+            )
+          }
+        >
+          {t("pricingReconciliationDirectExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-listing-sync-ops-export"
+          onClick={() =>
+            void downloadListingSyncOpsStatusCsv(locale).then(() =>
+              setMessage(t("pricingListingSyncOpsExportDone"))
+            )
+          }
+        >
+          {t("pricingListingSyncOpsExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-listing-sync-amz-export"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-amz-001"
+            ).then(() => setMessage(t("pricingListingSyncAmzExportDone")))}
+        >
+          {t("pricingListingSyncAmzExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-agent-tools-export"
+          onClick={() =>
+            void downloadAgentToolsCsv(locale).then(() =>
+              setMessage(t("pricingAgentToolsExportDone"))
+            )
+          }
+        >
+          {t("pricingAgentToolsExportCsv")}
         </button>
         <button
           type="button"
