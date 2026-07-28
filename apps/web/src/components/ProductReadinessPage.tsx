@@ -34,6 +34,9 @@ import {
   downloadCategoryRuleTemplateCsv,
   createCopilotSession,
   downloadCopilotSessionCsv,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadShopCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -331,6 +334,39 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessCopilotSessionExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-price-version-export"
+            onClick={() =>
+              void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+                .then(() => setMessage(t("readinessPriceVersionExportDone")))
+                .catch(() => setMessage(t("readinessPriceVersionExportEmpty")))
+            }
+          >
+            {t("readinessPriceVersionExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-version-backup-csv"
+            onClick={() =>
+              void downloadVersionBackupCsv(locale).then(() =>
+                setMessage(t("readinessVersionBackupCsvDone"))
+              )
+            }
+          >
+            {t("readinessVersionBackupCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-shop-export"
+            onClick={() =>
+              void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+                setMessage(t("readinessShopExportDone"))
+              )
+            }
+          >
+            {t("readinessShopExportCsv")}
           </button>
           <button
             type="button"

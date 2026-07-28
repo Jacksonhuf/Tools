@@ -36,6 +36,9 @@ import {
   downloadCategoryRuleTemplateCsv,
   createCopilotSession,
   downloadCopilotSessionCsv,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadP5ReadinessCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -529,6 +532,39 @@ export function ChannelsPage() {
           }
         >
           {t("channelsCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-price-version-export"
+          onClick={() =>
+            void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("channelsPriceVersionExportDone")))
+              .catch(() => setMessage(t("channelsPriceVersionExportEmpty")))
+          }
+        >
+          {t("channelsPriceVersionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("channelsVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("channelsVersionBackupCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("channelsP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("channelsP5ReadinessExportCsv")}
         </button>
       </div>
 

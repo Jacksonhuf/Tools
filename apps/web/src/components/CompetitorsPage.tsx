@@ -44,6 +44,10 @@ import {
   downloadCategoryRuleTemplateCsv,
   createCopilotSession,
   downloadCopilotSessionCsv,
+  downloadLatestQueuePriceVersionCsv,
+  downloadVersionBackupCsv,
+  downloadP5ReadinessCsv,
+  downloadShopCsv,
   fetchIngestStatus,
   fetchDynamicRule,
   unfreezeDynamicRule,
@@ -526,6 +530,50 @@ export function CompetitorsPage() {
           }
         >
           {t("competitorCopilotSessionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-price-version-export"
+          onClick={() =>
+            void downloadLatestQueuePriceVersionCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("competitorPriceVersionExportDone")))
+              .catch(() => setMessage(t("competitorPriceVersionExportEmpty")))
+          }
+        >
+          {t("competitorPriceVersionExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("competitorVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("competitorVersionBackupCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-p5-readiness-export"
+          onClick={() =>
+            void downloadP5ReadinessCsv(locale).then(() =>
+              setMessage(t("competitorP5ReadinessExportDone"))
+            )
+          }
+        >
+          {t("competitorP5ReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="competitor-shop-export"
+          onClick={() =>
+            void downloadShopCsv(locale, "shop-ml-demo").then(() =>
+              setMessage(t("competitorShopExportDone"))
+            )
+          }
+        >
+          {t("competitorShopExportCsv")}
         </button>
         <button
           type="button"

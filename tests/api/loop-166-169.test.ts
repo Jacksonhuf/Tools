@@ -73,4 +73,37 @@ describe("export store kinds (Loop 166-169)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports version_backup_rows_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "version_backup_rows_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports p5_readiness_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "p5_readiness_csv" }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports shop_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "shop_csv",
+        shop_id: "shop-ml-demo",
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });
