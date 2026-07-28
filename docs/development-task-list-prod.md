@@ -4,7 +4,7 @@
 |------|------|
 | 关联 PRD | [PRD-mexico-cross-border-pricing.md](./PRD-mexico-cross-border-pricing.md) |
 | 基线 | [development-task-list.md](./development-task-list.md) v1.1（MVP） |
-| 状态 | Wave 1–5 已交付；Wave 6 本批 |
+| 状态 | Wave 1–6 已交付；Wave 7–8 本批 |
 
 ## 本批已交付（Prod Wave 1–3）
 
@@ -46,13 +46,22 @@
 | P0-E1-04g | Digest job queue PG 仓储（`digest_jobs`） | ✅ |
 | X-01 | `GET /production/readiness` 暴露 cost/fx/tariff/digest 驱动 | ✅ |
 
+## 本批已交付（Prod Wave 7–8）
+
+| ID | Task | 状态 |
+|----|------|------|
+| P4-E1-06 | 生产 LLM：`llm_http` 生产门禁 + `RULE_COMPILER_PRODUCTION_NO_FALLBACK` | ✅ |
+| P5-06 / TC-NFR-PERF-001 | k6 基线脚本 + Node load baseline + `ci-nfr-weekly` 扩展 | ✅ |
+| X-03 | 双周 `ci-security-scan` + 渗透清单 + 密钥模式扫描 | ✅ |
+| TC-NFR-SEC-003 | 日志脱敏 `sanitizeForLog` + 自动化测试 | ✅ |
+| GL-* | `GET /production/go-live` + `docs/go-live-checklist.md` | ✅ |
+
 ## 下一批（待开发）
 
 | 波次 | 关键 Task |
 |------|-----------|
 | Wave 0 | staging/prod 环境、Secrets、WAF、备份 PITR |
 | Wave 2 | SKU/Cost Web 生产化、审批 RBAC 分角色 |
-| Wave 7–8 | 生产 LLM、NFR k6 基线、安全扫描 X-03、上线 GL-* |
 
 完整 153 项规划见 Cloud Agent 会话记录（2026-07-28）。
 
@@ -68,7 +77,10 @@ REDIS_URL=redis://...
 CHANNEL_ADAPTER_DRIVER=live
 CHANNEL_LIVE_ACKNOWLEDGED=true
 ML_CLIENT_ID=... ML_CLIENT_SECRET=...
-AMAZON_LWA_APP_ID=... AMAZON_LWA_CLIENT_SECRET=...
+RULE_COMPILER_DRIVER=llm_http
+RULE_COMPILER_LLM_ENDPOINT=https://...
+RULE_COMPILER_LLM_API_KEY=...
+RULE_COMPILER_PRODUCTION_NO_FALLBACK=true
 ```
 
 ## 门禁

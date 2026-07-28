@@ -1,8 +1,10 @@
+import { isProductionMode } from "./production-config.js";
 import {
   compileNaturalLanguageToRuleDraft,
   type DynamicRuleDraft,
 } from "./rule-compiler.js";
 import { fetchRuleDraftFromLlmEndpoint } from "./llm-rule-compiler-client.js";
+import { isProductionLlmNoFallback } from "./production-llm.js";
 
 export type RuleCompilerDriver = "heuristic" | "llm_stub" | "llm_http";
 
@@ -32,6 +34,7 @@ export function getRuleCompilerStatus() {
     driver,
     llm_endpoint_configured: Boolean(endpoint),
     llm_model: process.env.RULE_COMPILER_LLM_MODEL?.trim() || null,
+    production_no_fallback: isProductionLlmNoFallback(),
     ready:
       driver === "heuristic" ||
       driver === "llm_stub" ||
@@ -94,7 +97,10 @@ export async function compileRuleViaAdapter(
         explanation: remote.explanation,
         compiler: { driver, model, stub: false },
       };
-    } catch {
+    } catch (e) {
+      if (isProductionLlmNoFallback()) {
+        throw e;
+      }
       const fallback = heuristicResult(
         text,
         locale,

@@ -315,6 +315,8 @@ import {
 import { getAuthStatus, resolveAuthDriver } from "./auth.js";
 import { resolveAuthPrincipal } from "./auth-principal.js";
 import { evaluateProductionConfig } from "./production-config.js";
+import { evaluateProductionLlm } from "./production-llm.js";
+import { evaluateGoLiveReadiness } from "./go-live-readiness.js";
 import { getDebounceStatus } from "./repricing/debounce.js";
 import { assertPrincipalRoles } from "./rbac-middleware.js";
 import { ROLES } from "./rbac.js";
@@ -447,8 +449,14 @@ export function createApp(options: CreateAppOptions = {}) {
       fx_rate: getFxRateStoreStatus(),
       tariff_hs: getTariffHsStoreStatus(),
       digest_jobs: getDigestJobStoreStatus(),
+      rule_compiler: getRuleCompilerStatus(),
+      production_llm: evaluateProductionLlm(),
       generated_at: new Date().toISOString(),
     })
+  );
+
+  app.get("/api/v1/production/go-live", (c) =>
+    c.json(evaluateGoLiveReadiness())
   );
 
   app.get("/api/v1/auth/status/export", async (c) => {

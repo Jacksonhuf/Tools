@@ -1,5 +1,6 @@
 import type { SalesChannel } from "@mx-pricing/channel-adapters";
 import type { ShopRepository } from "./repositories/shop-index.js";
+import { sanitizeForLog } from "./log-redaction.js";
 
 interface TokenResponse {
   access_token: string;
@@ -95,7 +96,7 @@ export async function completeOAuthWithCode(
     }
     return { shop_id: updated.id, auth_status: updated.auth_status };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "OAUTH_FAILED";
-    return { error: msg };
+    const msg = sanitizeForLog(e);
+    return { error: msg.includes("OAUTH") ? msg : "OAUTH_FAILED" };
   }
 }

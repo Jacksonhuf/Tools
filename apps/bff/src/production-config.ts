@@ -1,3 +1,5 @@
+import { resolveRuleCompilerDriver } from "./rule-compiler-adapter.js";
+
 export interface ProductionConfigStatus {
   production_mode: boolean;
   database_required: boolean;
@@ -42,6 +44,13 @@ export function evaluateProductionConfig(): ProductionConfigStatus {
     }
     if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
       issues.push("SHOP_CREDENTIAL_ENCRYPTION_KEY is required in production mode");
+    }
+    if (resolveRuleCompilerDriver() === "llm_http") {
+      if (!process.env.RULE_COMPILER_LLM_ENDPOINT?.trim()) {
+        issues.push(
+          "RULE_COMPILER_LLM_ENDPOINT is required for llm_http in production"
+        );
+      }
     }
   }
 
