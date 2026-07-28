@@ -78,7 +78,7 @@ After staging is green:
 
 1. Configure [config/env.production.example](../config/env.production.example) in your secret manager
 2. Run `npm run secrets:validate` with `DEPLOY_ENV=production`
-3. Deploy via [scripts/vercel-deploy.sh](../scripts/vercel-deploy.sh) or your platform
+3. Deploy via [vercel-production-deploy.md](./vercel-production-deploy.md) (`npm run deploy:vercel:prod`)
 4. Verify [go-live-checklist.md](./go-live-checklist.md) gates
 
 ## Related docs

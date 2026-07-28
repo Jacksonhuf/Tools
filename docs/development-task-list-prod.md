@@ -84,12 +84,14 @@
 | OPS-02 | `scripts/staging/smoke.mjs` — readiness/go-live/auth/pricing HTTP smoke | ✅ |
 | OPS-03 | `tests/int/staging-smoke.test.ts` + `ci-staging-smoke.yml` | ✅ |
 | OPS-04 | `docs/staging-deploy-runbook.md` | ✅ |
+| OPS-05 | Vercel 生产部署文档 + `vercel:check-env` + `config/vercel.env.production.example` | ✅ |
+| OPS-06 | `scripts/git/cleanup-merged-branches.sh` | ✅ |
 
 ## 下一批（待开发）
 
 _生产平台主线（Wave 0–8 + Wave 2）与 Post-Merge Staging Ops 已闭环。_
 
-下一优先级：在目标环境配置 secrets 并执行 Vercel/生产 cutover（见 [staging-deploy-runbook.md](./staging-deploy-runbook.md)）。
+下一优先级：在 Vercel 配置生产环境变量并 cutover（见 [vercel-production-deploy.md](./vercel-production-deploy.md)）。
 
 ## 生产环境变量速查
 
