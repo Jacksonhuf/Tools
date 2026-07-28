@@ -76,11 +76,22 @@
 | P0-E1-03d | RBAC 分角色：cost/SKU 写、审批、渠道发布 | ✅ |
 | P0-E1-03e | Web 按角色隐藏审批/写价按钮 | ✅ |
 
+## 本批已交付（Post-Merge Ops）
+
+| ID | Task | 状态 |
+|----|------|------|
+| OPS-01 | `scripts/staging/bootstrap.mjs` — compose + migrate + secrets | ✅ |
+| OPS-02 | `scripts/staging/smoke.mjs` — readiness/go-live/auth/pricing HTTP smoke | ✅ |
+| OPS-03 | `tests/int/staging-smoke.test.ts` + `ci-staging-smoke.yml` | ✅ |
+| OPS-04 | `docs/staging-deploy-runbook.md` | ✅ |
+| OPS-05 | Vercel 生产部署文档 + `vercel:check-env` + `config/vercel.env.production.example` | ✅ |
+| OPS-06 | `scripts/git/cleanup-merged-branches.sh` | ✅ |
+
 ## 下一批（待开发）
 
-_生产平台主线（Wave 0–8 + Wave 2）已闭环。_
+_生产平台主线（Wave 0–8 + Wave 2）与 Post-Merge Staging Ops 已闭环。_
 
-完整 153 项规划见 Cloud Agent 会话记录（2026-07-28）。
+下一优先级：在 Vercel 配置生产环境变量并 cutover（见 [vercel-production-deploy.md](./vercel-production-deploy.md)）。
 
 ## 生产环境变量速查
 

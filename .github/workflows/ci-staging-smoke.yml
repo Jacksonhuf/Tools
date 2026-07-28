@@ -1,0 +1,58 @@
+name: ci-staging-smoke
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  staging-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mx
+          POSTGRES_PASSWORD: mx_staging_secret
+          POSTGRES_DB: mx_pricing_staging
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U mx -d mx_pricing_staging"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      RUN_STAGING_SMOKE: "1"
+      DEPLOY_ENV: staging
+      AUTH_DRIVER: oidc_jwt
+      OIDC_JWT_HS256_SECRET: change-me-staging-jwt-secret
+      SHOP_CREDENTIAL_ENCRYPTION_KEY: change-me-staging-shop-key-32chars!!
+      DATABASE_URL: postgresql://mx:mx_staging_secret@localhost:5433/mx_pricing_staging
+      REDIS_URL: redis://localhost:6380
+      WAF_ENABLED: "true"
+      BACKUP_ENABLED: "true"
+      PITR_ENABLED: "true"
+      STAGING_PG_HOST: localhost
+      STAGING_PG_PORT: "5433"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Bootstrap staging (migrations + secrets)
+        run: node scripts/staging/bootstrap.mjs --skip-docker
+      - name: Staging profile integration smoke
+        run: npx vitest run tests/int/staging-smoke.test.ts
