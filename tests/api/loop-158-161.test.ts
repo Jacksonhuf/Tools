@@ -53,7 +53,7 @@ describe("reconciliation alerts report export (Loop 161)", () => {
   });
 });
 
-describe("export store kinds (Loop 158-160)", () => {
+describe("export store kinds (Loop 158-161)", () => {
   it("POST /exports repricing_queue_sku_csv", async () => {
     const { app } = createTestApp();
     const post = await app.request("/api/v1/exports", {
@@ -90,6 +90,16 @@ describe("export store kinds (Loop 158-160)", () => {
         kind: "sku_category_rule_template_csv",
         sku_id: "demo-sku-001",
       }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports reconciliation_alerts_csv", async () => {
+    const { app } = createTestApp();
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ kind: "reconciliation_alerts_csv" }),
     });
     expect(post.status).toBe(200);
   });

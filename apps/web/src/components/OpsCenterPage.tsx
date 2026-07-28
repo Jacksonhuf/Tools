@@ -65,6 +65,7 @@ import {
   downloadCrossChannelGuardCsv,
   downloadDigestScheduleCsv,
   downloadDynamicRepricingRuleCsv,
+  downloadSkuCategoryRuleTemplateCsv,
   promoteRepricingToPending,
   reconcileListing,
   type OpsMetricsSnapshot,
@@ -403,6 +404,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsDynamicRepricingRuleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-sku-category-template-export"
+          onClick={() =>
+            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+              setMessage(t("opsSkuCategoryRuleTemplateExportDone"))
+            )
+          }
+        >
+          {t("opsSkuCategoryRuleTemplateExportCsv")}
         </button>
       </div>
 
