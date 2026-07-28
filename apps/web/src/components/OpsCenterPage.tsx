@@ -54,6 +54,7 @@ import {
   downloadAgentToolsCsv,
   downloadAgentReadinessCsv,
   downloadProductReadinessCsv,
+  downloadCompetitorAnchorCsv,
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
   downloadDigestQueuedJobsSummaryCsv,
@@ -327,6 +328,17 @@ export function OpsCenterPage() {
           }
         >
           {t("opsProductReadinessExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-competitor-anchor-export"
+          onClick={() =>
+            void downloadCompetitorAnchorCsv(locale, "listing-ml-001").then(() =>
+              setMessage(t("opsCompetitorAnchorExportDone"))
+            )
+          }
+        >
+          {t("opsCompetitorAnchorExportCsv")}
         </button>
         <button
           type="button"
