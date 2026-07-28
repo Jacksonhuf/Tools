@@ -7,8 +7,8 @@ const TENANT = { "X-Tenant-Id": "tenant-demo" };
 const JSON_HEADERS = { ...AUTH, ...TENANT, "Content-Type": "application/json" };
 
 describe("TC-INT-CH-007 publish idempotency_key", () => {
-  beforeEach(() => {
-    resetPublishIdempotencyForTests();
+  beforeEach(async () => {
+    await resetPublishIdempotencyForTests();
   });
 
   it("replays stored outcome without second adapter call", async () => {

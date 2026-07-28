@@ -24,11 +24,8 @@ import {
   buildAdjustmentBatchInput,
   previewAdjustmentBatch,
 } from "./adjustment-service.js";
-import {
-  completeOAuthMock,
-  shopPublicView,
-  startOAuth,
-} from "./channel-oauth.js";
+import { completeOAuthMock, shopPublicView, startOAuth } from "./channel-oauth.js";
+import { completeOAuthWithCode } from "./channel-oauth-exchange.js";
 import {
   MockChannelListingAdapter,
   MockChannelPublishAdapter,
@@ -307,7 +304,10 @@ import {
   getAgentToolAuditRepository,
   MemoryAgentToolAuditRepository,
 } from "./repositories/agent-audit-index.js";
-import { getAuthStatus, validateBearerTokenAsync } from "./auth.js";
+import { getAuthStatus, resolveAuthDriver } from "./auth.js";
+import { resolveAuthPrincipal } from "./auth-principal.js";
+import { evaluateProductionConfig } from "./production-config.js";
+import { getDebounceStatus } from "./repricing/debounce.js";
 import { authStatusToCsv } from "./auth-status-csv.js";
 import { getFeatureFlags, getFeatureFlagValue } from "./feature-flags.js";
 import { featureFlagsToCsv } from "./feature-flags-csv.js";
@@ -332,6 +332,7 @@ export type AppEnv = {
     tenantId: string;
     locale: AppLocale;
     authSubject: string;
+    authRoles: string[];
   };
 };
 
@@ -388,13 +389,16 @@ export function createApp(options: CreateAppOptions = {}) {
       throw new HTTPException(401, { message: "UNAUTHORIZED" });
     }
     const token = auth.slice("Bearer ".length);
-    const result = await validateBearerTokenAsync(token);
+    const headerTenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
+    const driver = resolveAuthDriver();
+    const result = await resolveAuthPrincipal(token, headerTenantId, driver);
     if (!result.ok) {
-      throw new HTTPException(401, { message: result.code });
+      const status = result.code === "TENANT_MISMATCH" ? 403 : 401;
+      throw new HTTPException(status, { message: result.code });
     }
-    const tenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
-    c.set("tenantId", tenantId);
-    c.set("authSubject", result.subject);
+    c.set("tenantId", result.principal.tenantId);
+    c.set("authSubject", result.principal.subject);
+    c.set("authRoles", result.principal.roles);
     c.set("locale", parseAcceptLanguage(c.req.header("Accept-Language")));
     await next();
   });
@@ -407,7 +411,24 @@ export function createApp(options: CreateAppOptions = {}) {
     })
   );
 
-  app.get("/api/v1/auth/status", (c) => c.json(getAuthStatus()));
+  app.get("/api/v1/auth/status", (c) =>
+    c.json({
+      ...getAuthStatus(),
+      production: evaluateProductionConfig(),
+      debounce: getDebounceStatus(),
+    })
+  );
+
+  app.get("/api/v1/production/readiness", (c) =>
+    c.json({
+      production: evaluateProductionConfig(),
+      auth: getAuthStatus(),
+      channels: getChannelAdapterStatus(),
+      debounce: getDebounceStatus(),
+      catalog_driver: catalog.driver,
+      generated_at: new Date().toISOString(),
+    })
+  );
 
   app.get("/api/v1/auth/status/export", async (c) => {
     const exportedAt = new Date().toISOString();
@@ -2990,6 +3011,45 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({
       ...result,
       shop: shop ? shopPublicView(shop) : null,
+    });
+  });
+
+  app.post("/api/v1/shops/:shopId/oauth/callback", async (c) => {
+    const tenantId = c.get("tenantId");
+    const shopId = c.req.param("shopId");
+    const shop = await shops.getShop(tenantId, shopId);
+    if (!shop) {
+      throw new HTTPException(404, { message: "SHOP_NOT_FOUND" });
+    }
+    const body = (await c.req.json().catch(() => ({}))) as {
+      code?: string;
+      state?: string;
+    };
+    if (!body.code?.trim()) {
+      return c.json({ error: "CODE_REQUIRED" }, 400);
+    }
+    const result = await completeOAuthWithCode(
+      shops,
+      tenantId,
+      shopId,
+      shop.channel,
+      body.code.trim(),
+      body.state
+    );
+    if ("error" in result) {
+      const status =
+        result.error === "SHOP_NOT_FOUND"
+          ? 404
+          : result.error.includes("NOT_CONFIGURED")
+            ? 503
+            : 400;
+      return c.json({ error: result.error }, status);
+    }
+    const updated = await shops.getShop(tenantId, shopId);
+    return c.json({
+      ...result,
+      shop: updated ? shopPublicView(updated) : null,
+      mode: "production_oauth",
     });
   });
 

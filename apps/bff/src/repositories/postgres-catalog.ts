@@ -164,10 +164,13 @@ export class PostgresCatalogRepository implements CatalogRepository {
   }
 
   async setVersionChannelPublishStatus(
-    _versionId: string,
-    _status: PriceVersionRecord["channel_publish_status"]
+    versionId: string,
+    status: PriceVersionRecord["channel_publish_status"]
   ): Promise<void> {
-    /* channel_publish_status column not in migration yet — no-op for postgres */
+    await this.pool.query(
+      `UPDATE price_versions SET channel_publish_status = $2 WHERE id::text = $1`,
+      [versionId, status ?? null]
+    );
   }
 
   async countVersions(): Promise<number> {

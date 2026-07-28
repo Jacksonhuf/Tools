@@ -25,7 +25,8 @@
     "dev:bff": "npm run start -w @mx-pricing/bff",
     "dev:channel-gateway": "node tools/channel-gateway-sidecar/server.mjs",
     "repricing-batch:worker": "node tools/repricing-batch-worker/run.mjs",
-    "dev:async-worker": "node tools/async-worker/run.mjs"
+    "dev:async-worker": "node tools/async-worker/run.mjs",
+    "repricing-event:worker": "node tools/repricing-event-worker/run.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

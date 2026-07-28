@@ -12,4 +12,12 @@ export type {
 export { MockChannelPublishAdapter } from "./mock-publish.js";
 export { HttpStubChannelPublishAdapter } from "./http-stub-publish.js";
 export { HttpStubChannelListingAdapter } from "./http-stub-listing.js";
+export {
+  MercadoLibreListingAdapter,
+  MercadoLibrePublishAdapter,
+} from "./mercadolibre-adapter.js";
+export {
+  AmazonMxListingAdapter,
+  AmazonMxPublishAdapter,
+} from "./amazon-sp-api-adapter.js";
 export { parsePublishHttpResponse, parseListingPullHttpResponse } from "./http-response.js";
