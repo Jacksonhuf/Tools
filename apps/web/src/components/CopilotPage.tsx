@@ -62,6 +62,10 @@ import {
   downloadListingCsv,
   downloadTariffHsRateCsv,
   downloadFxRateCsv,
+  downloadLatestCostSheetCsv,
+  downloadFirstCompetitorOfferCsv,
+  downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertCsv,
   downloadShopCsv,
   downloadRepricingBatchJobsSummaryCsv,
   downloadFeatureFlagsCsv,
@@ -839,6 +843,42 @@ export function CopilotPage() {
             }
           >
             {t("copilotFxRateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-cost-sheet-row-export"
+            onClick={() =>
+              void downloadLatestCostSheetCsv(locale, DEMO_SKU)
+                .then(() => setMessage(t("copilotCostSheetRowExportDone")))
+                .catch(() => setMessage(t("copilotCostSheetRowExportEmpty")))
+            }
+          >
+            {t("copilotCostSheetRowExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-competitor-offer-export"
+            onClick={() =>
+              void downloadFirstCompetitorOfferCsv(
+                locale,
+                LISTING_BY_CHANNEL.MERCADO_LIBRE
+              )
+                .then(() => setMessage(t("copilotCompetitorOfferExportDone")))
+                .catch(() => setMessage(t("copilotCompetitorOfferExportEmpty")))
+            }
+          >
+            {t("copilotCompetitorOfferExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="copilot-reconciliation-alert-export"
+            onClick={() =>
+              void downloadFirstReconciliationAlertCsv(locale)
+                .then(() => setMessage(t("copilotReconciliationAlertExportDone")))
+                .catch(() => setMessage(t("copilotReconciliationAlertExportEmpty")))
+            }
+          >
+            {t("copilotReconciliationAlertExportCsv")}
           </button>
           <button
             type="button"

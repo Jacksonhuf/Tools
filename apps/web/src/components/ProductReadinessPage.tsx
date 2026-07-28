@@ -43,6 +43,10 @@ import {
   downloadListingCsv,
   downloadTariffHsRateCsv,
   downloadFxRateCsv,
+  downloadLatestCostSheetCsv,
+  downloadFirstCompetitorOfferCsv,
+  downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertCsv,
   downloadProductReadinessCheckCsv,
   downloadFeatureFlagCsv,
   type FeatureFlagsSnapshot,
@@ -440,6 +444,39 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessFxRateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-cost-sheet-row-export"
+            onClick={() =>
+              void downloadLatestCostSheetCsv(locale, DEMO_SKU)
+                .then(() => setMessage(t("readinessCostSheetRowExportDone")))
+                .catch(() => setMessage(t("readinessCostSheetRowExportEmpty")))
+            }
+          >
+            {t("readinessCostSheetRowExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-competitor-offer-export"
+            onClick={() =>
+              void downloadFirstCompetitorOfferCsv(locale, "listing-ml-001")
+                .then(() => setMessage(t("readinessCompetitorOfferExportDone")))
+                .catch(() => setMessage(t("readinessCompetitorOfferExportEmpty")))
+            }
+          >
+            {t("readinessCompetitorOfferExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="readiness-reconciliation-alert-export"
+            onClick={() =>
+              void downloadFirstReconciliationAlertCsv(locale)
+                .then(() => setMessage(t("readinessReconciliationAlertExportDone")))
+                .catch(() => setMessage(t("readinessReconciliationAlertExportEmpty")))
+            }
+          >
+            {t("readinessReconciliationAlertExportCsv")}
           </button>
           <button
             type="button"

@@ -26,6 +26,9 @@ import {
   downloadListingCsv,
   downloadTariffHsRateCsv,
   downloadFxRateCsv,
+  downloadFirstCompetitorOfferCsv,
+  downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertCsv,
   downloadPricingContextCsv,
   downloadI18nGlossaryCsv,
   downloadI18nGlossaryTermCsv,
@@ -430,6 +433,28 @@ export function PricingPage() {
           }
         >
           {t("pricingFxRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-competitor-offer-export"
+          onClick={() =>
+            void downloadFirstCompetitorOfferCsv(locale, "listing-ml-001")
+              .then(() => setMessage(t("pricingCompetitorOfferExportDone")))
+              .catch(() => setMessage(t("pricingCompetitorOfferExportEmpty")))
+          }
+        >
+          {t("pricingCompetitorOfferExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="pricing-reconciliation-alert-export"
+          onClick={() =>
+            void downloadFirstReconciliationAlertCsv(locale)
+              .then(() => setMessage(t("pricingReconciliationAlertExportDone")))
+              .catch(() => setMessage(t("pricingReconciliationAlertExportEmpty")))
+          }
+        >
+          {t("pricingReconciliationAlertExportCsv")}
         </button>
       </div>
       {crossChannelWarning && (

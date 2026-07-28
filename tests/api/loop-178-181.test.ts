@@ -108,4 +108,65 @@ describe("export store kinds (Loop 178-180)", () => {
     });
     expect(post.status).toBe(200);
   });
+
+  it("POST /exports competitor_offer_csv", async () => {
+    const { app } = createTestApp();
+    const create = await app.request(
+      "/api/v1/listings/listing-ml-001/competitors",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ external_ref: "MLM-OFFER-EXPORT-179" }),
+      }
+    );
+    expect(create.status).toBe(201);
+    const { id } = (await create.json()) as { id: string };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "competitor_offer_csv",
+        offer_id: id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
+
+  it("POST /exports reconciliation_alert_csv", async () => {
+    const { app, catalog, listingAdapter, reconciliationAlerts } =
+      createTestApp();
+    reconciliationAlerts.resetForTests?.();
+    catalog.resetForTests?.();
+    await catalog.createVersion({
+      tenant_id: "tenant-demo",
+      sku_id: "demo-sku-001",
+      channel: "MERCADO_LIBRE",
+      state: "active",
+      publish_price_mxn: 100,
+    });
+    await app.request("/api/v1/shops/shop-ml-demo/oauth/mock-complete", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({}),
+    });
+    listingAdapter.priceByRef.set("MLM123456", 108);
+    const recon = await app.request(
+      "/api/v1/listings/listing-ml-001/reconcile",
+      {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ external_ref: "MLM123456" }),
+      }
+    );
+    const { alert_id } = (await recon.json()) as { alert_id: string };
+    const post = await app.request("/api/v1/exports", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({
+        kind: "reconciliation_alert_csv",
+        alert_id,
+      }),
+    });
+    expect(post.status).toBe(200);
+  });
 });

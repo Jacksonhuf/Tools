@@ -46,6 +46,10 @@ import {
   downloadSkuCatalogCsv,
   downloadTariffHsRateCsv,
   downloadFxRateCsv,
+  downloadLatestCostSheetCsv,
+  downloadFirstCompetitorOfferCsv,
+  downloadFirstReconciliationAlertCsv,
+  downloadReconciliationAlertCsv,
   fetchChannelSandboxStatus,
   fetchShops,
   mockCompleteShopOAuth,
@@ -650,6 +654,42 @@ export function ChannelsPage() {
           }
         >
           {t("channelsFxRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-cost-sheet-row-export"
+          onClick={() =>
+            void downloadLatestCostSheetCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("channelsCostSheetRowExportDone")))
+              .catch(() => setMessage(t("channelsCostSheetRowExportEmpty")))
+          }
+        >
+          {t("channelsCostSheetRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-competitor-offer-export"
+          onClick={() =>
+            void downloadFirstCompetitorOfferCsv(
+              locale,
+              SHOP_LISTING_ID["shop-ml-demo"]
+            )
+              .then(() => setMessage(t("channelsCompetitorOfferExportDone")))
+              .catch(() => setMessage(t("channelsCompetitorOfferExportEmpty")))
+          }
+        >
+          {t("channelsCompetitorOfferExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="channels-reconciliation-alert-export"
+          onClick={() =>
+            void downloadFirstReconciliationAlertCsv(locale)
+              .then(() => setMessage(t("channelsReconciliationAlertExportDone")))
+              .catch(() => setMessage(t("channelsReconciliationAlertExportEmpty")))
+          }
+        >
+          {t("channelsReconciliationAlertExportCsv")}
         </button>
       </div>
 

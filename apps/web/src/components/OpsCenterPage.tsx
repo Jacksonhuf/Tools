@@ -77,6 +77,8 @@ import {
   downloadTenantSharedFeeTemplatesCsv,
   downloadSkuCatalogCsv,
   downloadListingCsv,
+  downloadLatestCostSheetCsv,
+  downloadFirstCompetitorOfferCsv,
   downloadShopCsv,
   promoteRepricingToPending,
   reconcileListing,
@@ -555,6 +557,28 @@ export function OpsCenterPage() {
           }
         >
           {t("opsListingExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-cost-sheet-row-export"
+          onClick={() =>
+            void downloadLatestCostSheetCsv(locale, DEMO_SKU)
+              .then(() => setMessage(t("opsCostSheetRowExportDone")))
+              .catch(() => setMessage(t("opsCostSheetRowExportEmpty")))
+          }
+        >
+          {t("opsCostSheetRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-competitor-offer-export"
+          onClick={() =>
+            void downloadFirstCompetitorOfferCsv(locale, DEMO_LISTINGS[0])
+              .then(() => setMessage(t("opsCompetitorOfferExportDone")))
+              .catch(() => setMessage(t("opsCompetitorOfferExportEmpty")))
+          }
+        >
+          {t("opsCompetitorOfferExportCsv")}
         </button>
       </div>
 

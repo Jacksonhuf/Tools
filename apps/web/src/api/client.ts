@@ -1775,6 +1775,41 @@ export async function downloadCostSheetCsv(
   URL.revokeObjectURL(url);
 }
 
+export async function downloadLatestCostSheetCsv(
+  locale: string,
+  skuId = DEMO_SKU
+): Promise<void> {
+  const { items } = await fetchCostSheets(locale, skuId);
+  const sheetId = items[0]?.id;
+  if (!sheetId) {
+    throw new Error("COST_SHEET_EMPTY");
+  }
+  await downloadCostSheetCsv(locale, skuId, sheetId);
+}
+
+export async function downloadFirstCompetitorOfferCsv(
+  locale: string,
+  listingId: string
+): Promise<void> {
+  const { items } = await fetchCompetitorOffers(locale, listingId);
+  const offerId = items[0]?.id;
+  if (!offerId) {
+    throw new Error("COMPETITOR_OFFER_EMPTY");
+  }
+  await downloadCompetitorOfferCsv(locale, offerId);
+}
+
+export async function downloadFirstReconciliationAlertCsv(
+  locale: string
+): Promise<void> {
+  const { items } = await fetchReconciliationAlerts(locale);
+  const alertId = items[0]?.id;
+  if (!alertId) {
+    throw new Error("RECONCILIATION_ALERT_EMPTY");
+  }
+  await downloadReconciliationAlertCsv(locale, alertId);
+}
+
 export async function fetchRepricingBatchJobsSummary(locale: string) {
   const res = await fetch(`/api/v1/repricing-batch/jobs/summary`, {
     headers: headers(locale),
