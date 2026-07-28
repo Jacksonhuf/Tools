@@ -2631,3 +2631,4 @@ Demo：`GET /api/v1/skus/demo-sku-001/pricing-context` + `X-Tenant-Id: tenant-de
 | v7.46 | 2026-07-28 | Loop 318–321 补全 Loop 166–169 version/backup/p5/shop Web 与 export POST 测 |
 | v7.47 | 2026-07-28 | Loop 322–325 补全 Loop 170–173 p3/p4/fee-template/tenant-fee Web 与 export POST 测 |
 | v7.48 | 2026-07-28 | Loop 326–329 补全 Loop 174–177 sku/listing/tariff/fx Web 与 export POST 测 |
+| v7.49 | 2026-07-28 | Prod Wave 1–3：生产启动校验、JWT/RBAC、Redis 去抖、ML/Amazon 适配器、OAuth callback、PG idempotency、repricing-event-worker |
