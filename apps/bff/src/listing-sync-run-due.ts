@@ -8,10 +8,9 @@ import {
   markListingSyncScheduleRan,
 } from "./listing-sync-schedule.js";
 
-export const DEFAULT_LISTING_SYNC_REFS: Record<string, string> = {
-  "listing-ml-001": "MLM123456",
-  "listing-amz-001": "B0TEST123",
-};
+import { LISTING_CHANNEL_EXTERNAL_REFS } from "./listing-channel-refs.js";
+
+export const DEFAULT_LISTING_SYNC_REFS = LISTING_CHANNEL_EXTERNAL_REFS;
 
 export type ListingSyncDueRun = {
   listing_id: string;

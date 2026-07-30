@@ -9,6 +9,7 @@ import {
   getStoredPublishOutcome,
   storePublishOutcome,
 } from "./publish-idempotency-store.js";
+import { resolveListingExternalRef } from "./listing-channel-refs.js";
 import {
   isChannelSandboxEnabled,
   recordChannelSandboxEvent,
@@ -128,6 +129,7 @@ export async function publishListingPrice(
   }
 
   const priceMxn = price as number;
+  const externalRef = resolveListingExternalRef(listingId);
   const shopRef = {
     shop_id: shopId,
     channel,
@@ -137,7 +139,7 @@ export async function publishListingPrice(
 
   let result = await publisher.publishPrice({
     shop: shopRef,
-    external_ref: listingId,
+    external_ref: externalRef,
     price_mxn: priceMxn,
   });
 
@@ -151,7 +153,7 @@ export async function publishListingPrice(
     if (adjusted !== priceMxn) {
       result = await publisher.publishPrice({
         shop: shopRef,
-        external_ref: listingId,
+        external_ref: externalRef,
         price_mxn: adjusted,
       });
       retried = true;

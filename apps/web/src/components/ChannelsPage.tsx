@@ -359,6 +359,21 @@ export function ChannelsPage() {
                   : t("channelAdapterNotConfigured")}
               </dd>
             </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("channelLivePublish")}</dt>
+              <dd className="m-0 font-medium">
+                <Badge
+                  variant={statusBadgeVariant(
+                    adapterStatus.live_publish_armed ? "connected" : "disconnected"
+                  )}
+                  data-testid="channel-live-publish-armed"
+                >
+                  {adapterStatus.live_publish_armed
+                    ? t("channelLivePublishArmed")
+                    : t("channelLivePublishPending")}
+                </Badge>
+              </dd>
+            </div>
           </dl>
           <Button
             type="button"

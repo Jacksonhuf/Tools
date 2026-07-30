@@ -1,5 +1,6 @@
 import { resolveRuleCompilerDriver } from "./rule-compiler-adapter.js";
 import { resolveDeployEnvironment } from "./deploy-environment.js";
+import { isChannelLivePublishArmed } from "./channel-adapter-factory.js";
 
 export interface ProductionConfigStatus {
   production_mode: boolean;
@@ -48,6 +49,11 @@ export function evaluateProductionConfig(): ProductionConfigStatus {
       }
       if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
         issues.push("SHOP_CREDENTIAL_ENCRYPTION_KEY is required in production mode");
+      }
+      if (!isChannelLivePublishArmed()) {
+        issues.push(
+          "CHANNEL_LIVE_ACKNOWLEDGED should be set for production channel publish (auto driver)"
+        );
       }
       if (resolveRuleCompilerDriver() === "llm_http") {
         if (!process.env.RULE_COMPILER_LLM_ENDPOINT?.trim()) {
