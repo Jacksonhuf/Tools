@@ -11,6 +11,7 @@ import { CrossChannelDashboardPage } from "./components/CrossChannelDashboardPag
 import { PolicyConfigPage } from "./components/PolicyConfigPage";
 import { SkuCostPage } from "./components/SkuCostPage";
 import { AuthProvider } from "./auth/AuthProvider";
+import { AppShell, type NavItem } from "./ui";
 
 type Tab =
   | "pricing"
@@ -24,129 +25,71 @@ type Tab =
   | "readiness"
   | "policy";
 
+const NAV: Array<{ id: Tab; labelKey: string; testId: string }> = [
+  { id: "pricing", labelKey: "navPricing", testId: "nav-pricing" },
+  { id: "skuCost", labelKey: "navSkuCost", testId: "nav-sku-cost" },
+  { id: "adjustments", labelKey: "navAdjustments", testId: "nav-adjustments" },
+  { id: "channels", labelKey: "navChannels", testId: "nav-channels" },
+  { id: "competitors", labelKey: "navCompetitors", testId: "nav-competitors" },
+  { id: "crossChannel", labelKey: "navCrossChannel", testId: "nav-cross-channel" },
+  { id: "ops", labelKey: "navOps", testId: "nav-ops" },
+  { id: "copilot", labelKey: "navCopilot", testId: "nav-copilot" },
+  { id: "readiness", labelKey: "navReadiness", testId: "nav-readiness" },
+  { id: "policy", labelKey: "navPolicy", testId: "nav-policy" },
+];
+
 export function App() {
   const { t, i18n } = useTranslation();
   const [tab, setTab] = useState<Tab>("pricing");
 
+  const navItems: NavItem[] = NAV.map((n) => ({
+    id: n.id,
+    label: t(n.labelKey),
+    testId: n.testId,
+  }));
+
   return (
     <AuthProvider locale={i18n.language}>
-    <div data-testid="app-shell">
-      <header className="header">
-        <h1>{t("appTitle")}</h1>
-        <select
-          aria-label="language"
-          value={i18n.language}
-          onChange={(e) => void i18n.changeLanguage(e.target.value)}
-        >
-          <option value="zh-CN">中文</option>
-          <option value="en">English</option>
-          <option value="es-MX">Español (MX)</option>
-        </select>
-      </header>
-      <nav className="subnav">
-        <button
-          type="button"
-          className={tab === "pricing" ? "active" : ""}
-          onClick={() => setTab("pricing")}
-          data-testid="nav-pricing"
-        >
-          {t("navPricing")}
-        </button>
-        <button
-          type="button"
-          className={tab === "skuCost" ? "active" : ""}
-          onClick={() => setTab("skuCost")}
-          data-testid="nav-sku-cost"
-        >
-          {t("navSkuCost")}
-        </button>
-        <button
-          type="button"
-          className={tab === "adjustments" ? "active" : ""}
-          onClick={() => setTab("adjustments")}
-          data-testid="nav-adjustments"
-        >
-          {t("navAdjustments")}
-        </button>
-        <button
-          type="button"
-          className={tab === "channels" ? "active" : ""}
-          onClick={() => setTab("channels")}
-          data-testid="nav-channels"
-        >
-          {t("navChannels")}
-        </button>
-        <button
-          type="button"
-          className={tab === "competitors" ? "active" : ""}
-          onClick={() => setTab("competitors")}
-          data-testid="nav-competitors"
-        >
-          {t("navCompetitors")}
-        </button>
-        <button
-          type="button"
-          className={tab === "crossChannel" ? "active" : ""}
-          onClick={() => setTab("crossChannel")}
-          data-testid="nav-cross-channel"
-        >
-          {t("navCrossChannel")}
-        </button>
-        <button
-          type="button"
-          className={tab === "ops" ? "active" : ""}
-          onClick={() => setTab("ops")}
-          data-testid="nav-ops"
-        >
-          {t("navOps")}
-        </button>
-        <button
-          type="button"
-          className={tab === "copilot" ? "active" : ""}
-          onClick={() => setTab("copilot")}
-          data-testid="nav-copilot"
-        >
-          {t("navCopilot")}
-        </button>
-        <button
-          type="button"
-          className={tab === "readiness" ? "active" : ""}
-          onClick={() => setTab("readiness")}
-          data-testid="nav-readiness"
-        >
-          {t("navReadiness")}
-        </button>
-        <button
-          type="button"
-          className={tab === "policy" ? "active" : ""}
-          onClick={() => setTab("policy")}
-          data-testid="nav-policy"
-        >
-          {t("navPolicy")}
-        </button>
-      </nav>
-      {tab === "pricing" ? (
-        <PricingPage />
-      ) : tab === "skuCost" ? (
-        <SkuCostPage />
-      ) : tab === "adjustments" ? (
-        <AdjustmentBatchesPage />
-      ) : tab === "channels" ? (
-        <ChannelsPage />
-      ) : tab === "competitors" ? (
-        <CompetitorsPage />
-      ) : tab === "crossChannel" ? (
-        <CrossChannelDashboardPage />
-      ) : tab === "ops" ? (
-        <OpsCenterPage />
-      ) : tab === "readiness" ? (
-        <ProductReadinessPage />
-      ) : tab === "policy" ? (
-        <PolicyConfigPage />
-      ) : (
-        <CopilotPage />
-      )}
-    </div>
+      <AppShell
+        brand={t("appTitle")}
+        navItems={navItems}
+        activeId={tab}
+        onNavigate={(id) => setTab(id as Tab)}
+        languageSelect={
+          <select
+            className="lang-select"
+            aria-label="language"
+            value={i18n.language}
+            onChange={(e) => void i18n.changeLanguage(e.target.value)}
+          >
+            <option value="zh-CN">中文</option>
+            <option value="en">English</option>
+            <option value="es-MX">Español (MX)</option>
+          </select>
+        }
+      >
+        {tab === "pricing" ? (
+          <PricingPage />
+        ) : tab === "skuCost" ? (
+          <SkuCostPage />
+        ) : tab === "adjustments" ? (
+          <AdjustmentBatchesPage />
+        ) : tab === "channels" ? (
+          <ChannelsPage />
+        ) : tab === "competitors" ? (
+          <CompetitorsPage />
+        ) : tab === "crossChannel" ? (
+          <CrossChannelDashboardPage />
+        ) : tab === "ops" ? (
+          <OpsCenterPage />
+        ) : tab === "readiness" ? (
+          <ProductReadinessPage />
+        ) : tab === "policy" ? (
+          <PolicyConfigPage />
+        ) : (
+          <CopilotPage />
+        )}
+      </AppShell>
     </AuthProvider>
   );
 }

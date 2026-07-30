@@ -94,6 +94,7 @@ import {
   type CostSheetRow,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
+import { PageHeader } from "../ui";
 
 type PricingMode = "cost" | "competitive_with_floor";
 
@@ -271,6 +272,7 @@ export function PricingPage() {
 
   return (
     <div className="page page-wide">
+      <PageHeader title={t("navPricing")} />
       {error && <p className="error">{error}</p>}
       {message && <p className="message">{message}</p>}
       <div className="shop-actions">

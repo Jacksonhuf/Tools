@@ -14,6 +14,7 @@ import {
 } from "../api/client";
 import { useCanApprove, useCanPricingWrite } from "../auth/AuthContext";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
+import { Alert, Badge, Button, Card, CardHeader, PageHeader } from "../ui";
 
 export function AdjustmentBatchesPage() {
   const { t, i18n } = useTranslation();
@@ -118,8 +119,8 @@ export function AdjustmentBatchesPage() {
 
   return (
     <div className="page page-wide" data-testid="adjustment-batches-page">
-      <h1>{t("adjustmentsTitle")}</h1>
-      <div className="shop-actions">
+      <PageHeader title={t("adjustmentsTitle")} />
+      <div className="button-row">
         <button
           type="button"
           data-testid="adjustment-approval-policy-export"
@@ -143,11 +144,11 @@ export function AdjustmentBatchesPage() {
           {t("adjustmentBatchesIndexExportCsv")}
         </button>
       </div>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      {error && <Alert variant="error">{error}</Alert>}
+      {message && <Alert variant="success">{message}</Alert>}
 
-      <section className="card">
-        <h2>{t("createBatch")}</h2>
+      <Card>
+        <CardHeader title={t("createBatch")} />
         <label>
           {t("batchReason")}
           <input
@@ -189,19 +190,18 @@ export function AdjustmentBatchesPage() {
           </label>
         </div>
         {canWrite && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
             data-testid="adjustment-create-batch"
             onClick={() => void createBatch()}
           >
             {t("submitBatch")}
-          </button>
+          </Button>
         )}
-      </section>
+      </Card>
 
-      <section className="card" data-testid="adjustment-csv-import">
-        <h2>{t("adjustmentCsvImport")}</h2>
-        <p className="hint">{t("adjustmentCsvImportHint")}</p>
+      <Card data-testid="adjustment-csv-import">
+        <CardHeader title={t("adjustmentCsvImport")} description={t("adjustmentCsvImportHint")} />
         <textarea
           rows={3}
           value={importCsv}
@@ -209,8 +209,8 @@ export function AdjustmentBatchesPage() {
           style={{ width: "100%", fontFamily: "monospace" }}
         />
         {canWrite && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
             data-testid="adjustment-csv-apply"
             onClick={() => {
               setError(null);
@@ -226,28 +226,25 @@ export function AdjustmentBatchesPage() {
             }}
           >
             {t("adjustmentCsvImportRun")}
-          </button>
+          </Button>
         )}
-      </section>
+      </Card>
 
-      <section className="card">
-        <h2>{t("batchList")}</h2>
+      <Card>
+        <CardHeader title={t("batchList")} />
         <AdjustmentBatchTable
           batches={batches}
           selectedId={selectedId}
           onSelect={setSelectedId}
           formatMoney={fmt}
         />
-      </section>
+      </Card>
 
       {selected && (
-        <section className="card">
-          <h2>{t("batchDetail")}</h2>
+        <Card>
+          <CardHeader title={t("batchDetail")} />
           <p>
-            {t("batchStatus")}:{" "}
-            <span className={`status status-${selected.status}`}>
-              {selected.status}
-            </span>
+            {t("batchStatus")}: <Badge status={selected.status}>{selected.status}</Badge>
           </p>
           <ul>
             {selected.items.map((it) => (
@@ -281,29 +278,27 @@ export function AdjustmentBatchesPage() {
               {t("adjustmentBatchIndexExportCsv")}
             </button>
             {selected.status === "pending_approval" && canApprove && (
-              <button
-                type="button"
-                className="primary"
+              <Button
+                variant="primary"
                 data-testid="adjustment-approve"
                 onClick={() => void approve()}
               >
                 {t("approveBatch")}
-              </button>
+              </Button>
             )}
             {(selected.status === "draft" ||
               selected.status === "approved") &&
               canWrite && (
-              <button
-                type="button"
-                className="primary"
+              <Button
+                variant="primary"
                 data-testid="adjustment-apply"
                 onClick={() => void apply()}
               >
                 {t("applyBatch")}
-              </button>
+              </Button>
             )}
           </div>
-        </section>
+        </Card>
       )}
     </div>
   );

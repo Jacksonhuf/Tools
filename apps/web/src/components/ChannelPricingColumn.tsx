@@ -1,5 +1,6 @@
 import type { Channel } from "../api/client";
 import { WaterfallChart } from "./WaterfallChart";
+import { Button } from "../ui";
 
 export interface ChannelSimulation {
   publish_price_mxn: number;
@@ -61,21 +62,28 @@ export function ChannelPricingColumn({
   return (
     <div className="channel-column" data-channel={channel}>
       <h2>{title}</h2>
-      <p>
-        {activeLabel}:{" "}
-        {context.versions.active?.publish_price?.formatted ?? "—"}
-      </p>
+      <div className="channel-meta">
+        <div className="channel-meta-row">
+          <span className="channel-meta-label">{activeLabel}</span>
+          <span>
+            {context.versions.active?.publish_price?.formatted ?? "—"}
+          </span>
+        </div>
+        <div className="channel-meta-row">
+          <span className="channel-meta-label">{floorLabel}</span>
+          <span>{floor.formatted}</span>
+        </div>
+      </div>
       {context.versions.active && onSyncToChannel && (
-        <button type="button" onClick={onSyncToChannel}>
+        <Button variant="secondary" size="sm" onClick={onSyncToChannel}>
           {syncToChannelLabel}
-        </button>
+        </Button>
       )}
-      <p>
-        {floorLabel}: {floor.formatted}
-      </p>
       {simulation && (
         <>
-          <p className="highlight">{simulation.publish_price.formatted}</p>
+          <p className="channel-price-hero">
+            {simulation.publish_price.formatted}
+          </p>
           <WaterfallChart
             rows={simulation.waterfall}
             formatAmount={formatAmount}
@@ -83,7 +91,7 @@ export function ChannelPricingColumn({
           />
           <h3>{guardsLabel}</h3>
           {simulation.guards.length === 0 ? (
-            <p>{noGuardsLabel}</p>
+            <p className="hint">{noGuardsLabel}</p>
           ) : (
             <ul>
               {simulation.guards.map((g) => (
@@ -91,9 +99,9 @@ export function ChannelPricingColumn({
               ))}
             </ul>
           )}
-          <button type="button" className="primary" onClick={onPublish}>
+          <Button variant="primary" onClick={onPublish}>
             {publishLabel}
-          </button>
+          </Button>
         </>
       )}
     </div>
