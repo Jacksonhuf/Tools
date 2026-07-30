@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   fetchFeatureFlags,
@@ -80,7 +80,18 @@ import {
   type ProductReadinessSnapshot,
 } from "../api/client";
 import { ExportPanel } from "@/components/layout/ExportPanel";
-import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import { PageHeader } from "@/components/layout/AppLayout";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+  matchDataTableFilter,
+} from "@/components/patterns/DataTable";
+import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,6 +119,7 @@ export function ProductReadinessPage() {
   const [flags, setFlags] = useState<FeatureFlagsSnapshot | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [milestoneFilter, setMilestoneFilter] = useState("");
 
   const load = useCallback(async () => {
     setError(null);
@@ -126,6 +138,13 @@ export function ProductReadinessPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filteredMilestones = useMemo(() => {
+    if (!readiness) return [];
+    return readiness.milestones.filter((m) =>
+      matchDataTableFilter(milestoneFilter, m.id, m.status, m.summary)
+    );
+  }, [readiness, milestoneFilter]);
 
   return (
     <div className="page page-wide">
@@ -922,30 +941,37 @@ export function ProductReadinessPage() {
           </button>
           </div>
           </ExportPanel>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>{t("batchStatus")}</TableHead>
-                <TableHead>{t("readinessSummary")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {readiness.milestones.map((m) => (
-                <TableRow key={m.id}>
-                  <TableCell>
-                    <code>{m.id}</code>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusBadgeVariant(m.status)}>
-                      {m.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{m.summary}</TableCell>
-                </TableRow>
+          <DataTable
+            filter={milestoneFilter}
+            onFilterChange={setMilestoneFilter}
+            filterPlaceholder={t("dataTableFilterPlaceholder")}
+            isEmpty={filteredMilestones.length === 0}
+            emptyMessage={t("dataTableNoResults")}
+            maxHeight={360}
+          >
+          <DataTableRoot>
+            <DataTableHeader>
+              <DataTableRow className="hover:bg-transparent">
+                <DataTableHead>ID</DataTableHead>
+                <DataTableHead>{t("batchStatus")}</DataTableHead>
+                <DataTableHead>{t("readinessSummary")}</DataTableHead>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {filteredMilestones.map((m) => (
+                <DataTableRow key={m.id}>
+                  <DataTableCell>
+                    <code className="text-xs">{m.id}</code>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge status={m.status} />
+                  </DataTableCell>
+                  <DataTableCell>{m.summary}</DataTableCell>
+                </DataTableRow>
               ))}
-            </TableBody>
-          </Table>
+            </DataTableBody>
+          </DataTableRoot>
+          </DataTable>
           </CardContent>
         </Card>
       )}

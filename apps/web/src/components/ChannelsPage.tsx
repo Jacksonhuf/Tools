@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   fetchChannelAdapterStatus,
@@ -92,6 +92,17 @@ import {
 } from "../api/client";
 import { ExportPanel } from "@/components/layout/ExportPanel";
 import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+  matchDataTableFilter,
+} from "@/components/patterns/DataTable";
+import { StatusBadge } from "@/components/primitives/StatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -136,6 +147,7 @@ export function ChannelsPage() {
   const [lastSyncByListing, setLastSyncByListing] = useState<
     Record<string, { status: string; price: number | null }>
   >({});
+  const [shopFilter, setShopFilter] = useState("");
 
   const load = useCallback(async () => {
     setError(null);
@@ -252,6 +264,20 @@ export function ChannelsPage() {
 
   const channelLabel = (ch: string) =>
     ch === "MERCADO_LIBRE" ? t("mercadoLibre") : t("amazonMx");
+
+  const filteredShops = useMemo(
+    () =>
+      shops.filter((shop) =>
+        matchDataTableFilter(
+          shopFilter,
+          shop.name,
+          shop.channel,
+          shop.auth_status,
+          shop.external_seller_id
+        )
+      ),
+    [shops, shopFilter]
+  );
 
   return (
     <div className="page page-wide">
@@ -1162,38 +1188,49 @@ export function ChannelsPage() {
         </TabsContent>
 
         <TabsContent value="shops">
-      <Card>
+      <Card className="ring-1 ring-border/50">
         <CardHeader>
           <CardTitle>{t("shopList")}</CardTitle>
         </CardHeader>
-        <CardContent>
-        <Table data-testid="shops-table">
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("channel")}</TableHead>
-              <TableHead>{t("shopName")}</TableHead>
-              <TableHead>{t("batchStatus")}</TableHead>
-              <TableHead>{t("shopSellerId")}</TableHead>
-              <TableHead>{t("channelLastListingSyncCol")}</TableHead>
-              <TableHead>{t("shopActions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {shops.map((shop) => (
-              <TableRow key={shop.id}>
-                <TableCell>{channelLabel(shop.channel)}</TableCell>
-                <TableCell>{shop.name}</TableCell>
-                <TableCell>
-                  <Badge variant={statusBadgeVariant(shop.auth_status)}>
-                    {shop.auth_status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{shop.external_seller_id ?? "—"}</TableCell>
-                <TableCell>
+        <CardContent className="p-0 pb-4 px-4">
+        <DataTable
+          testId="shops-table"
+          filter={shopFilter}
+          onFilterChange={setShopFilter}
+          filterPlaceholder={t("dataTableFilterPlaceholder")}
+          isEmpty={filteredShops.length === 0}
+          emptyMessage={
+            shops.length === 0 ? t("channelSandboxNoEvents") : t("dataTableNoResults")
+          }
+          maxHeight={400}
+        >
+        <DataTableRoot>
+          <DataTableHeader>
+            <DataTableRow className="hover:bg-transparent">
+              <DataTableHead>{t("channel")}</DataTableHead>
+              <DataTableHead>{t("shopName")}</DataTableHead>
+              <DataTableHead>{t("batchStatus")}</DataTableHead>
+              <DataTableHead>{t("shopSellerId")}</DataTableHead>
+              <DataTableHead>{t("channelLastListingSyncCol")}</DataTableHead>
+              <DataTableHead>{t("shopActions")}</DataTableHead>
+            </DataTableRow>
+          </DataTableHeader>
+          <DataTableBody>
+            {filteredShops.map((shop) => (
+              <DataTableRow key={shop.id}>
+                <DataTableCell>{channelLabel(shop.channel)}</DataTableCell>
+                <DataTableCell className="font-medium">{shop.name}</DataTableCell>
+                <DataTableCell>
+                  <StatusBadge status={shop.auth_status} />
+                </DataTableCell>
+                <DataTableCell className="font-mono text-xs text-muted-foreground">
+                  {shop.external_seller_id ?? "—"}
+                </DataTableCell>
+                <DataTableCell>
                   {SHOP_LISTING_ID[shop.id] &&
                     lastSyncByListing[SHOP_LISTING_ID[shop.id]] && (
                       <span
-                        className="text-sm text-muted-foreground"
+                        className="text-xs text-muted-foreground"
                         data-testid={`channel-last-sync-${shop.id}`}
                       >
                         {t("channelLastListingSync", {
@@ -1205,22 +1242,22 @@ export function ChannelsPage() {
                         })}
                       </span>
                     )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-2">
+                </DataTableCell>
+                <DataTableCell>
+                  <div className="flex flex-wrap gap-1.5">
                   {shop.auth_status !== "connected" ? (
                     <Button type="button" size="sm" variant="outline" onClick={() => void connect(shop)}>
                       {t("connectShop")}
                     </Button>
                   ) : (
                     <>
-                      <Button type="button" size="sm" variant="outline" onClick={() => void pull(shop)}>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => void pull(shop)}>
                         {t("pullListing")}
                       </Button>
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         data-testid="listing-sync-run"
                         onClick={() => void syncListingJob(shop)}
                       >
@@ -1229,7 +1266,7 @@ export function ChannelsPage() {
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => void publishActive(shop)}
                       >
                         {t("publishToChannel")}
@@ -1237,11 +1274,12 @@ export function ChannelsPage() {
                     </>
                   )}
                   </div>
-                </TableCell>
-              </TableRow>
+                </DataTableCell>
+              </DataTableRow>
             ))}
-          </TableBody>
-        </Table>
+          </DataTableBody>
+        </DataTableRoot>
+        </DataTable>
         </CardContent>
       </Card>
         </TabsContent>

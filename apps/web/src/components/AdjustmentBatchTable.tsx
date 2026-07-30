@@ -1,16 +1,17 @@
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AdjustmentBatch } from "../api/client";
-import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { statusBadgeVariant } from "@/components/layout/AppLayout";
-import { cn } from "@/lib/utils";
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+  matchDataTableFilter,
+} from "@/components/patterns/DataTable";
+import { StatusBadge } from "@/components/primitives/StatusBadge";
 
 const LISTING_LABELS: Record<string, string> = {
   "listing-ml-001": "Mercado Libre",
@@ -31,56 +32,72 @@ export function AdjustmentBatchTable({
   formatMoney,
 }: Props) {
   const { t } = useTranslation();
+  const [filter, setFilter] = useState("");
 
-  if (batches.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("noBatches")}</p>;
-  }
+  const filtered = useMemo(
+    () =>
+      batches.filter((b) =>
+        matchDataTableFilter(
+          filter,
+          b.id,
+          b.status,
+          b.reason_code,
+          b.items.map((it) => it.listing_id).join(" ")
+        )
+      ),
+    [batches, filter]
+  );
 
   return (
-    <Table data-testid="adjustment-batch-table">
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("batchId")}</TableHead>
-          <TableHead>{t("batchStatus")}</TableHead>
-          <TableHead>{t("batchReason")}</TableHead>
-          <TableHead>{t("batchItems")}</TableHead>
-          <TableHead>{t("batchCreated")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {batches.map((b) => (
-          <TableRow
-            key={b.id}
-            className={cn(
-              "cursor-pointer",
-              selectedId === b.id && "bg-primary/10"
-            )}
-            onClick={() => onSelect(b.id)}
-          >
-            <TableCell className="font-mono text-xs">{b.id}</TableCell>
-            <TableCell>
-              <Badge
-                variant={statusBadgeVariant(b.status)}
-                data-testid={`batch-status-${b.status}`}
-              >
-                {b.status}
-              </Badge>
-            </TableCell>
-            <TableCell>{b.reason_code ?? "—"}</TableCell>
-            <TableCell className="max-w-md truncate">
-              {b.items
-                .map(
-                  (it) =>
-                    `${LISTING_LABELS[it.listing_id] ?? it.listing_id}: ${formatMoney(it.explicit_price_mxn)}`
-                )
-                .join("; ")}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {new Date(b.created_at).toLocaleString()}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      testId="adjustment-batch-table"
+      filter={filter}
+      onFilterChange={setFilter}
+      filterPlaceholder={t("dataTableFilterPlaceholder")}
+      isEmpty={filtered.length === 0}
+      emptyMessage={batches.length === 0 ? t("noBatches") : t("dataTableNoResults")}
+      maxHeight={420}
+    >
+      <DataTableRoot>
+        <DataTableHeader>
+          <DataTableRow className="hover:bg-transparent">
+            <DataTableHead>{t("batchId")}</DataTableHead>
+            <DataTableHead>{t("batchStatus")}</DataTableHead>
+            <DataTableHead>{t("batchReason")}</DataTableHead>
+            <DataTableHead>{t("batchItems")}</DataTableHead>
+            <DataTableHead>{t("batchCreated")}</DataTableHead>
+          </DataTableRow>
+        </DataTableHeader>
+        <DataTableBody>
+          {filtered.map((b) => (
+            <DataTableRow
+              key={b.id}
+              selected={selectedId === b.id}
+              onClick={() => onSelect(b.id)}
+            >
+              <DataTableCell className="font-mono text-xs">{b.id}</DataTableCell>
+              <DataTableCell>
+                <StatusBadge
+                  status={b.status}
+                  data-testid={`batch-status-${b.status}`}
+                />
+              </DataTableCell>
+              <DataTableCell>{b.reason_code ?? "—"}</DataTableCell>
+              <DataTableCell className="max-w-md truncate">
+                {b.items
+                  .map(
+                    (it) =>
+                      `${LISTING_LABELS[it.listing_id] ?? it.listing_id}: ${formatMoney(it.explicit_price_mxn)}`
+                  )
+                  .join("; ")}
+              </DataTableCell>
+              <DataTableCell className="text-muted-foreground">
+                {new Date(b.created_at).toLocaleString()}
+              </DataTableCell>
+            </DataTableRow>
+          ))}
+        </DataTableBody>
+      </DataTableRoot>
+    </DataTable>
   );
 }

@@ -15,12 +15,12 @@ import {
 } from "../api/client";
 import { useCanPricingWrite } from "../auth/AuthContext";
 import { PageHeader } from "@/components/layout/AppLayout";
+import { FormActions, FormField, FormRow, FormSection } from "@/components/patterns/FormField";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -205,13 +205,12 @@ export function SkuCostPage() {
           </CardContent>
         </Card>
 
-        <Card className="mb-4" data-testid="sku-cost-landed-panel">
-          <CardHeader>
-            <CardTitle>{t("landedCost")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2 max-w-xs">
-              <Label htmlFor="landed-input">{t("landedCost")} (MXN)</Label>
+        <FormSection title={t("landedCost")} testId="sku-cost-landed-panel">
+            <FormField
+              label={`${t("landedCost")} (MXN)`}
+              htmlFor="landed-input"
+              hint={!canWrite ? t("skuCostReadOnly") : undefined}
+            >
               <Input
                 id="landed-input"
                 type="number"
@@ -220,26 +219,25 @@ export function SkuCostPage() {
                 disabled={!canWrite}
                 onChange={(e) => setLandedEdit(Number(e.target.value))}
               />
-            </div>
-            {canWrite ? (
-              <Button
-                data-testid="sku-cost-landed-save"
-                onClick={() => void saveLanded()}
-              >
-                {t("saveLanded")}
-              </Button>
-            ) : (
-              <p className="text-sm text-muted-foreground">{t("skuCostReadOnly")}</p>
+            </FormField>
+            {canWrite && (
+              <FormActions>
+                <Button
+                  data-testid="sku-cost-landed-save"
+                  onClick={() => void saveLanded()}
+                >
+                  {t("saveLanded")}
+                </Button>
+              </FormActions>
             )}
-          </CardContent>
-        </Card>
+        </FormSection>
 
-        <Card data-testid="sku-cost-sheets-panel">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
-            <div>
-              <CardTitle>{t("costSheetsTitle")}</CardTitle>
-              <CardDescription>{t("costSheetBatch")}</CardDescription>
-            </div>
+        <FormSection
+          title={t("costSheetsTitle")}
+          description={t("costSheetBatch")}
+          testId="sku-cost-sheets-panel"
+        >
+            <div className="flex justify-end -mt-2 mb-2">
             <Button
               variant="outline"
               size="sm"
@@ -252,25 +250,21 @@ export function SkuCostPage() {
             >
               {t("skuCostTemplateDownload")}
             </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </div>
             {canWrite && (
               <>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="grid gap-2">
-                    <Label>{t("costSheetBatch")}</Label>
+                <FormRow cols={3}>
+                  <FormField label={t("costSheetBatch")}>
                     <Input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>COGS</Label>
+                  </FormField>
+                  <FormField label="COGS">
                     <Input
                       type="number"
                       value={cogsAmount}
                       onChange={(e) => setCogsAmount(Number(e.target.value))}
                     />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>{t("skuCostCurrency")}</Label>
+                  </FormField>
+                  <FormField label={t("skuCostCurrency")}>
                     <Select value={cogsCurrency} onValueChange={setCogsCurrency}>
                       <SelectTrigger>
                         <SelectValue />
@@ -280,9 +274,9 @@ export function SkuCostPage() {
                         <SelectItem value="MXN">MXN</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
+                  </FormField>
+                </FormRow>
+                <FormActions>
                   <Button data-testid="sku-cost-sheet-add" onClick={() => void addCostSheet()}>
                     {t("costSheetAdd")}
                   </Button>
@@ -300,9 +294,10 @@ export function SkuCostPage() {
                   >
                     {t("skuCostFxApply")}
                   </Button>
-                </div>
+                </FormActions>
               </>
             )}
+            <FormActions className="border-t-0 pt-0">
             <Button
               variant="outline"
               data-testid="sku-cost-sheets-export"
@@ -316,6 +311,7 @@ export function SkuCostPage() {
             >
               {t("costSheetExportCsv")}
             </Button>
+            </FormActions>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -360,8 +356,7 @@ export function SkuCostPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+        </FormSection>
       </div>
     </TooltipProvider>
   );
