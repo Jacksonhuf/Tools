@@ -11,142 +11,39 @@ import { CrossChannelDashboardPage } from "./components/CrossChannelDashboardPag
 import { PolicyConfigPage } from "./components/PolicyConfigPage";
 import { SkuCostPage } from "./components/SkuCostPage";
 import { AuthProvider } from "./auth/AuthProvider";
-
-type Tab =
-  | "pricing"
-  | "skuCost"
-  | "adjustments"
-  | "channels"
-  | "competitors"
-  | "crossChannel"
-  | "ops"
-  | "copilot"
-  | "readiness"
-  | "policy";
+import { AppLayout, type AppTab } from "./components/layout/AppLayout";
+import { Toaster } from "@/components/ui/sonner";
 
 export function App() {
-  const { t, i18n } = useTranslation();
-  const [tab, setTab] = useState<Tab>("pricing");
+  const { i18n } = useTranslation();
+  const [tab, setTab] = useState<AppTab>("pricing");
 
   return (
     <AuthProvider locale={i18n.language}>
-    <div data-testid="app-shell">
-      <header className="header">
-        <h1>{t("appTitle")}</h1>
-        <select
-          aria-label="language"
-          value={i18n.language}
-          onChange={(e) => void i18n.changeLanguage(e.target.value)}
-        >
-          <option value="zh-CN">中文</option>
-          <option value="en">English</option>
-          <option value="es-MX">Español (MX)</option>
-        </select>
-      </header>
-      <nav className="subnav">
-        <button
-          type="button"
-          className={tab === "pricing" ? "active" : ""}
-          onClick={() => setTab("pricing")}
-          data-testid="nav-pricing"
-        >
-          {t("navPricing")}
-        </button>
-        <button
-          type="button"
-          className={tab === "skuCost" ? "active" : ""}
-          onClick={() => setTab("skuCost")}
-          data-testid="nav-sku-cost"
-        >
-          {t("navSkuCost")}
-        </button>
-        <button
-          type="button"
-          className={tab === "adjustments" ? "active" : ""}
-          onClick={() => setTab("adjustments")}
-          data-testid="nav-adjustments"
-        >
-          {t("navAdjustments")}
-        </button>
-        <button
-          type="button"
-          className={tab === "channels" ? "active" : ""}
-          onClick={() => setTab("channels")}
-          data-testid="nav-channels"
-        >
-          {t("navChannels")}
-        </button>
-        <button
-          type="button"
-          className={tab === "competitors" ? "active" : ""}
-          onClick={() => setTab("competitors")}
-          data-testid="nav-competitors"
-        >
-          {t("navCompetitors")}
-        </button>
-        <button
-          type="button"
-          className={tab === "crossChannel" ? "active" : ""}
-          onClick={() => setTab("crossChannel")}
-          data-testid="nav-cross-channel"
-        >
-          {t("navCrossChannel")}
-        </button>
-        <button
-          type="button"
-          className={tab === "ops" ? "active" : ""}
-          onClick={() => setTab("ops")}
-          data-testid="nav-ops"
-        >
-          {t("navOps")}
-        </button>
-        <button
-          type="button"
-          className={tab === "copilot" ? "active" : ""}
-          onClick={() => setTab("copilot")}
-          data-testid="nav-copilot"
-        >
-          {t("navCopilot")}
-        </button>
-        <button
-          type="button"
-          className={tab === "readiness" ? "active" : ""}
-          onClick={() => setTab("readiness")}
-          data-testid="nav-readiness"
-        >
-          {t("navReadiness")}
-        </button>
-        <button
-          type="button"
-          className={tab === "policy" ? "active" : ""}
-          onClick={() => setTab("policy")}
-          data-testid="nav-policy"
-        >
-          {t("navPolicy")}
-        </button>
-      </nav>
-      {tab === "pricing" ? (
-        <PricingPage />
-      ) : tab === "skuCost" ? (
-        <SkuCostPage />
-      ) : tab === "adjustments" ? (
-        <AdjustmentBatchesPage />
-      ) : tab === "channels" ? (
-        <ChannelsPage />
-      ) : tab === "competitors" ? (
-        <CompetitorsPage />
-      ) : tab === "crossChannel" ? (
-        <CrossChannelDashboardPage />
-      ) : tab === "ops" ? (
-        <OpsCenterPage />
-      ) : tab === "readiness" ? (
-        <ProductReadinessPage />
-      ) : tab === "policy" ? (
-        <PolicyConfigPage />
-      ) : (
-        <CopilotPage />
-      )}
-    </div>
+      <AppLayout activeTab={tab} onTabChange={setTab}>
+        {tab === "pricing" ? (
+          <PricingPage />
+        ) : tab === "skuCost" ? (
+          <SkuCostPage />
+        ) : tab === "adjustments" ? (
+          <AdjustmentBatchesPage />
+        ) : tab === "channels" ? (
+          <ChannelsPage />
+        ) : tab === "competitors" ? (
+          <CompetitorsPage />
+        ) : tab === "crossChannel" ? (
+          <CrossChannelDashboardPage />
+        ) : tab === "ops" ? (
+          <OpsCenterPage />
+        ) : tab === "readiness" ? (
+          <ProductReadinessPage />
+        ) : tab === "policy" ? (
+          <PolicyConfigPage />
+        ) : (
+          <CopilotPage />
+        )}
+      </AppLayout>
+      <Toaster richColors position="top-right" />
     </AuthProvider>
   );
 }

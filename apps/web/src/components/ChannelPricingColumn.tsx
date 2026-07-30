@@ -1,5 +1,7 @@
 import type { Channel } from "../api/client";
 import { WaterfallChart } from "./WaterfallChart";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export interface ChannelSimulation {
   publish_price_mxn: number;
@@ -59,41 +61,49 @@ export function ChannelPricingColumn({
       : context.floors.amazon_mx;
 
   return (
-    <div className="channel-column" data-channel={channel}>
-      <h2>{title}</h2>
-      <p>
-        {activeLabel}:{" "}
-        {context.versions.active?.publish_price?.formatted ?? "—"}
-      </p>
+    <div className="space-y-4" data-channel={channel}>
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between border-b py-2">
+          <span className="text-muted-foreground">{activeLabel}</span>
+          <span className="font-medium tabular-nums">
+            {context.versions.active?.publish_price?.formatted ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between border-b py-2">
+          <span className="text-muted-foreground">{floorLabel}</span>
+          <span className="font-medium tabular-nums">{floor.formatted}</span>
+        </div>
+      </div>
       {context.versions.active && onSyncToChannel && (
-        <button type="button" onClick={onSyncToChannel}>
+        <Button variant="outline" size="sm" onClick={onSyncToChannel}>
           {syncToChannelLabel}
-        </button>
+        </Button>
       )}
-      <p>
-        {floorLabel}: {floor.formatted}
-      </p>
       {simulation && (
         <>
-          <p className="highlight">{simulation.publish_price.formatted}</p>
+          <p className="text-3xl font-bold tabular-nums tracking-tight text-primary">
+            {simulation.publish_price.formatted}
+          </p>
           <WaterfallChart
             rows={simulation.waterfall}
             formatAmount={formatAmount}
             layerLabels={layerLabels}
           />
-          <h3>{guardsLabel}</h3>
+          <Separator />
+          <h3 className="text-sm font-semibold">{guardsLabel}</h3>
           {simulation.guards.length === 0 ? (
-            <p>{noGuardsLabel}</p>
+            <p className="text-sm text-muted-foreground">{noGuardsLabel}</p>
           ) : (
-            <ul>
+            <ul className="list-inside list-disc text-sm text-muted-foreground">
               {simulation.guards.map((g) => (
                 <li key={g}>{g}</li>
               ))}
             </ul>
           )}
-          <button type="button" className="primary" onClick={onPublish}>
+          <Button className="w-full sm:w-auto" onClick={onPublish}>
             {publishLabel}
-          </button>
+          </Button>
         </>
       )}
     </div>

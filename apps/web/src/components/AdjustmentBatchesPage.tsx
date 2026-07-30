@@ -14,6 +14,16 @@ import {
 } from "../api/client";
 import { useCanApprove, useCanPricingWrite } from "../auth/AuthContext";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
+import { toast } from "sonner";
+import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export function AdjustmentBatchesPage() {
   const { t, i18n } = useTranslation();
@@ -85,6 +95,7 @@ export function AdjustmentBatchesPage() {
         items,
       });
       setMessage(`${t("batchCreatedMsg")}: ${batch.id} (${batch.status})`);
+      toast.success(`${t("batchCreatedMsg")}: ${batch.id}`);
       setSelectedId(batch.id);
       await load();
     } catch (e) {
@@ -97,6 +108,7 @@ export function AdjustmentBatchesPage() {
     try {
       await approveAdjustmentBatch(locale, selected.id);
       setMessage(t("batchApproved"));
+      toast.success(t("batchApproved"));
       await load();
     } catch (e) {
       setError(String(e));
@@ -110,6 +122,7 @@ export function AdjustmentBatchesPage() {
       setMessage(
         `${t("batchApplied")}: ${result.version_ids?.join(", ") ?? ""}`
       );
+      toast.success(t("batchApplied"));
       await load();
     } catch (e) {
       setError(String(e));
@@ -118,192 +131,209 @@ export function AdjustmentBatchesPage() {
 
   return (
     <div className="page page-wide" data-testid="adjustment-batches-page">
-      <h1>{t("adjustmentsTitle")}</h1>
-      <div className="shop-actions">
-        <button
-          type="button"
-          data-testid="adjustment-approval-policy-export"
-          onClick={() =>
-            void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
-              setMessage(t("adjustmentApprovalPolicyExportDone"))
-            )
-          }
-        >
-          {t("adjustmentApprovalPolicyExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="adjustment-batches-index-export"
-          onClick={() =>
-            void downloadAdjustmentBatchesIndexCsv(locale).then(() =>
-              setMessage(t("adjustmentBatchesIndexExportDone"))
-            )
-          }
-        >
-          {t("adjustmentBatchesIndexExportCsv")}
-        </button>
-      </div>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      <PageHeader
+        title={t("adjustmentsTitle")}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="adjustment-approval-policy-export"
+              onClick={() =>
+                void downloadAdjustmentApprovalPolicyCsv(locale).then(() =>
+                  toast.success(t("adjustmentApprovalPolicyExportDone"))
+                )
+              }
+            >
+              {t("adjustmentApprovalPolicyExportCsv")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="adjustment-batches-index-export"
+              onClick={() =>
+                void downloadAdjustmentBatchesIndexCsv(locale).then(() =>
+                  toast.success(t("adjustmentBatchesIndexExportDone"))
+                )
+              }
+            >
+              {t("adjustmentBatchesIndexExportCsv")}
+            </Button>
+          </>
+        }
+      />
 
-      <section className="card">
-        <h2>{t("createBatch")}</h2>
-        <label>
-          {t("batchReason")}
-          <input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>{t("createBatch")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2 max-w-sm">
+            <Label htmlFor="batch-reason">{t("batchReason")}</Label>
+            <Input
+              id="batch-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </div>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <Checkbox
+                id="include-ml"
+                checked={includeMl}
+                onCheckedChange={(v) => setIncludeMl(v === true)}
+              />
+              <Label htmlFor="include-ml" className="font-normal">
+                {t("mercadoLibre")}
+              </Label>
+              <Input
+                type="number"
+                className="w-28"
+                data-testid="adjustment-price-ml"
+                value={prices.ml}
+                onChange={(e) =>
+                  setPrices((p) => ({ ...p, ml: Number(e.target.value) }))
+                }
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <Checkbox
+                id="include-amz"
+                checked={includeAmz}
+                onCheckedChange={(v) => setIncludeAmz(v === true)}
+              />
+              <Label htmlFor="include-amz" className="font-normal">
+                {t("amazonMx")}
+              </Label>
+              <Input
+                type="number"
+                className="w-28"
+                value={prices.amz}
+                onChange={(e) =>
+                  setPrices((p) => ({ ...p, amz: Number(e.target.value) }))
+                }
+              />
+            </div>
+          </div>
+          {canWrite && (
+            <Button data-testid="adjustment-create-batch" onClick={() => void createBatch()}>
+              {t("submitBatch")}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4" data-testid="adjustment-csv-import">
+        <CardHeader>
+          <CardTitle>{t("adjustmentCsvImport")}</CardTitle>
+          <CardDescription>{t("adjustmentCsvImportHint")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            rows={3}
+            className="font-mono text-sm"
+            value={importCsv}
+            onChange={(e) => setImportCsv(e.target.value)}
           />
-        </label>
-        <div className="listing-checks">
-          <label>
-            <input
-              type="checkbox"
-              checked={includeMl}
-              onChange={(e) => setIncludeMl(e.target.checked)}
-            />
-            {t("mercadoLibre")}
-            <input
-              type="number"
-              data-testid="adjustment-price-ml"
-              value={prices.ml}
-              onChange={(e) =>
-                setPrices((p) => ({ ...p, ml: Number(e.target.value) }))
-              }
-            />
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={includeAmz}
-              onChange={(e) => setIncludeAmz(e.target.checked)}
-            />
-            {t("amazonMx")}
-            <input
-              type="number"
-              value={prices.amz}
-              onChange={(e) =>
-                setPrices((p) => ({ ...p, amz: Number(e.target.value) }))
-              }
-            />
-          </label>
-        </div>
-        {canWrite && (
-          <button
-            type="button"
-            data-testid="adjustment-create-batch"
-            onClick={() => void createBatch()}
-          >
-            {t("submitBatch")}
-          </button>
-        )}
-      </section>
+          {canWrite && (
+            <Button
+              data-testid="adjustment-csv-apply"
+              onClick={() => {
+                setError(null);
+                void applyAdjustmentPricesCsv(locale, importCsv, reason)
+                  .then((r) => {
+                    toast.success(`${t("batchCreatedMsg")}: ${r.batch.id}`);
+                    setSelectedId(r.batch.id);
+                    return load();
+                  })
+                  .catch((e) => setError(String(e)));
+              }}
+            >
+              {t("adjustmentCsvImportRun")}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
-      <section className="card" data-testid="adjustment-csv-import">
-        <h2>{t("adjustmentCsvImport")}</h2>
-        <p className="hint">{t("adjustmentCsvImportHint")}</p>
-        <textarea
-          rows={3}
-          value={importCsv}
-          onChange={(e) => setImportCsv(e.target.value)}
-          style={{ width: "100%", fontFamily: "monospace" }}
-        />
-        {canWrite && (
-          <button
-            type="button"
-            data-testid="adjustment-csv-apply"
-            onClick={() => {
-              setError(null);
-              void applyAdjustmentPricesCsv(locale, importCsv, reason)
-                .then((r) => {
-                  setMessage(
-                    `${t("batchCreatedMsg")}: ${r.batch.id} (${r.batch.status})`
-                  );
-                  setSelectedId(r.batch.id);
-                  return load();
-                })
-                .catch((e) => setError(String(e)));
-            }}
-          >
-            {t("adjustmentCsvImportRun")}
-          </button>
-        )}
-      </section>
-
-      <section className="card">
-        <h2>{t("batchList")}</h2>
-        <AdjustmentBatchTable
-          batches={batches}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          formatMoney={fmt}
-        />
-      </section>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>{t("batchList")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdjustmentBatchTable
+            batches={batches}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            formatMoney={fmt}
+          />
+        </CardContent>
+      </Card>
 
       {selected && (
-        <section className="card">
-          <h2>{t("batchDetail")}</h2>
-          <p>
-            {t("batchStatus")}:{" "}
-            <span className={`status status-${selected.status}`}>
-              {selected.status}
-            </span>
-          </p>
-          <ul>
-            {selected.items.map((it) => (
-              <li key={it.id}>
-                {it.listing_id}: {fmt(it.from_price_mxn ?? 0)} →{" "}
-                {fmt(it.explicit_price_mxn)}
-              </li>
-            ))}
-          </ul>
-          <div className="batch-actions">
-            <button
-              type="button"
-              data-testid="adjustment-batch-export"
-              onClick={() =>
-                void downloadAdjustmentBatchCsv(locale, selected.id).then(() =>
-                  setMessage(t("adjustmentBatchExportDone"))
-                )
-              }
-            >
-              {t("adjustmentBatchExportCsv")}
-            </button>
-            <button
-              type="button"
-              data-testid="adjustment-batch-index-export"
-              onClick={() =>
-                void downloadAdjustmentBatchIndexCsv(locale, selected.id).then(
-                  () => setMessage(t("adjustmentBatchIndexExportDone"))
-                )
-              }
-            >
-              {t("adjustmentBatchIndexExportCsv")}
-            </button>
-            {selected.status === "pending_approval" && canApprove && (
-              <button
-                type="button"
-                className="primary"
-                data-testid="adjustment-approve"
-                onClick={() => void approve()}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("batchDetail")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm">
+              {t("batchStatus")}:{" "}
+              <Badge variant={statusBadgeVariant(selected.status)}>
+                {selected.status}
+              </Badge>
+            </p>
+            <ul className="space-y-1 text-sm">
+              {selected.items.map((it) => (
+                <li key={it.id} className="rounded-md bg-muted/40 px-3 py-2">
+                  {it.listing_id}: {fmt(it.from_price_mxn ?? 0)} →{" "}
+                  {fmt(it.explicit_price_mxn)}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="adjustment-batch-export"
+                onClick={() =>
+                  void downloadAdjustmentBatchCsv(locale, selected.id).then(() =>
+                    toast.success(t("adjustmentBatchExportDone"))
+                  )
+                }
               >
-                {t("approveBatch")}
-              </button>
-            )}
-            {(selected.status === "draft" ||
-              selected.status === "approved") &&
-              canWrite && (
-              <button
-                type="button"
-                className="primary"
-                data-testid="adjustment-apply"
-                onClick={() => void apply()}
+                {t("adjustmentBatchExportCsv")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="adjustment-batch-index-export"
+                onClick={() =>
+                  void downloadAdjustmentBatchIndexCsv(locale, selected.id).then(
+                    () => toast.success(t("adjustmentBatchIndexExportDone"))
+                  )
+                }
               >
-                {t("applyBatch")}
-              </button>
-            )}
-          </div>
-        </section>
+                {t("adjustmentBatchIndexExportCsv")}
+              </Button>
+              {selected.status === "pending_approval" && canApprove && (
+                <Button data-testid="adjustment-approve" onClick={() => void approve()}>
+                  {t("approveBatch")}
+                </Button>
+              )}
+              {(selected.status === "draft" || selected.status === "approved") &&
+                canWrite && (
+                  <Button data-testid="adjustment-apply" onClick={() => void apply()}>
+                    {t("applyBatch")}
+                  </Button>
+                )}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -1,5 +1,16 @@
 import { useTranslation } from "react-i18next";
 import type { AdjustmentBatch } from "../api/client";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { statusBadgeVariant } from "@/components/layout/AppLayout";
+import { cn } from "@/lib/utils";
 
 const LISTING_LABELS: Record<string, string> = {
   "listing-ml-001": "Mercado Libre",
@@ -22,44 +33,49 @@ export function AdjustmentBatchTable({
   const { t } = useTranslation();
 
   if (batches.length === 0) {
-    return <p>{t("noBatches")}</p>;
+    return <p className="text-sm text-muted-foreground">{t("noBatches")}</p>;
   }
 
   return (
-    <table className="batch-table" data-testid="adjustment-batch-table">
-      <thead>
-        <tr>
-          <th>{t("batchId")}</th>
-          <th>{t("batchStatus")}</th>
-          <th>{t("batchReason")}</th>
-          <th>{t("batchItems")}</th>
-          <th>{t("batchCreated")}</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table data-testid="adjustment-batch-table">
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("batchId")}</TableHead>
+          <TableHead>{t("batchStatus")}</TableHead>
+          <TableHead>{t("batchReason")}</TableHead>
+          <TableHead>{t("batchItems")}</TableHead>
+          <TableHead>{t("batchCreated")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {batches.map((b) => (
-          <tr
+          <TableRow
             key={b.id}
-            className={selectedId === b.id ? "selected" : ""}
+            className={cn(
+              "cursor-pointer",
+              selectedId === b.id && "bg-primary/10"
+            )}
             onClick={() => onSelect(b.id)}
           >
-            <td>{b.id}</td>
-            <td>
-              <span className={`status status-${b.status}`}>{b.status}</span>
-            </td>
-            <td>{b.reason_code ?? "—"}</td>
-            <td>
+            <TableCell className="font-mono text-xs">{b.id}</TableCell>
+            <TableCell>
+              <Badge variant={statusBadgeVariant(b.status)}>{b.status}</Badge>
+            </TableCell>
+            <TableCell>{b.reason_code ?? "—"}</TableCell>
+            <TableCell className="max-w-md truncate">
               {b.items
                 .map(
                   (it) =>
                     `${LISTING_LABELS[it.listing_id] ?? it.listing_id}: ${formatMoney(it.explicit_price_mxn)}`
                 )
                 .join("; ")}
-            </td>
-            <td>{new Date(b.created_at).toLocaleString()}</td>
-          </tr>
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+              {new Date(b.created_at).toLocaleString()}
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }
