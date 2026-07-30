@@ -15,12 +15,12 @@ import {
 import { useCanApprove, useCanPricingWrite } from "../auth/AuthContext";
 import { AdjustmentBatchTable } from "./AdjustmentBatchTable";
 import { toast } from "sonner";
-import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import { statusBadgeVariant } from "@/components/layout/AppLayout";
+import { PageIntent } from "@/components/patterns/PageIntent";
 import { FormActions, FormField, FormInset, FormRow, FormSection } from "@/components/patterns/FormField";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -131,8 +131,8 @@ export function AdjustmentBatchesPage() {
   };
 
   return (
-    <div className="page page-wide" data-testid="adjustment-batches-page">
-      <PageHeader
+    <div className="space-y-4" data-testid="adjustment-batches-page">
+      <PageIntent
         title={t("adjustmentsTitle")}
         actions={
           <>
@@ -165,8 +165,13 @@ export function AdjustmentBatchesPage() {
       />
 
       {error && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert>
+          <AlertDescription>{message}</AlertDescription>
         </Alert>
       )}
 
@@ -267,82 +272,72 @@ export function AdjustmentBatchesPage() {
           )}
       </FormSection>
 
-      <Card className="mb-4 ring-1 ring-border/50 shadow-sm">
-        <CardHeader>
-          <CardTitle>{t("batchList")}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0 pb-4 px-4">
-          <AdjustmentBatchTable
-            batches={batches}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            formatMoney={fmt}
-          />
-        </CardContent>
-      </Card>
+      <FormSection title={t("batchList")}>
+        <AdjustmentBatchTable
+          batches={batches}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          formatMoney={fmt}
+        />
+      </FormSection>
 
       {selected && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("batchDetail")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm">
-              {t("batchStatus")}:{" "}
-              <Badge
-                variant={statusBadgeVariant(selected.status)}
-                data-testid={`batch-status-${selected.status}`}
-              >
-                {selected.status}
-              </Badge>
-            </p>
-            <ul className="space-y-1 text-sm">
-              {selected.items.map((it) => (
-                <li key={it.id} className="rounded-md bg-muted/40 px-3 py-2">
-                  {it.listing_id}: {fmt(it.from_price_mxn ?? 0)} →{" "}
-                  {fmt(it.explicit_price_mxn)}
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="adjustment-batch-export"
-                onClick={() =>
-                  void downloadAdjustmentBatchCsv(locale, selected.id).then(() =>
-                    toast.success(t("adjustmentBatchExportDone"))
-                  )
-                }
-              >
-                {t("adjustmentBatchExportCsv")}
+        <FormSection title={t("batchDetail")}>
+          <p className="text-sm">
+            {t("batchStatus")}:{" "}
+            <Badge
+              variant={statusBadgeVariant(selected.status)}
+              data-testid={`batch-status-${selected.status}`}
+            >
+              {selected.status}
+            </Badge>
+          </p>
+          <ul className="space-y-1 text-sm">
+            {selected.items.map((it) => (
+              <li key={it.id} className="rounded-md bg-muted/40 px-3 py-2">
+                {it.listing_id}: {fmt(it.from_price_mxn ?? 0)} →{" "}
+                {fmt(it.explicit_price_mxn)}
+              </li>
+            ))}
+          </ul>
+          <FormActions className="border-t-0 pt-0">
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="adjustment-batch-export"
+              onClick={() =>
+                void downloadAdjustmentBatchCsv(locale, selected.id).then(() =>
+                  toast.success(t("adjustmentBatchExportDone"))
+                )
+              }
+            >
+              {t("adjustmentBatchExportCsv")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="adjustment-batch-index-export"
+              onClick={() =>
+                void downloadAdjustmentBatchIndexCsv(locale, selected.id).then(
+                  () => toast.success(t("adjustmentBatchIndexExportDone"))
+                )
+              }
+            >
+              {t("adjustmentBatchIndexExportCsv")}
+            </Button>
+            {selected.status === "pending_approval" && canApprove && (
+              <Button data-testid="adjustment-approve" onClick={() => void approve()}>
+                {t("approveBatch")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="adjustment-batch-index-export"
-                onClick={() =>
-                  void downloadAdjustmentBatchIndexCsv(locale, selected.id).then(
-                    () => toast.success(t("adjustmentBatchIndexExportDone"))
-                  )
-                }
-              >
-                {t("adjustmentBatchIndexExportCsv")}
-              </Button>
-              {selected.status === "pending_approval" && canApprove && (
-                <Button data-testid="adjustment-approve" onClick={() => void approve()}>
-                  {t("approveBatch")}
+            )}
+            {(selected.status === "draft" || selected.status === "approved") &&
+              canWrite && (
+                <Button data-testid="adjustment-apply" onClick={() => void apply()}>
+                  {t("applyBatch")}
                 </Button>
               )}
-              {(selected.status === "draft" || selected.status === "approved") &&
-                canWrite && (
-                  <Button data-testid="adjustment-apply" onClick={() => void apply()}>
-                    {t("applyBatch")}
-                  </Button>
-                )}
-            </div>
-          </CardContent>
-        </Card>
+          </FormActions>
+        </FormSection>
       )}
     </div>
   );

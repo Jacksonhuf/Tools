@@ -14,18 +14,22 @@ import {
   type CostSheetRow,
 } from "../api/client";
 import { useCanPricingWrite } from "../auth/AuthContext";
-import { PageHeader } from "@/components/layout/AppLayout";
+import { PageIntent } from "@/components/patterns/PageIntent";
+import { KpiStrip } from "@/components/patterns/KpiStrip";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+} from "@/components/patterns/DataTable";
 import { FormActions, FormField, FormRow, FormSection } from "@/components/patterns/FormField";
+import { KpiMetric } from "@/components/primitives/KpiMetric";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -33,14 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
@@ -160,50 +156,43 @@ export function SkuCostPage() {
 
   return (
     <TooltipProvider>
-      <div className="page page-wide" data-testid="sku-cost-page">
-        <PageHeader title={t("skuCostTitle")} description={t("skuCostHint")} />
+      <div className="space-y-4" data-testid="sku-cost-page">
+        <PageIntent title={t("skuCostTitle")} description={t("skuCostHint")} />
 
         {error && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle>{t("sku")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2 max-w-md">
-              <Label htmlFor="sku-select">{t("sku")}</Label>
-              <Select value={selectedSkuId} onValueChange={setSelectedSkuId}>
-                <SelectTrigger id="sku-select" data-testid="sku-cost-selector">
-                  <SelectValue placeholder={t("sku")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {skus.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.sku_code} — {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedSku && (
-              <div
-                className="inline-flex flex-col rounded-lg border bg-primary/5 px-4 py-3"
-                data-testid="sku-cost-landed-display"
-              >
-                <span className="text-xs font-medium uppercase text-muted-foreground">
-                  {t("landedCost")}
-                </span>
-                <span className="text-2xl font-bold tabular-nums text-primary">
-                  {fmt(selectedSku.landed_cost_mxn)}
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <FormSection title={t("sku")}>
+          <FormField label={t("sku")} htmlFor="sku-select">
+            <Select value={selectedSkuId} onValueChange={setSelectedSkuId}>
+              <SelectTrigger id="sku-select" data-testid="sku-cost-selector">
+                <SelectValue placeholder={t("sku")} />
+              </SelectTrigger>
+              <SelectContent>
+                {skus.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.sku_code} — {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormField>
+          {selectedSku && (
+            <KpiStrip className="mb-0">
+              <KpiMetric
+                label={t("landedCost")}
+                value={
+                  <span data-testid="sku-cost-landed-display">
+                    {fmt(selectedSku.landed_cost_mxn)}
+                  </span>
+                }
+              />
+            </KpiStrip>
+          )}
+        </FormSection>
 
         <FormSection title={t("landedCost")} testId="sku-cost-landed-panel">
             <FormField
@@ -312,50 +301,57 @@ export function SkuCostPage() {
               {t("costSheetExportCsv")}
             </Button>
             </FormActions>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("costSheetBatch")}</TableHead>
-                  <TableHead>COGS</TableHead>
-                  <TableHead className="w-[80px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {costSheets.slice(0, 5).map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>
-                      <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                        {s.batch_no}
-                      </code>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {s.cogs_amount} {s.cogs_currency}
-                    </TableCell>
-                    <TableCell>
-                      {canWrite && selectedSkuId && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              data-testid={`sku-cost-sheet-export-${s.id}`}
-                              onClick={() =>
-                                void downloadCostSheetCsv(locale, selectedSkuId, s.id).then(
-                                  () => toast.success(t("costSheetRowExportDone"))
-                                )
-                              }
-                            >
-                              CSV
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{t("costSheetRowExportCsv")}</TooltipContent>
-                        </Tooltip>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              testId="sku-cost-sheets-table"
+              isEmpty={costSheets.length === 0}
+              emptyMessage={t("dataTableNoResults")}
+              maxHeight={280}
+            >
+              <DataTableRoot>
+                <DataTableHeader>
+                  <DataTableRow>
+                    <DataTableHead>{t("costSheetBatch")}</DataTableHead>
+                    <DataTableHead>COGS</DataTableHead>
+                    <DataTableHead className="w-[80px]" />
+                  </DataTableRow>
+                </DataTableHeader>
+                <DataTableBody>
+                  {costSheets.slice(0, 5).map((s) => (
+                    <DataTableRow key={s.id}>
+                      <DataTableCell>
+                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                          {s.batch_no}
+                        </code>
+                      </DataTableCell>
+                      <DataTableCell className="tabular-nums">
+                        {s.cogs_amount} {s.cogs_currency}
+                      </DataTableCell>
+                      <DataTableCell>
+                        {canWrite && selectedSkuId && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                data-testid={`sku-cost-sheet-export-${s.id}`}
+                                onClick={() =>
+                                  void downloadCostSheetCsv(locale, selectedSkuId, s.id).then(
+                                    () => toast.success(t("costSheetRowExportDone"))
+                                  )
+                                }
+                              >
+                                CSV
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t("costSheetRowExportCsv")}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))}
+                </DataTableBody>
+              </DataTableRoot>
+            </DataTable>
         </FormSection>
       </div>
     </TooltipProvider>

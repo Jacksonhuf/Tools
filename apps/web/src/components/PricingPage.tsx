@@ -99,10 +99,19 @@ import { KpiStrip } from "@/components/patterns/KpiStrip";
 import { KpiMetric } from "@/components/primitives/KpiMetric";
 import { AdvancedSection } from "@/components/patterns/AdvancedSection";
 import { ExportHub } from "@/components/patterns/ExportHub";
+import { FormActions, FormField, FormRow, FormSection } from "@/components/patterns/FormField";
 import { PricingControlsPanel } from "@/components/patterns/PricingControlsPanel";
 import { Surface } from "@/components/primitives/Surface";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PricingMode = "cost" | "competitive_with_floor";
 
@@ -286,7 +295,7 @@ export function PricingPage() {
     : t("pricingKpiGuardOk");
 
   return (
-    <div className="page page-wide">
+    <div className="space-y-4">
       <PageIntent
         title={t("navPricing")}
         description={t("pricingWorkbenchHint")}
@@ -415,62 +424,70 @@ export function PricingPage() {
 
       <AdvancedSection title={t("advancedSection")} description={t("advancedSectionHint")}>
       {mlCtx && (
-        <section className="card">
-          <h2>{mlCtx.sku.name}</h2>
-          <label className="inline-edit">
-            {t("landedCost")} (MXN)
-            <input
-              type="number"
-              value={landedEdit}
-              onChange={(e) => setLandedEdit(Number(e.target.value))}
-            />
-            <button type="button" onClick={() => void saveLanded()}>
+        <FormSection title={mlCtx.sku.name}>
+          <FormRow cols={2}>
+            <FormField label={`${t("landedCost")} (MXN)`} htmlFor="pricing-landed-edit">
+              <Input
+                id="pricing-landed-edit"
+                type="number"
+                value={landedEdit}
+                onChange={(e) => setLandedEdit(Number(e.target.value))}
+              />
+            </FormField>
+          </FormRow>
+          <FormActions>
+            <Button type="button" onClick={() => void saveLanded()}>
               {t("saveLanded")}
-            </button>
-          </label>
-        </section>
+            </Button>
+          </FormActions>
+        </FormSection>
       )}
-        <section className="card" data-testid="cost-sheets-panel">
-        <h2>{t("costSheetsTitle")}</h2>
-        <p className="hint">{t("costSheetsHint")}</p>
-        <label>
-          {t("sku")}
-          <select
-            data-testid="pricing-sku-selector"
-            value={selectedSkuId}
-            onChange={(e) => setSelectedSkuId(e.target.value)}
-          >
-            {skus.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.sku_code} — {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t("costSheetBatch")}
-          <input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
-        </label>
-        <label>
-          COGS (MXN)
-          <input
-            type="number"
-            value={cogsAmount}
-            onChange={(e) => setCogsAmount(Number(e.target.value))}
-          />
-        </label>
-        <button type="button" data-testid="cost-sheet-add" onClick={() => void addCostSheet()}>
+        <FormSection
+          title={t("costSheetsTitle")}
+          description={t("costSheetsHint")}
+          testId="cost-sheets-panel"
+        >
+        <FormField label={t("sku")}>
+          <Select value={selectedSkuId} onValueChange={setSelectedSkuId}>
+            <SelectTrigger data-testid="pricing-sku-selector">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {skus.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.sku_code} — {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormRow cols={2}>
+          <FormField label={t("costSheetBatch")}>
+            <Input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
+          </FormField>
+          <FormField label="COGS (MXN)">
+            <Input
+              type="number"
+              value={cogsAmount}
+              onChange={(e) => setCogsAmount(Number(e.target.value))}
+            />
+          </FormField>
+        </FormRow>
+        <FormActions>
+        <Button type="button" data-testid="cost-sheet-add" onClick={() => void addCostSheet()}>
           {t("costSheetAdd")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           data-testid="cost-sheet-apply-landed"
           onClick={() => void applySheetLanded()}
         >
           {t("costSheetApplyLanded")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           data-testid="cost-sheet-export"
           onClick={() =>
             void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
@@ -479,9 +496,10 @@ export function PricingPage() {
           }
         >
           {t("costSheetExportCsv")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           data-testid="cost-sheet-row-export"
           disabled={!costSheets[0]}
           onClick={() => {
@@ -493,21 +511,21 @@ export function PricingPage() {
           }}
         >
           {t("costSheetRowExportCsv")}
-        </button>
-        <ul>
+        </Button>
+        </FormActions>
+        <ul className="space-y-1 text-sm">
           {costSheets.slice(0, 3).map((s) => (
             <li key={s.id}>
               <code>{s.batch_no}</code>: {s.cogs_amount} {s.cogs_currency}
             </li>
           ))}
         </ul>
-      </section>
+      </FormSection>
 
 {layerLabels.LANDED && (
-        <section className="card" data-testid="pricing-glossary-hint">
-          <h2>{t("glossaryTitle")}</h2>
-          <p>{t("glossaryHint")}</p>
-          <ul>
+        <FormSection title={t("glossaryTitle")} testId="pricing-glossary-hint">
+          <p className="text-sm text-muted-foreground">{t("glossaryHint")}</p>
+          <ul className="space-y-1 text-sm">
             {["LANDED", "LIST_PRICE", "IVA_DISPLAY"].map((key) =>
               layerLabels[key] ? (
                 <li key={key}>
@@ -516,7 +534,7 @@ export function PricingPage() {
               ) : null
             )}
           </ul>
-        </section>
+        </FormSection>
       )}
 
 
@@ -1321,8 +1339,6 @@ export function PricingPage() {
       </div>
         </ExportHub>
       </AdvancedSection>
-
-      {message && <p className="message">{message}</p>}
     </div>
   );
 }

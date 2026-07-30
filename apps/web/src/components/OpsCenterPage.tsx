@@ -273,7 +273,7 @@ export function OpsCenterPage() {
     ch === "MERCADO_LIBRE" ? t("mercadoLibre") : t("amazonMx");
 
   return (
-    <div className="page page-wide">
+    <div className="space-y-4">
       <PageIntent
         title={t("opsTitle")}
         description={t("opsHint")}

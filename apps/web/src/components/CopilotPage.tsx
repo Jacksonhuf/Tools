@@ -101,7 +101,7 @@ import {
   type CopilotChatMessage,
 } from "../api/client";
 import { CopilotChatPanel } from "./CopilotChatPanel";
-import { PageHeader } from "@/components/layout/AppLayout";
+import { PageIntent } from "@/components/patterns/PageIntent";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LISTINGS: Array<{ id: string; channel: Channel }> = [
@@ -377,10 +377,10 @@ export function CopilotPage() {
   };
 
   return (
-    <div className="page page-wide">
-      <PageHeader title={t("copilotTitle")} description={t("copilotHint")} />
+    <div className="space-y-4">
+      <PageIntent title={t("copilotTitle")} description={t("copilotHint")} />
       {p4Ready != null && (
-        <p className="hint" data-testid="p4-readiness">
+        <p className="text-sm text-muted-foreground" data-testid="p4-readiness">
           P4: {p4Ready ? t("copilotP4Ready") : t("copilotP4NotReady")}{" "}
           <button
             type="button"
@@ -396,7 +396,7 @@ export function CopilotPage() {
         </p>
       )}
       {compilerLabel && (
-        <p className="hint" data-testid="compiler-status">
+        <p className="text-sm text-muted-foreground" data-testid="compiler-status">
           {t("copilotCompilerStatus")}: {compilerLabel}
         </p>
       )}
@@ -413,6 +413,17 @@ export function CopilotPage() {
           {t("copilotRuleCompilerExportCsv")}
         </button>
       </p>
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+
       <section className="card" data-testid="copilot-digest-schedule">
         <h2>{t("copilotDigestScheduleTitle")}</h2>
         <label>
@@ -1336,16 +1347,6 @@ export function CopilotPage() {
             </button>
           </div>
         </section>
-      )}
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {message && (
-        <Alert className="mb-4">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
       )}
 
       <section className="card controls">
