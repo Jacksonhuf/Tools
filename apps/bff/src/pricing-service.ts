@@ -137,15 +137,17 @@ export function buildPricingContext(
     rounding_rule: { type: "NONE", decimals: 2 },
   });
 
-  const defaultActive: {
+  type VersionSlice = {
     version_id?: string;
     publish_price_mxn: number;
     publish_price: ReturnType<typeof money>;
     channel: "MERCADO_LIBRE" | "AMAZON_MX";
-  } = {
+  };
+
+  const defaultActive: VersionSlice = {
     publish_price_mxn: costActive.publish_price_mxn,
     publish_price: money(costActive.publish_price_mxn),
-    channel: "MERCADO_LIBRE" as const,
+    channel: "MERCADO_LIBRE",
   };
 
   return {
@@ -171,7 +173,7 @@ export function buildPricingContext(
     channel: channel ?? null,
     listings: [],
     versions: {
-      suggested: null,
+      suggested: null as VersionSlice | null,
       active: defaultActive,
     },
   };

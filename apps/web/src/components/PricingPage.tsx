@@ -81,6 +81,7 @@ import {
   downloadI18nGlossaryTermCsv,
   fetchI18nGlossary,
   fetchCostSheets,
+  fetchCompetitorCurve,
   fetchCrossChannelGuard,
   fetchPricingContext,
   fetchSkus,
@@ -92,8 +93,10 @@ import {
   type Channel,
   type CrossChannelGuardResponse,
   type CostSheetRow,
+  LISTING_BY_CHANNEL,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
+import type { CompetitorCurvePoint } from "./CompetitorCurveMini";
 import { PageIntent } from "@/components/patterns/PageIntent";
 import { KpiStrip } from "@/components/patterns/KpiStrip";
 import { KpiMetric } from "@/components/primitives/KpiMetric";
@@ -127,6 +130,9 @@ export function PricingPage() {
   const [contextByChannel, setContextByChannel] = useState<
     Record<Channel, Awaited<ReturnType<typeof fetchPricingContext>> | null>
   >({ MERCADO_LIBRE: null, AMAZON_MX: null });
+  const [curveByChannel, setCurveByChannel] = useState<
+    Record<Channel, CompetitorCurvePoint[]>
+  >({ MERCADO_LIBRE: [], AMAZON_MX: [] });
   const [simByChannel, setSimByChannel] = useState<
     Record<Channel, ChannelSimulation | null>
   >({ MERCADO_LIBRE: null, AMAZON_MX: null });
@@ -149,15 +155,22 @@ export function PricingPage() {
   const loadAll = useCallback(async () => {
     setError(null);
     try {
-      const [ml, amz, skuList, xch, sheets, glossary] = await Promise.all([
+      const [ml, amz, skuList, xch, sheets, glossary, mlCurve, amzCurve] =
+        await Promise.all([
         fetchPricingContext(locale, "MERCADO_LIBRE"),
         fetchPricingContext(locale, "AMAZON_MX"),
         fetchSkus(locale),
         fetchCrossChannelGuard(locale),
         fetchCostSheets(locale, selectedSkuId),
         fetchI18nGlossary(locale),
+        fetchCompetitorCurve(locale, LISTING_BY_CHANNEL.MERCADO_LIBRE, "7d"),
+        fetchCompetitorCurve(locale, LISTING_BY_CHANNEL.AMAZON_MX, "7d"),
       ]);
       setContextByChannel({ MERCADO_LIBRE: ml, AMAZON_MX: amz });
+      setCurveByChannel({
+        MERCADO_LIBRE: mlCurve.points,
+        AMAZON_MX: amzCurve.points,
+      });
       setCrossChannelWarning(xch.warning);
       setCostSheets(sheets.items);
       setSkus(skuList.items);
@@ -288,6 +301,10 @@ export function PricingPage() {
   const amzCtx = contextByChannel.AMAZON_MX;
   const mlActive = mlCtx?.versions.active?.publish_price?.formatted ?? "—";
   const amzActive = amzCtx?.versions.active?.publish_price?.formatted ?? "—";
+  const mlSuggested =
+    mlCtx?.versions.suggested?.publish_price?.formatted ?? t("noSuggested");
+  const amzSuggested =
+    amzCtx?.versions.suggested?.publish_price?.formatted ?? t("noSuggested");
   const mlSimulated =
     simByChannel.MERCADO_LIBRE?.publish_price.formatted ?? t("pricingKpiNotRun");
   const guardKpi = crossChannelWarning
@@ -334,6 +351,8 @@ export function PricingPage() {
       <KpiStrip>
         <KpiMetric label={t("pricingKpiMl")} value={mlActive} />
         <KpiMetric label={t("pricingKpiAmz")} value={amzActive} />
+        <KpiMetric label={t("pricingKpiMlSuggested")} value={mlSuggested} />
+        <KpiMetric label={t("pricingKpiAmzSuggested")} value={amzSuggested} />
         <KpiMetric label={t("pricingKpiSimulated")} value={mlSimulated} />
         <KpiMetric
           label={t("pricingKpiGuard")}
@@ -363,9 +382,14 @@ export function PricingPage() {
               simulation={simByChannel.MERCADO_LIBRE}
               formatAmount={fmt}
               activeLabel={t("activePrice")}
+              suggestedLabel={t("suggestedPrice")}
+              noSuggestedLabel={t("noSuggested")}
+              suggestedDeltaLabel={t("suggestedDelta")}
               floorLabel={t("floorMl")}
               guardsLabel={t("guards")}
               noGuardsLabel={t("noGuards")}
+              competitorCurveLabel={t("competitorCurveMini")}
+              curvePoints={curveByChannel.MERCADO_LIBRE}
               publishLabel={t("publish")}
               syncToChannelLabel={t("syncToChannel")}
               onSyncToChannel={() => void syncToChannel("MERCADO_LIBRE")}
@@ -396,9 +420,14 @@ export function PricingPage() {
               simulation={simByChannel.AMAZON_MX}
               formatAmount={fmt}
               activeLabel={t("activePrice")}
+              suggestedLabel={t("suggestedPrice")}
+              noSuggestedLabel={t("noSuggested")}
+              suggestedDeltaLabel={t("suggestedDelta")}
               floorLabel={t("floorAmazon")}
               guardsLabel={t("guards")}
               noGuardsLabel={t("noGuards")}
+              competitorCurveLabel={t("competitorCurveMini")}
+              curvePoints={curveByChannel.AMAZON_MX}
               publishLabel={t("publish")}
               syncToChannelLabel={t("syncToChannel")}
               onSyncToChannel={() => void syncToChannel("AMAZON_MX")}
