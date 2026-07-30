@@ -1,5 +1,7 @@
 import type { Channel } from "../api/client";
+import { CompetitorCurveMini, type CompetitorCurvePoint } from "./CompetitorCurveMini";
 import { WaterfallChart } from "./WaterfallChart";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
@@ -10,11 +12,16 @@ export interface ChannelSimulation {
   guards: string[];
 }
 
+interface VersionSlice {
+  version_id?: string;
+  publish_price_mxn?: number;
+  publish_price?: { formatted: string };
+}
+
 interface PricingContextSlice {
   versions: {
-    active?: {
-      publish_price?: { formatted: string };
-    } | null;
+    active?: VersionSlice | null;
+    suggested?: VersionSlice | null;
   };
   floors: {
     mercado_libre: { formatted: string; amount_mxn: number };
@@ -33,10 +40,31 @@ interface Props {
   syncToChannelLabel: string;
   onSyncToChannel?: () => void;
   activeLabel: string;
+  suggestedLabel: string;
+  noSuggestedLabel: string;
+  suggestedDeltaLabel: string;
   floorLabel: string;
   guardsLabel: string;
   noGuardsLabel: string;
+  competitorCurveLabel: string;
+  curvePoints?: CompetitorCurvePoint[];
   layerLabels?: Record<string, string>;
+}
+
+function formatDelta(
+  activeMxn: number | undefined,
+  suggestedMxn: number | undefined,
+  formatAmount: (n: number) => string
+): string | null {
+  if (activeMxn == null || suggestedMxn == null) {
+    return null;
+  }
+  const delta = suggestedMxn - activeMxn;
+  if (delta === 0) {
+    return formatAmount(0);
+  }
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${formatAmount(delta)}`;
 }
 
 export function ChannelPricingColumn({
@@ -50,15 +78,27 @@ export function ChannelPricingColumn({
   syncToChannelLabel,
   onSyncToChannel,
   activeLabel,
+  suggestedLabel,
+  noSuggestedLabel,
+  suggestedDeltaLabel,
   floorLabel,
   guardsLabel,
   noGuardsLabel,
+  competitorCurveLabel,
+  curvePoints = [],
   layerLabels,
 }: Props) {
   const floor =
     channel === "MERCADO_LIBRE"
       ? context.floors.mercado_libre
       : context.floors.amazon_mx;
+  const suggested = context.versions.suggested;
+  const active = context.versions.active;
+  const delta = formatDelta(
+    active?.publish_price_mxn,
+    suggested?.publish_price_mxn,
+    formatAmount
+  );
 
   return (
     <div className="space-y-4" data-channel={channel}>
@@ -67,14 +107,41 @@ export function ChannelPricingColumn({
         <div className="flex items-center justify-between border-b py-2">
           <span className="text-muted-foreground">{activeLabel}</span>
           <span className="font-medium tabular-nums">
-            {context.versions.active?.publish_price?.formatted ?? "—"}
+            {active?.publish_price?.formatted ?? "—"}
           </span>
         </div>
+        <div
+          className="flex items-center justify-between border-b py-2"
+          data-testid={`pricing-suggested-${channel}`}
+        >
+          <span className="text-muted-foreground">{suggestedLabel}</span>
+          <div className="flex items-center gap-2">
+            {suggested?.version_id && (
+              <Badge variant="outline" className="text-xs">
+                {suggested.version_id.slice(0, 8)}
+              </Badge>
+            )}
+            <span className="font-medium tabular-nums">
+              {suggested?.publish_price?.formatted ?? noSuggestedLabel}
+            </span>
+          </div>
+        </div>
+        {delta && (
+          <div className="flex items-center justify-between border-b py-2 text-xs">
+            <span className="text-muted-foreground">{suggestedDeltaLabel}</span>
+            <span className="font-medium tabular-nums">{delta}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between border-b py-2">
           <span className="text-muted-foreground">{floorLabel}</span>
           <span className="font-medium tabular-nums">{floor.formatted}</span>
         </div>
       </div>
+      <CompetitorCurveMini
+        points={curvePoints}
+        title={competitorCurveLabel}
+        formatAmount={formatAmount}
+      />
       {context.versions.active && onSyncToChannel && (
         <Button variant="outline" size="sm" onClick={onSyncToChannel}>
           {syncToChannelLabel}

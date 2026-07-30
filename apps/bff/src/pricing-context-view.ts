@@ -28,18 +28,27 @@ export async function buildSkuPricingContextView(
   const active = versions.find(
     (v) => v.state === "active" && v.channel === ch
   );
+  const suggested = versions.find(
+    (v) => v.state === "suggested" && v.channel === ch
+  );
   const ctx = buildPricingContext(sku, channel, locale);
+  const versionSlice = (
+    v: (typeof versions)[number]
+  ): NonNullable<typeof ctx.versions.active> => ({
+    version_id: v.id,
+    publish_price_mxn: v.publish_price_mxn,
+    publish_price: formatMoney({
+      locale,
+      currency: "MXN",
+      amount: v.publish_price_mxn,
+    }),
+    channel: v.channel as "MERCADO_LIBRE" | "AMAZON_MX",
+  });
   if (active) {
-    ctx.versions.active = {
-      version_id: active.id,
-      publish_price_mxn: active.publish_price_mxn,
-      publish_price: formatMoney({
-        locale,
-        currency: "MXN",
-        amount: active.publish_price_mxn,
-      }),
-      channel: active.channel as "MERCADO_LIBRE" | "AMAZON_MX",
-    };
+    ctx.versions.active = versionSlice(active);
+  }
+  if (suggested) {
+    ctx.versions.suggested = versionSlice(suggested);
   }
   const listingId = getListingIdForChannel(ch);
   if (listingId) {
