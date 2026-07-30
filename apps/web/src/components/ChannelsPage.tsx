@@ -90,6 +90,27 @@ import {
   type ChannelSandboxEvent,
   type ShopSummary,
 } from "../api/client";
+import { ExportPanel } from "@/components/layout/ExportPanel";
+import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DEMO_REFS: Record<string, string> = {
   MERCADO_LIBRE: "MLM123456",
@@ -234,15 +255,23 @@ export function ChannelsPage() {
 
   return (
     <div className="page page-wide">
-      <h1>{t("channelsTitle")}</h1>
-      <p className="hint">{t("channelsHint")}</p>
+      <PageHeader title={t("channelsTitle")} description={t("channelsHint")} />
       {sandboxNote && (
-        <p className="hint" data-testid="channel-sandbox-badge">
+        <p className="mb-4 text-sm text-muted-foreground" data-testid="channel-sandbox-badge">
           {t("channelSandboxBadge")}: {sandboxNote}
         </p>
       )}
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+      <ExportPanel title={t("exportActions")}>
       <div className="shop-actions">
         <button
           type="button"
@@ -1052,11 +1081,27 @@ export function ChannelsPage() {
           {t("channelsNotificationTemplateExportCsv")}
         </button>
       </div>
+      </ExportPanel>
 
+      <Tabs defaultValue="adapter" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="adapter">{t("channelAdapterTitle")}</TabsTrigger>
+          <TabsTrigger value="shops">{t("shopList")}</TabsTrigger>
+          {sandboxNote && (
+            <TabsTrigger value="sandbox" data-testid="channels-tab-sandbox">
+              {t("channelSandboxEventsTitle")}
+            </TabsTrigger>
+          )}
+        </TabsList>
+
+        <TabsContent value="adapter">
       {adapterStatus && (
-        <section className="card" data-testid="channel-adapter-status">
-          <h2>{t("channelAdapterTitle")}</h2>
-          <p className="hint">{adapterStatus.note}</p>
+        <Card data-testid="channel-adapter-status">
+          <CardHeader>
+            <CardTitle>{t("channelAdapterTitle")}</CardTitle>
+            <CardDescription>{adapterStatus.note}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
           <dl className="adapter-status-dl">
             <div>
               <dt>{t("channelAdapterDriver")}</dt>
@@ -1069,14 +1114,16 @@ export function ChannelsPage() {
             <div>
               <dt>{t("batchStatus")}</dt>
               <dd>
-                <span
-                  className={`status status-${adapterStatus.ready ? "connected" : "disconnected"}`}
+                <Badge
+                  variant={statusBadgeVariant(
+                    adapterStatus.ready ? "connected" : "disconnected"
+                  )}
                   data-testid="channel-adapter-ready"
                 >
                   {adapterStatus.ready
                     ? t("channelAdapterReady")
                     : t("channelAdapterNotReady")}
-                </span>
+                </Badge>
               </dd>
             </div>
             <div>
@@ -1096,8 +1143,10 @@ export function ChannelsPage() {
               </dd>
             </div>
           </dl>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             data-testid="channel-adapter-export"
             onClick={() =>
               void downloadChannelAdapterStatusCsv(locale).then(() =>
@@ -1106,39 +1155,45 @@ export function ChannelsPage() {
             }
           >
             {t("channelAdapterExportCsv")}
-          </button>
-        </section>
+          </Button>
+          </CardContent>
+        </Card>
       )}
+        </TabsContent>
 
-      <section className="card">
-        <h2>{t("shopList")}</h2>
-        <table className="batch-table shop-table" data-testid="shops-table">
-          <thead>
-            <tr>
-              <th>{t("channel")}</th>
-              <th>{t("shopName")}</th>
-              <th>{t("batchStatus")}</th>
-              <th>{t("shopSellerId")}</th>
-              <th>{t("channelLastListingSyncCol")}</th>
-              <th>{t("shopActions")}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <TabsContent value="shops">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("shopList")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+        <Table data-testid="shops-table">
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("channel")}</TableHead>
+              <TableHead>{t("shopName")}</TableHead>
+              <TableHead>{t("batchStatus")}</TableHead>
+              <TableHead>{t("shopSellerId")}</TableHead>
+              <TableHead>{t("channelLastListingSyncCol")}</TableHead>
+              <TableHead>{t("shopActions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {shops.map((shop) => (
-              <tr key={shop.id}>
-                <td>{channelLabel(shop.channel)}</td>
-                <td>{shop.name}</td>
-                <td>
-                  <span className={`status status-${shop.auth_status}`}>
+              <TableRow key={shop.id}>
+                <TableCell>{channelLabel(shop.channel)}</TableCell>
+                <TableCell>{shop.name}</TableCell>
+                <TableCell>
+                  <Badge variant={statusBadgeVariant(shop.auth_status)}>
                     {shop.auth_status}
-                  </span>
-                </td>
-                <td>{shop.external_seller_id ?? "—"}</td>
-                <td>
+                  </Badge>
+                </TableCell>
+                <TableCell>{shop.external_seller_id ?? "—"}</TableCell>
+                <TableCell>
                   {SHOP_LISTING_ID[shop.id] &&
                     lastSyncByListing[SHOP_LISTING_ID[shop.id]] && (
                       <span
-                        className="hint"
+                        className="text-sm text-muted-foreground"
                         data-testid={`channel-last-sync-${shop.id}`}
                       >
                         {t("channelLastListingSync", {
@@ -1150,45 +1205,59 @@ export function ChannelsPage() {
                         })}
                       </span>
                     )}
-                </td>
-                <td className="shop-actions">
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-2">
                   {shop.auth_status !== "connected" ? (
-                    <button type="button" onClick={() => void connect(shop)}>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void connect(shop)}>
                       {t("connectShop")}
-                    </button>
+                    </Button>
                   ) : (
                     <>
-                      <button type="button" onClick={() => void pull(shop)}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => void pull(shop)}>
                         {t("pullListing")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="outline"
                         data-testid="listing-sync-run"
                         onClick={() => void syncListingJob(shop)}
                       >
                         {t("listingSyncRun")}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="outline"
                         onClick={() => void publishActive(shop)}
                       >
                         {t("publishToChannel")}
-                      </button>
+                      </Button>
                     </>
                   )}
-                </td>
-              </tr>
+                  </div>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </section>
+          </TableBody>
+        </Table>
+        </CardContent>
+      </Card>
+        </TabsContent>
 
-      {sandboxNote && (
-        <section className="card">
-          <h2>{t("channelSandboxEventsTitle")}</h2>
-          <div className="shop-actions">
-            <button
+        {sandboxNote && (
+        <TabsContent value="sandbox">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("channelSandboxEventsTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               data-testid="channel-sandbox-export"
               onClick={() =>
                 void downloadChannelSandboxEventsCsv(locale).then(() =>
@@ -1197,9 +1266,11 @@ export function ChannelsPage() {
               }
             >
               {t("channelSandboxExportCsv")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               data-testid="channel-sandbox-event-export"
               disabled={!sandboxEvents[0]}
               onClick={() => {
@@ -1211,41 +1282,41 @@ export function ChannelsPage() {
               }}
             >
               {t("channelSandboxEventExportCsv")}
-            </button>
+            </Button>
           </div>
           {sandboxEvents.length === 0 ? (
-            <p className="hint" data-testid="channel-sandbox-events-empty">
+            <p className="text-sm text-muted-foreground" data-testid="channel-sandbox-events-empty">
               {t("channelSandboxNoEvents")}
             </p>
           ) : (
-            <table
-              className="batch-table shop-table"
-              data-testid="channel-sandbox-events"
-            >
-              <thead>
-                <tr>
-                  <th>{t("channelSandboxEventTime")}</th>
-                  <th>{t("channelSandboxEventType")}</th>
-                  <th>{t("channel")}</th>
-                  <th>{t("channelSandboxListing")}</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="channel-sandbox-events">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("channelSandboxEventTime")}</TableHead>
+                  <TableHead>{t("channelSandboxEventType")}</TableHead>
+                  <TableHead>{t("channel")}</TableHead>
+                  <TableHead>{t("channelSandboxListing")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {sandboxEvents.map((ev) => (
-                  <tr key={ev.id}>
-                    <td>{new Date(ev.created_at).toLocaleString(locale)}</td>
-                    <td>
+                  <TableRow key={ev.id}>
+                    <TableCell>{new Date(ev.created_at).toLocaleString(locale)}</TableCell>
+                    <TableCell>
                       <code>{ev.event_type}</code>
-                    </td>
-                    <td>{channelLabel(ev.channel)}</td>
-                    <td>{ev.listing_id}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{channelLabel(ev.channel)}</TableCell>
+                    <TableCell>{ev.listing_id}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
-        </section>
-      )}
+          </CardContent>
+        </Card>
+        </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }

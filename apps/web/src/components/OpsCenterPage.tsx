@@ -107,6 +107,10 @@ import {
   type RepricingQueueItem,
   type TariffHsRow,
 } from "../api/client";
+import { OpsMetricsCard } from "./OpsMetricsCard";
+import { ExportPanel } from "@/components/layout/ExportPanel";
+import { PageHeader } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DEMO_LISTINGS = ["listing-ml-001", "listing-amz-001"];
 const RECON_REFS: Record<string, string> = {
@@ -257,10 +261,18 @@ export function OpsCenterPage() {
 
   return (
     <div className="page page-wide">
-      <h1>{t("opsTitle")}</h1>
-      <p className="hint">{t("opsHint")}</p>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      <PageHeader title={t("opsTitle")} description={t("opsHint")} />
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+      <ExportPanel title={t("exportActions")}>
       <div className="shop-actions">
         <button
           type="button"
@@ -821,82 +833,19 @@ export function OpsCenterPage() {
           {t("opsI18nGlossaryTermExportCsv")}
         </button>
       </div>
+      </ExportPanel>
 
       {metrics && (
-        <section className="card" data-testid="ops-metrics">
-          <h2>{t("opsMetricsTitle")}</h2>
-          <button
-            type="button"
-            data-testid="ops-metrics-export"
-            onClick={() =>
-              void downloadOpsMetricsCsv(locale).then(() =>
-                setMessage(t("opsMetricsExportDone"))
-              )
-            }
-          >
-            {t("opsMetricsExportCsv")}
-          </button>
-          <dl className="adapter-status-dl">
-            <div>
-              <dt>{t("opsMetricsCatalog")}</dt>
-              <dd>
-                <code>{metrics.catalog_driver}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>{t("channelAdapterDriver")}</dt>
-              <dd>
-                <code data-testid="ops-metrics-adapter-driver">
-                  {metrics.channel_adapters.driver}
-                </code>
-              </dd>
-            </div>
-            <div>
-              <dt>{t("channelSandboxBadge")}</dt>
-              <dd>
-                {metrics.channel_sandbox.mode} ({metrics.channel_sandbox.event_count})
-              </dd>
-            </div>
-            <div>
-              <dt>{t("opsMetricsDigestQueue")}</dt>
-              <dd>
-                {metrics.digest_queue.queued} / {metrics.digest_queue.total}
-                {metrics.digest_queue.dead_letter > 0 && (
-                  <>
-                    {" "}
-                    · DLQ {metrics.digest_queue.dead_letter}
-                  </>
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>{t("opsMetricsRepricingQueue")}</dt>
-              <dd data-testid="ops-metrics-repricing-queue">
-                {metrics.repricing_batch_queue.queued} /{" "}
-                {metrics.repricing_batch_queue.total} (
-                <code>{metrics.repricing_batch_queue.driver}</code>)
-              </dd>
-            </div>
-            <div>
-              <dt>{t("opsRepricingBatchSummary")}</dt>
-              <dd data-testid="ops-repricing-batch-summary">
-                {t("opsRepricingBatchSummaryLine", {
-                  queued: repricingBatchQueued,
-                  driver: repricingBatchDriver,
-                })}
-              </dd>
-            </div>
-            <div>
-              <dt>{t("opsMetricsNfr")}</dt>
-              <dd data-testid="ops-metrics-nfr">
-                {t("opsMetricsNfrSimulate", {
-                  count: metrics.nfr.pricing_simulate_count,
-                  avgMs: metrics.nfr.pricing_calc_duration_ms_avg,
-                })}
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <OpsMetricsCard
+          metrics={metrics}
+          repricingBatchQueued={repricingBatchQueued}
+          repricingBatchDriver={repricingBatchDriver}
+          onExport={() =>
+            void downloadOpsMetricsCsv(locale).then(() =>
+              setMessage(t("opsMetricsExportDone"))
+            )
+          }
+        />
       )}
 
       <section className="card controls">

@@ -45,6 +45,7 @@ test.describe("Channels sandbox UI", () => {
     await expect(page.getByTestId("channel-sandbox-badge")).toBeVisible({
       timeout: 15_000,
     });
+    await page.getByTestId("channels-tab-sandbox").click();
     await expect(page.getByTestId("channel-sandbox-events")).toBeVisible();
     await expect(
       page.getByTestId("channel-sandbox-events").getByText("channel_publish").first()
