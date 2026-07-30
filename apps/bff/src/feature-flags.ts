@@ -16,6 +16,7 @@ export function getFeatureFlags() {
     repricing_batch_worker: !envOff("FEATURE_REPRICING_BATCH_WORKER"),
     channel_live_publish:
       envOn("CHANNEL_LIVE_ACKNOWLEDGED") && !envOff("FEATURE_CHANNEL_LIVE_PUBLISH"),
+    competitor_compliant_scrape: envOn("FEATURE_COMPETITOR_COMPLIANT_SCRAPE"),
     generated_at: new Date().toISOString(),
   };
 }
@@ -33,6 +34,7 @@ const FLAG_KEYS: FeatureFlagKey[] = [
   "buy_box_anchor",
   "repricing_batch_worker",
   "channel_live_publish",
+  "competitor_compliant_scrape",
 ];
 
 export function getFeatureFlagValue(
