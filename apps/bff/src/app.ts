@@ -348,6 +348,11 @@ import {
   notificationTemplateToCsv,
   notificationTemplatesToCsv,
 } from "./notification-template-csv.js";
+import {
+  listNotificationInbox,
+  markNotificationRead,
+} from "./notification-delivery.js";
+import { notificationInboxToCsv } from "./notification-inbox-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
@@ -599,6 +604,36 @@ export function createApp(options: CreateAppOptions = {}) {
         "Content-Disposition": `attachment; filename="notification-template.csv"`,
       },
     });
+  });
+
+  app.get("/api/v1/notifications/inbox", async (c) => {
+    const tenantId = c.get("tenantId");
+    const items = await listNotificationInbox(tenantId);
+    return c.json({ items });
+  });
+
+  app.get("/api/v1/notifications/inbox/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const items = await listNotificationInbox(tenantId);
+    const csv = notificationInboxToCsv(locale, items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="notification-inbox-${locale}.csv"`,
+      },
+    });
+  });
+
+  app.post("/api/v1/notifications/:notificationId/read", async (c) => {
+    const tenantId = c.get("tenantId");
+    const notificationId = c.req.param("notificationId");
+    const updated = await markNotificationRead(tenantId, notificationId);
+    if (!updated) {
+      throw new HTTPException(404, { message: "NOTIFICATION_NOT_FOUND" });
+    }
+    return c.json({ notification: updated });
   });
 
   app.get("/api/v1/skus/:skuId/pricing-context/export", async (c) => {
@@ -3678,7 +3713,8 @@ export function createApp(options: CreateAppOptions = {}) {
         listingHealth,
         repricingActivity,
         tenantId,
-        eventId
+        eventId,
+        c.get("locale")
       );
       return c.json(result);
     } catch (e) {

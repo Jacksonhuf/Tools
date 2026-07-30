@@ -2141,6 +2141,49 @@ export async function fetchNotificationTemplates(locale: string) {
   }>;
 }
 
+export type NotificationInboxItem = {
+  id: string;
+  template_id: string;
+  event: string;
+  channel: string;
+  subject: string;
+  body: string;
+  listing_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export async function fetchNotificationInbox(locale: string) {
+  const res = await fetch(`/api/v1/notifications/inbox`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-inbox ${res.status}`);
+  return res.json() as Promise<{ items: NotificationInboxItem[] }>;
+}
+
+export async function markNotificationRead(locale: string, notificationId: string) {
+  const res = await fetch(`/api/v1/notifications/${notificationId}/read`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-read ${res.status}`);
+  return res.json() as Promise<{ notification: NotificationInboxItem }>;
+}
+
+export async function downloadNotificationInboxCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/notifications/inbox/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-inbox-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notification-inbox-${locale}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
   const res = await fetch(`/api/v1/auth/status/export`, {
     headers: headers(locale),
