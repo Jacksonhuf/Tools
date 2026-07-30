@@ -1,0 +1,112 @@
+/**
+ * Obsidian design tokens — single source of truth for light/dark themes.
+ */
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 0 0% 98%;
+    --foreground: 240 6% 4%;
+    --surface-1: 0 0% 100%;
+    --surface-2: 220 14% 97%;
+    --surface-3: 220 13% 95%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 6% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 6% 4%;
+
+    /* Brand — electric blue + AI accent */
+    --primary: 230 91% 64%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 258 90% 66%;
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Status */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 230 91% 64%;
+    --radius: 0.5rem;
+
+    /* Sidebar — light: subtle inset panel */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 6% 10%;
+    --sidebar-primary: 230 91% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 240 6% 92%;
+    --sidebar-ring: 230 91% 64%;
+
+    /* Charts */
+    --chart-1: 230 91% 64%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 258 90% 66%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 0 84% 60%;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+    --shadow-lg: 0 12px 32px -4px rgb(0 0 0 / 0.12);
+  }
+
+  .dark {
+    --background: 240 6% 4%;
+    --foreground: 0 0% 98%;
+    --surface-1: 240 6% 7%;
+    --surface-2: 240 4% 10%;
+    --surface-3: 240 4% 16%;
+
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 4% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 222 82% 65%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 258 90% 72%;
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 14%;
+    --muted-foreground: 240 5% 65%;
+
+    --success: 160 72% 42%;
+    --warning: 38 92% 55%;
+    --destructive: 0 72% 55%;
+    --info: 217 91% 65%;
+
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 222 82% 65%;
+
+    --sidebar-background: 240 6% 5%;
+    --sidebar-foreground: 240 5% 90%;
+    --sidebar-primary: 222 82% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 4% 12%;
+    --sidebar-ring: 222 82% 65%;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 16px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 12px 40px -4px rgb(0 0 0 / 0.6);
+  }
+}

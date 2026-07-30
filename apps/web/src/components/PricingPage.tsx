@@ -94,9 +94,24 @@ import {
   type CostSheetRow,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
-import { PageHeader } from "@/components/layout/AppLayout";
+import { PageIntent } from "@/components/patterns/PageIntent";
+import { KpiStrip } from "@/components/patterns/KpiStrip";
+import { KpiMetric } from "@/components/primitives/KpiMetric";
+import { AdvancedSection } from "@/components/patterns/AdvancedSection";
+import { ExportHub } from "@/components/patterns/ExportHub";
+import { FormActions, FormField, FormRow, FormSection } from "@/components/patterns/FormField";
+import { PricingControlsPanel } from "@/components/patterns/PricingControlsPanel";
+import { Surface } from "@/components/primitives/Surface";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PricingMode = "cost" | "competitive_with_floor";
 
@@ -271,10 +286,30 @@ export function PricingPage() {
 
   const mlCtx = contextByChannel.MERCADO_LIBRE;
   const amzCtx = contextByChannel.AMAZON_MX;
+  const mlActive = mlCtx?.versions.active?.publish_price?.formatted ?? "—";
+  const amzActive = amzCtx?.versions.active?.publish_price?.formatted ?? "—";
+  const mlSimulated =
+    simByChannel.MERCADO_LIBRE?.publish_price.formatted ?? t("pricingKpiNotRun");
+  const guardKpi = crossChannelWarning
+    ? `${crossChannelWarning.spread_pct}%`
+    : t("pricingKpiGuardOk");
 
   return (
-    <div className="page page-wide">
-      <PageHeader title={t("navPricing")} />
+    <div className="space-y-4">
+      <PageIntent
+        title={t("navPricing")}
+        description={t("pricingWorkbenchHint")}
+        actions={
+          <Button
+            type="button"
+            data-testid="simulate-both"
+            shortcut="⌘↵"
+            onClick={() => void runSimulateAll()}
+          >
+            {t("simulateBoth")}
+          </Button>
+        }
+      />
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -295,7 +330,253 @@ export function PricingPage() {
           </AlertDescription>
         </Alert>
       )}
-      <div className="shop-actions">
+
+      <KpiStrip>
+        <KpiMetric label={t("pricingKpiMl")} value={mlActive} />
+        <KpiMetric label={t("pricingKpiAmz")} value={amzActive} />
+        <KpiMetric label={t("pricingKpiSimulated")} value={mlSimulated} />
+        <KpiMetric
+          label={t("pricingKpiGuard")}
+          value={guardKpi}
+          trendDirection={crossChannelWarning ? "down" : "up"}
+        />
+      </KpiStrip>
+
+      <PricingControlsPanel
+        mode={mode}
+        onModeChange={setMode}
+        margin={margin}
+        onMarginChange={setMargin}
+        competitorMl={competitorMl}
+        onCompetitorMlChange={setCompetitorMl}
+        competitorAmz={competitorAmz}
+        onCompetitorAmzChange={setCompetitorAmz}
+      />
+
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2" data-testid="dual-channel-grid">
+        {mlCtx && (
+          <Surface variant="elevated" padding="md" className="channel-card">
+            <ChannelPricingColumn
+              channel="MERCADO_LIBRE"
+              title={t("mercadoLibre")}
+              context={mlCtx}
+              simulation={simByChannel.MERCADO_LIBRE}
+              formatAmount={fmt}
+              activeLabel={t("activePrice")}
+              floorLabel={t("floorMl")}
+              guardsLabel={t("guards")}
+              noGuardsLabel={t("noGuards")}
+              publishLabel={t("publish")}
+              syncToChannelLabel={t("syncToChannel")}
+              onSyncToChannel={() => void syncToChannel("MERCADO_LIBRE")}
+              onPublish={() => {
+                const sim = simByChannel.MERCADO_LIBRE;
+                if (!sim) return;
+                void publishPrice(locale, "MERCADO_LIBRE", sim.publish_price_mxn).then(
+                  async ({ ok, json }) => {
+                    setMessage(
+                      ok
+                        ? `${t("publishOk")}: ${json.version_id}`
+                        : `${t("publishFail")}`
+                    );
+                    await loadAll();
+                  }
+                );
+              }}
+              layerLabels={layerLabels}
+            />
+          </Surface>
+        )}
+        {amzCtx && (
+          <Surface variant="elevated" padding="md" className="channel-card">
+            <ChannelPricingColumn
+              channel="AMAZON_MX"
+              title={t("amazonMx")}
+              context={amzCtx}
+              simulation={simByChannel.AMAZON_MX}
+              formatAmount={fmt}
+              activeLabel={t("activePrice")}
+              floorLabel={t("floorAmazon")}
+              guardsLabel={t("guards")}
+              noGuardsLabel={t("noGuards")}
+              publishLabel={t("publish")}
+              syncToChannelLabel={t("syncToChannel")}
+              onSyncToChannel={() => void syncToChannel("AMAZON_MX")}
+              onPublish={() => {
+                const sim = simByChannel.AMAZON_MX;
+                if (!sim) return;
+                void publishPrice(locale, "AMAZON_MX", sim.publish_price_mxn).then(
+                  async ({ ok, json }) => {
+                    setMessage(
+                      ok
+                        ? `${t("publishOk")}: ${json.version_id}`
+                        : `${t("publishFail")}`
+                    );
+                    await loadAll();
+                  }
+                );
+              }}
+              layerLabels={layerLabels}
+            />
+          </Surface>
+        )}
+      </div>
+
+      <AdvancedSection title={t("advancedSection")} description={t("advancedSectionHint")}>
+      {mlCtx && (
+        <FormSection title={mlCtx.sku.name}>
+          <FormRow cols={2}>
+            <FormField label={`${t("landedCost")} (MXN)`} htmlFor="pricing-landed-edit">
+              <Input
+                id="pricing-landed-edit"
+                type="number"
+                value={landedEdit}
+                onChange={(e) => setLandedEdit(Number(e.target.value))}
+              />
+            </FormField>
+          </FormRow>
+          <FormActions>
+            <Button type="button" onClick={() => void saveLanded()}>
+              {t("saveLanded")}
+            </Button>
+          </FormActions>
+        </FormSection>
+      )}
+        <FormSection
+          title={t("costSheetsTitle")}
+          description={t("costSheetsHint")}
+          testId="cost-sheets-panel"
+        >
+        <FormField label={t("sku")}>
+          <Select value={selectedSkuId} onValueChange={setSelectedSkuId}>
+            <SelectTrigger data-testid="pricing-sku-selector">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {skus.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.sku_code} — {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormRow cols={2}>
+          <FormField label={t("costSheetBatch")}>
+            <Input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
+          </FormField>
+          <FormField label="COGS (MXN)">
+            <Input
+              type="number"
+              value={cogsAmount}
+              onChange={(e) => setCogsAmount(Number(e.target.value))}
+            />
+          </FormField>
+        </FormRow>
+        <FormActions>
+        <Button type="button" data-testid="cost-sheet-add" onClick={() => void addCostSheet()}>
+          {t("costSheetAdd")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          data-testid="cost-sheet-apply-landed"
+          onClick={() => void applySheetLanded()}
+        >
+          {t("costSheetApplyLanded")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          data-testid="cost-sheet-export"
+          onClick={() =>
+            void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
+              setMessage(t("costSheetExportDone"))
+            )
+          }
+        >
+          {t("costSheetExportCsv")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          data-testid="cost-sheet-row-export"
+          disabled={!costSheets[0]}
+          onClick={() => {
+            const sheet = costSheets[0];
+            if (!sheet) return;
+            void downloadCostSheetCsv(locale, selectedSkuId, sheet.id).then(() =>
+              setMessage(t("costSheetRowExportDone"))
+            );
+          }}
+        >
+          {t("costSheetRowExportCsv")}
+        </Button>
+        </FormActions>
+        <ul className="space-y-1 text-sm">
+          {costSheets.slice(0, 3).map((s) => (
+            <li key={s.id}>
+              <code>{s.batch_no}</code>: {s.cogs_amount} {s.cogs_currency}
+            </li>
+          ))}
+        </ul>
+      </FormSection>
+
+{layerLabels.LANDED && (
+        <FormSection title={t("glossaryTitle")} testId="pricing-glossary-hint">
+          <p className="text-sm text-muted-foreground">{t("glossaryHint")}</p>
+          <ul className="space-y-1 text-sm">
+            {["LANDED", "LIST_PRICE", "IVA_DISPLAY"].map((key) =>
+              layerLabels[key] ? (
+                <li key={key}>
+                  <code>{key}</code> — {layerLabels[key]}
+                </li>
+              ) : null
+            )}
+          </ul>
+        </FormSection>
+      )}
+
+
+        <ExportHub title={t("exportActions")} description={t("exportHubHint")}>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          data-testid="pricing-waterfall-export"
+          onClick={() =>
+            void downloadWaterfallExportCsv(locale, {
+              channel: "MERCADO_LIBRE",
+              pricing_mode: mode,
+              target_margin_pct: mode === "cost" ? margin : undefined,
+              competitor_price_mxn:
+                mode === "competitive_with_floor" ? competitorMl : undefined,
+            }).then(() => setMessage(t("waterfallExportDone")))
+          }
+        >
+          {t("waterfallExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="i18n-glossary-export"
+          onClick={() =>
+            void downloadI18nGlossaryCsv(locale).then(() =>
+              setMessage(t("glossaryExportDone"))
+            )
+          }
+        >
+          {t("glossaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="i18n-glossary-term-export"
+          onClick={() =>
+            void downloadI18nGlossaryTermCsv(locale, "LANDED").then(() =>
+              setMessage(t("glossaryTermExportDone"))
+            )
+          }
+        >
+          {t("glossaryTermExportCsv")}
+        </button>
         <button
           type="button"
           data-testid="pricing-skus-export"
@@ -1056,267 +1337,8 @@ export function PricingPage() {
           {t("pricingNotificationTemplateExportCsv")}
         </button>
       </div>
-
-      {mlCtx && (
-        <section className="card">
-          <h2>{mlCtx.sku.name}</h2>
-          <label className="inline-edit">
-            {t("landedCost")} (MXN)
-            <input
-              type="number"
-              value={landedEdit}
-              onChange={(e) => setLandedEdit(Number(e.target.value))}
-            />
-            <button type="button" onClick={() => void saveLanded()}>
-              {t("saveLanded")}
-            </button>
-          </label>
-        </section>
-      )}
-
-      <section className="card" data-testid="cost-sheets-panel">
-        <h2>{t("costSheetsTitle")}</h2>
-        <p className="hint">{t("costSheetsHint")}</p>
-        <label>
-          {t("sku")}
-          <select
-            data-testid="pricing-sku-selector"
-            value={selectedSkuId}
-            onChange={(e) => setSelectedSkuId(e.target.value)}
-          >
-            {skus.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.sku_code} — {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t("costSheetBatch")}
-          <input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
-        </label>
-        <label>
-          COGS (MXN)
-          <input
-            type="number"
-            value={cogsAmount}
-            onChange={(e) => setCogsAmount(Number(e.target.value))}
-          />
-        </label>
-        <button type="button" data-testid="cost-sheet-add" onClick={() => void addCostSheet()}>
-          {t("costSheetAdd")}
-        </button>
-        <button
-          type="button"
-          data-testid="cost-sheet-apply-landed"
-          onClick={() => void applySheetLanded()}
-        >
-          {t("costSheetApplyLanded")}
-        </button>
-        <button
-          type="button"
-          data-testid="cost-sheet-export"
-          onClick={() =>
-            void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
-              setMessage(t("costSheetExportDone"))
-            )
-          }
-        >
-          {t("costSheetExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="cost-sheet-row-export"
-          disabled={!costSheets[0]}
-          onClick={() => {
-            const sheet = costSheets[0];
-            if (!sheet) return;
-            void downloadCostSheetCsv(locale, selectedSkuId, sheet.id).then(() =>
-              setMessage(t("costSheetRowExportDone"))
-            );
-          }}
-        >
-          {t("costSheetRowExportCsv")}
-        </button>
-        <ul>
-          {costSheets.slice(0, 3).map((s) => (
-            <li key={s.id}>
-              <code>{s.batch_no}</code>: {s.cogs_amount} {s.cogs_currency}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="card controls">
-        <button
-          type="button"
-          data-testid="pricing-waterfall-export"
-          onClick={() =>
-            void downloadWaterfallExportCsv(locale, {
-              channel: "MERCADO_LIBRE",
-              pricing_mode: mode,
-              target_margin_pct: mode === "cost" ? margin : undefined,
-              competitor_price_mxn:
-                mode === "competitive_with_floor" ? competitorMl : undefined,
-            }).then(() => setMessage(t("waterfallExportDone")))
-          }
-        >
-          {t("waterfallExportCsv")}
-        </button>
-        <label>
-          {t("pricingMode")}
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as PricingMode)}
-          >
-            <option value="cost">{t("modeCost")}</option>
-            <option value="competitive_with_floor">{t("modeCompetitive")}</option>
-          </select>
-        </label>
-        {mode === "cost" ? (
-          <label>
-            {t("targetMargin")}: {margin}%
-            <input
-              type="range"
-              min={5}
-              max={40}
-              value={margin}
-              onChange={(e) => setMargin(Number(e.target.value))}
-            />
-          </label>
-        ) : (
-          <div className="competitor-inputs">
-            <label>
-              {t("competitorPrice")} (ML)
-              <input
-                type="number"
-                value={competitorMl}
-                onChange={(e) => setCompetitorMl(Number(e.target.value))}
-              />
-            </label>
-            <label>
-              {t("competitorPrice")} (Amazon)
-              <input
-                type="number"
-                value={competitorAmz}
-                onChange={(e) => setCompetitorAmz(Number(e.target.value))}
-              />
-            </label>
-          </div>
-        )}
-        <Button type="button" data-testid="simulate-both" onClick={() => void runSimulateAll()}>
-          {t("simulateBoth")}
-        </Button>
-        <button
-          type="button"
-          data-testid="i18n-glossary-export"
-          onClick={() =>
-            void downloadI18nGlossaryCsv(locale).then(() =>
-              setMessage(t("glossaryExportDone"))
-            )
-          }
-        >
-          {t("glossaryExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="i18n-glossary-term-export"
-          onClick={() =>
-            void downloadI18nGlossaryTermCsv(locale, "LANDED").then(() =>
-              setMessage(t("glossaryTermExportDone"))
-            )
-          }
-        >
-          {t("glossaryTermExportCsv")}
-        </button>
-      </section>
-
-      {layerLabels.LANDED && (
-        <section className="card" data-testid="pricing-glossary-hint">
-          <h2>{t("glossaryTitle")}</h2>
-          <p>{t("glossaryHint")}</p>
-          <ul>
-            {["LANDED", "LIST_PRICE", "IVA_DISPLAY"].map((key) =>
-              layerLabels[key] ? (
-                <li key={key}>
-                  <code>{key}</code> — {layerLabels[key]}
-                </li>
-              ) : null
-            )}
-          </ul>
-        </section>
-      )}
-
-      <div className="dual-channel" data-testid="dual-channel-grid">
-        {mlCtx && (
-          <section className="card channel-card">
-            <ChannelPricingColumn
-              channel="MERCADO_LIBRE"
-              title={t("mercadoLibre")}
-              context={mlCtx}
-              simulation={simByChannel.MERCADO_LIBRE}
-              formatAmount={fmt}
-              activeLabel={t("activePrice")}
-              floorLabel={t("floorMl")}
-              guardsLabel={t("guards")}
-              noGuardsLabel={t("noGuards")}
-              publishLabel={t("publish")}
-              syncToChannelLabel={t("syncToChannel")}
-              onSyncToChannel={() => void syncToChannel("MERCADO_LIBRE")}
-              onPublish={() => {
-                const sim = simByChannel.MERCADO_LIBRE;
-                if (!sim) return;
-                void publishPrice(locale, "MERCADO_LIBRE", sim.publish_price_mxn).then(
-                  async ({ ok, json }) => {
-                    setMessage(
-                      ok
-                        ? `${t("publishOk")}: ${json.version_id}`
-                        : `${t("publishFail")}`
-                    );
-                    await loadAll();
-                  }
-                );
-              }}
-              layerLabels={layerLabels}
-            />
-          </section>
-        )}
-        {amzCtx && (
-          <section className="card channel-card">
-            <ChannelPricingColumn
-              channel="AMAZON_MX"
-              title={t("amazonMx")}
-              context={amzCtx}
-              simulation={simByChannel.AMAZON_MX}
-              formatAmount={fmt}
-              activeLabel={t("activePrice")}
-              floorLabel={t("floorAmazon")}
-              guardsLabel={t("guards")}
-              noGuardsLabel={t("noGuards")}
-              publishLabel={t("publish")}
-              syncToChannelLabel={t("syncToChannel")}
-              onSyncToChannel={() => void syncToChannel("AMAZON_MX")}
-              onPublish={() => {
-                const sim = simByChannel.AMAZON_MX;
-                if (!sim) return;
-                void publishPrice(locale, "AMAZON_MX", sim.publish_price_mxn).then(
-                  async ({ ok, json }) => {
-                    setMessage(
-                      ok
-                        ? `${t("publishOk")}: ${json.version_id}`
-                        : `${t("publishFail")}`
-                    );
-                    await loadAll();
-                  }
-                );
-              }}
-              layerLabels={layerLabels}
-            />
-          </section>
-        )}
-      </div>
-
-      {message && <p className="message">{message}</p>}
+        </ExportHub>
+      </AdvancedSection>
     </div>
   );
 }

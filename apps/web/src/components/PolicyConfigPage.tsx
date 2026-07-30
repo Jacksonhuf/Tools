@@ -19,6 +19,17 @@ import {
   downloadSharedFeeTemplateCsv,
   downloadTenantSharedFeeTemplatesCsv,
 } from "../api/client";
+import { PageIntent } from "@/components/patterns/PageIntent";
+import {
+  FormActions,
+  FormField,
+  FormRow,
+  FormSection,
+} from "@/components/patterns/FormField";
+import { ExportHub } from "@/components/patterns/ExportHub";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function PolicyConfigPage() {
   const { t, i18n } = useTranslation();
@@ -86,188 +97,230 @@ export function PolicyConfigPage() {
   };
 
   return (
-    <div className="page page-wide" data-testid="policy-config-page">
-      <h1>{t("policyConfigTitle")}</h1>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+    <div className="space-y-4" data-testid="policy-config-page">
+      <PageIntent title={t("policyConfigTitle")} />
 
-      <section className="card">
-        <h2>{t("policyMargins")}</h2>
-        <label>
-          {t("targetMargin")} (%)
-          <input
-            type="number"
-            data-testid="policy-target-margin"
-            value={targetMargin}
-            onChange={(e) => setTargetMargin(Number(e.target.value))}
-          />
-        </label>
-        <label>
-          {t("minMargin")} (%)
-          <input
-            type="number"
-            data-testid="policy-min-margin"
-            value={minMargin}
-            onChange={(e) => setMinMargin(Number(e.target.value))}
-          />
-        </label>
-        <button type="button" data-testid="policy-save" onClick={() => void savePolicy()}>
-          {t("policySave")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-batch-apply"
-          onClick={() =>
-            void batchPatchSkuPolicies(locale, [
-              {
-                sku_id: DEMO_SKU,
-                target_margin_pct: targetMargin,
-                min_margin_pct: minMargin,
-              },
-            ]).then((r) =>
-              setMessage(
-                t("policyBatchDone", {
-                  updated: r.updated.length,
-                  errors: r.errors.length,
-                })
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert>
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+
+      <FormSection title={t("policyMargins")}>
+        <FormRow>
+          <FormField label={`${t("targetMargin")} (%)`} htmlFor="policy-target-margin">
+            <Input
+              id="policy-target-margin"
+              type="number"
+              data-testid="policy-target-margin"
+              value={targetMargin}
+              onChange={(e) => setTargetMargin(Number(e.target.value))}
+            />
+          </FormField>
+          <FormField label={`${t("minMargin")} (%)`} htmlFor="policy-min-margin">
+            <Input
+              id="policy-min-margin"
+              type="number"
+              data-testid="policy-min-margin"
+              value={minMargin}
+              onChange={(e) => setMinMargin(Number(e.target.value))}
+            />
+          </FormField>
+        </FormRow>
+        <FormActions>
+          <Button
+            type="button"
+            data-testid="policy-save"
+            onClick={() => void savePolicy()}
+          >
+            {t("policySave")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            data-testid="policy-batch-apply"
+            onClick={() =>
+              void batchPatchSkuPolicies(locale, [
+                {
+                  sku_id: DEMO_SKU,
+                  target_margin_pct: targetMargin,
+                  min_margin_pct: minMargin,
+                },
+              ]).then((r) =>
+                setMessage(
+                  t("policyBatchDone", {
+                    updated: r.updated.length,
+                    errors: r.errors.length,
+                  })
+                )
               )
-            )
-          }
-        >
-          {t("policyBatchSave")}
-        </button>
-      </section>
+            }
+          >
+            {t("policyBatchSave")}
+          </Button>
+        </FormActions>
+      </FormSection>
 
-      <section className="card">
-        <h2>{t("sharedFeeTemplates")}</h2>
-        <button
-          type="button"
-          data-testid="policy-shared-fee-export"
-          onClick={() =>
-            void downloadSharedFeeTemplatesCsv(locale).then(() =>
-              setMessage(t("sharedFeeTemplatesExportDone"))
-            )
-          }
+      <FormSection title={t("sharedFeeTemplates")}>
+        <ExportHub
+          title={t("sharedFeeTemplatesExportCsv")}
+          description={t("exportHubHint")}
         >
-          {t("sharedFeeTemplatesExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-shared-fee-template-export"
-          onClick={() =>
-            void downloadSharedFeeTemplateCsv(
-              locale,
-              "fee-tpl-ml-electronics"
-            ).then(() => setMessage(t("sharedFeeTemplateExportDone")))
-          }
-        >
-          {t("sharedFeeTemplateExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-tenant-shared-fee-export"
-          onClick={() =>
-            void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
-              () => setMessage(t("tenantSharedFeeTemplatesExportDone"))
-            )
-          }
-        >
-          {t("tenantSharedFeeTemplatesExportCsv")}
-        </button>
-        <ul>
+          <button
+            type="button"
+            data-testid="policy-shared-fee-export"
+            onClick={() =>
+              void downloadSharedFeeTemplatesCsv(locale).then(() =>
+                setMessage(t("sharedFeeTemplatesExportDone"))
+              )
+            }
+          >
+            {t("sharedFeeTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-shared-fee-template-export"
+            onClick={() =>
+              void downloadSharedFeeTemplateCsv(
+                locale,
+                "fee-tpl-ml-electronics"
+              ).then(() => setMessage(t("sharedFeeTemplateExportDone")))
+            }
+          >
+            {t("sharedFeeTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-tenant-shared-fee-export"
+            onClick={() =>
+              void downloadTenantSharedFeeTemplatesCsv(locale, "tenant-demo").then(
+                () => setMessage(t("tenantSharedFeeTemplatesExportDone"))
+              )
+            }
+          >
+            {t("tenantSharedFeeTemplatesExportCsv")}
+          </button>
+        </ExportHub>
+        <ul className="mt-4 space-y-2">
           {templates.map((tpl) => (
-            <li key={tpl.id}>
-              {tpl.name} ({tpl.channel}){" "}
-              <button type="button" onClick={() => void applyTemplate(tpl.id)}>
+            <li
+              key={tpl.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/50 bg-surface-2/50 px-3 py-2 text-sm"
+            >
+              <span>
+                {tpl.name} ({tpl.channel})
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => void applyTemplate(tpl.id)}
+              >
                 {t("feeTemplateApply")}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
-      </section>
+      </FormSection>
 
-      <section className="card" data-testid="policy-category-templates">
-        <h2>{t("categoryRuleTemplatesTitle")}</h2>
-        <ul>
+      <FormSection
+        title={t("categoryRuleTemplatesTitle")}
+        testId="policy-category-templates"
+      >
+        <ul className="space-y-2">
           {categoryTemplates.map((tpl) => (
-            <li key={tpl.category_id}>
-              <code>{tpl.category_id}</code> — {tpl.name}
+            <li
+              key={tpl.category_id}
+              className="rounded-lg border border-border/50 bg-surface-2/50 px-3 py-2 text-sm"
+            >
+              <code className="text-xs">{tpl.category_id}</code> — {tpl.name}
             </li>
           ))}
         </ul>
-        <button
-          type="button"
-          data-testid="policy-category-templates-export"
-          onClick={() =>
-            void downloadCategoryRuleTemplatesCsv(locale).then(() =>
-              setMessage(t("categoryRuleTemplatesExportDone"))
-            )
-          }
+        <ExportHub
+          title={t("categoryRuleTemplatesExportCsv")}
+          description={t("exportHubHint")}
+          className="mt-4"
         >
-          {t("categoryRuleTemplatesExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-category-template-export"
-          onClick={() =>
-            void downloadCategoryRuleTemplateCsv(
-              locale,
-              "cat-electronics-mx"
-            ).then(() => setMessage(t("categoryRuleTemplateExportDone")))
-          }
-        >
-          {t("categoryRuleTemplateExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-sku-category-template-export"
-          onClick={() =>
-            void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
-              setMessage(t("skuCategoryRuleTemplateExportDone"))
-            )
-          }
-        >
-          {t("skuCategoryRuleTemplateExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-pricing-context-export"
-          onClick={() =>
-            void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
-              () => setMessage(t("policyPricingContextExportDone"))
-            )
-          }
-        >
-          {t("policyPricingContextExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-repricing-batch-job-export"
-          onClick={() =>
-            void downloadLatestRepricingBatchJobCsv(locale)
-              .then(() => setMessage(t("policyRepricingBatchJobExportDone")))
-              .catch(() => setMessage(t("policyRepricingBatchJobExportEmpty")))
-          }
-        >
-          {t("policyRepricingBatchJobExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="policy-copilot-session-export"
-          onClick={() =>
-            void createCopilotSession(
-              locale,
-              "listing-ml-001",
-              DEMO_SKU,
-              "MERCADO_LIBRE"
-            )
-              .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
-              .then(() => setMessage(t("policyCopilotSessionExportDone")))
-          }
-        >
-          {t("policyCopilotSessionExportCsv")}
-        </button>
-      </section>
+          <button
+            type="button"
+            data-testid="policy-category-templates-export"
+            onClick={() =>
+              void downloadCategoryRuleTemplatesCsv(locale).then(() =>
+                setMessage(t("categoryRuleTemplatesExportDone"))
+              )
+            }
+          >
+            {t("categoryRuleTemplatesExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-category-template-export"
+            onClick={() =>
+              void downloadCategoryRuleTemplateCsv(
+                locale,
+                "cat-electronics-mx"
+              ).then(() => setMessage(t("categoryRuleTemplateExportDone")))
+            }
+          >
+            {t("categoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-sku-category-template-export"
+            onClick={() =>
+              void downloadSkuCategoryRuleTemplateCsv(locale, DEMO_SKU).then(() =>
+                setMessage(t("skuCategoryRuleTemplateExportDone"))
+              )
+            }
+          >
+            {t("skuCategoryRuleTemplateExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-pricing-context-export"
+            onClick={() =>
+              void downloadPricingContextCsv(locale, "MERCADO_LIBRE", DEMO_SKU).then(
+                () => setMessage(t("policyPricingContextExportDone"))
+              )
+            }
+          >
+            {t("policyPricingContextExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-repricing-batch-job-export"
+            onClick={() =>
+              void downloadLatestRepricingBatchJobCsv(locale)
+                .then(() => setMessage(t("policyRepricingBatchJobExportDone")))
+                .catch(() => setMessage(t("policyRepricingBatchJobExportEmpty")))
+            }
+          >
+            {t("policyRepricingBatchJobExportCsv")}
+          </button>
+          <button
+            type="button"
+            data-testid="policy-copilot-session-export"
+            onClick={() =>
+              void createCopilotSession(
+                locale,
+                "listing-ml-001",
+                DEMO_SKU,
+                "MERCADO_LIBRE"
+              )
+                .then((s) => downloadCopilotSessionCsv(locale, s.session_id))
+                .then(() => setMessage(t("policyCopilotSessionExportDone")))
+            }
+          >
+            {t("policyCopilotSessionExportCsv")}
+          </button>
+        </ExportHub>
+      </FormSection>
     </div>
   );
 }

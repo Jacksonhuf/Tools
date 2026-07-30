@@ -108,9 +108,22 @@ import {
   type TariffHsRow,
 } from "../api/client";
 import { OpsMetricsCard } from "./OpsMetricsCard";
-import { ExportPanel } from "@/components/layout/ExportPanel";
-import { PageHeader } from "@/components/layout/AppLayout";
+import { OpsRepricingQueueTable } from "./OpsRepricingQueueTable";
+import { PageIntent } from "@/components/patterns/PageIntent";
+import { AdvancedSection } from "@/components/patterns/AdvancedSection";
+import { ExportHub } from "@/components/patterns/ExportHub";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+} from "@/components/patterns/DataTable";
+import { Surface } from "@/components/primitives/Surface";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const DEMO_LISTINGS = ["listing-ml-001", "listing-amz-001"];
 const RECON_REFS: Record<string, string> = {
@@ -260,8 +273,24 @@ export function OpsCenterPage() {
     ch === "MERCADO_LIBRE" ? t("mercadoLibre") : t("amazonMx");
 
   return (
-    <div className="page page-wide">
-      <PageHeader title={t("opsTitle")} description={t("opsHint")} />
+    <div className="space-y-4">
+      <PageIntent
+        title={t("opsTitle")}
+        description={t("opsHint")}
+        actions={
+          <>
+            <Button type="button" variant="secondary" size="sm" onClick={() => void promote()}>
+              {t("opsPromotePending")}
+            </Button>
+            <Button type="button" size="sm" onClick={() => void publishBatch()}>
+              {t("opsBatchPublish")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => void runReconcile()}>
+              {t("opsRunReconcile")}
+            </Button>
+          </>
+        }
+      />
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{error}</AlertDescription>
@@ -272,8 +301,631 @@ export function OpsCenterPage() {
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       )}
-      <ExportPanel title={t("exportActions")}>
-      <div className="shop-actions">
+      {metrics && (
+        <OpsMetricsCard
+          metrics={metrics}
+          repricingBatchQueued={repricingBatchQueued}
+          repricingBatchDriver={repricingBatchDriver}
+          onExport={() =>
+            void downloadOpsMetricsCsv(locale).then(() =>
+              setMessage(t("opsMetricsExportDone"))
+            )
+          }
+        />
+      )}
+
+      <OpsRepricingQueueTable
+        items={items}
+        selected={selected}
+        onToggle={toggle}
+        channelLabel={channelLabel}
+        locale={locale}
+        toolbar={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="ops-repricing-queue-export"
+              onClick={() =>
+                void downloadRepricingQueueCsv(locale).then(() =>
+                  setMessage(t("opsRepricingQueueExportDone"))
+                )
+              }
+            >
+              {t("opsRepricingQueueExportCsv")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="ops-repricing-queue-sku-export"
+              onClick={() =>
+                void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
+                  setMessage(t("opsRepricingQueueSkuExportDone"))
+                )
+              }
+            >
+              {t("opsRepricingQueueSkuExportCsv")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="ops-price-version-export"
+              disabled={items.length === 0}
+              onClick={() =>
+                items[0]
+                  ? void downloadPriceVersionCsv(locale, items[0].version_id).then(
+                      () => setMessage(t("opsPriceVersionExportDone"))
+                    )
+                  : undefined
+              }
+            >
+              {t("opsPriceVersionExportCsv")}
+            </Button>
+          </>
+        }
+      />
+
+      <Surface variant="elevated" padding="md" className="mb-6">
+        <h2 className="mb-4 text-base font-semibold">{t("opsReconAlerts")}</h2>
+        <DataTable
+          testId="reconciliation-alerts-table"
+          isEmpty={alerts.length === 0}
+          emptyMessage={t("opsReconEmpty")}
+          maxHeight={280}
+          className="border-0 shadow-none ring-0"
+        >
+          <DataTableRoot>
+            <DataTableHeader>
+              <DataTableRow className="hover:bg-transparent">
+                <DataTableHead>{t("channel")}</DataTableHead>
+                <DataTableHead>{t("opsReconActive")}</DataTableHead>
+                <DataTableHead>{t("opsReconChannel")}</DataTableHead>
+                <DataTableHead>{t("opsReconDelta")}</DataTableHead>
+                <DataTableHead>{t("batchCreated")}</DataTableHead>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {alerts.map((a) => (
+                <DataTableRow key={a.id}>
+                  <DataTableCell>{channelLabel(a.channel)}</DataTableCell>
+                  <DataTableCell className="font-mono tabular-nums">{a.active_price_mxn}</DataTableCell>
+                  <DataTableCell className="font-mono tabular-nums">{a.channel_price_mxn}</DataTableCell>
+                  <DataTableCell className="font-mono tabular-nums">{a.delta_mxn}</DataTableCell>
+                  <DataTableCell className="text-muted-foreground">
+                    {new Date(a.created_at).toLocaleString(locale)}
+                  </DataTableCell>
+                </DataTableRow>
+              ))}
+            </DataTableBody>
+          </DataTableRoot>
+        </DataTable>
+      </Surface>
+
+      <AdvancedSection title={t("advancedSection")} description={t("opsAdvancedHint")}>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
+        <button
+          type="button"
+          data-testid="ops-export-pricing-csv"
+          onClick={() => void downloadPricingSnapshotCsv(locale, DEMO_SKU)}
+        >
+          {t("opsExportPricingCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-export-tenant-pricing-csv"
+          onClick={() =>
+            void downloadTenantPricingSnapshotsCsv(locale).then(() =>
+              setMessage(t("opsTenantPricingExportDone"))
+            )
+          }
+        >
+          {t("opsTenantPricingExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-export-pricing-row-csv"
+          onClick={() =>
+            void downloadPricingSnapshotRowCsv(
+              locale,
+              DEMO_SKU,
+              "MERCADO_LIBRE"
+            ).then(() => setMessage(t("opsPricingRowExportDone")))
+          }
+        >
+          {t("opsPricingRowExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-version-backup"
+          onClick={() => void downloadVersionBackup(locale)}
+        >
+          {t("opsVersionBackup")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-version-backup-csv"
+          onClick={() =>
+            void downloadVersionBackupCsv(locale).then(() =>
+              setMessage(t("opsVersionBackupCsvDone"))
+            )
+          }
+        >
+          {t("opsVersionBackupCsv")}
+        </button>
+      </Surface>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-listing-sync-schedule">
+        <h2 className="text-base font-semibold">{t("opsListingSyncSchedule")}</h2>
+        <label>
+          <input
+            type="checkbox"
+            checked={syncEnabled}
+            onChange={(e) => setSyncEnabled(e.target.checked)}
+          />
+          {t("opsListingSyncEnabled")}
+        </label>
+        <label>
+          {t("opsListingSyncCron")}
+          <input
+            type="text"
+            value={syncCron}
+            onChange={(e) => setSyncCron(e.target.value)}
+            style={{ width: "100%", fontFamily: "monospace" }}
+          />
+        </label>
+        <p className="text-sm text-muted-foreground" data-testid="ops-listing-sync-summary">
+          {t("opsListingSyncSummary", {
+            ok: syncJobOk,
+            failed: syncJobFailed,
+            sampled: syncJobOk + syncJobFailed,
+          })}
+        </p>
+        <p className="text-sm text-muted-foreground" data-testid="ops-listing-sync-last-run">
+          {t("opsListingSyncLastRun")}:{" "}
+          {syncLastRun ? new Date(syncLastRun).toLocaleString(locale) : "—"}
+        </p>
+        <button
+          type="button"
+          onClick={() =>
+            void updateListingSyncSchedule(locale, {
+              enabled: syncEnabled,
+              cron_expression: syncCron,
+            }).then(() => setMessage(t("policySaved")))
+          }
+        >
+          {t("opsListingSyncSave")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-run-force"
+          onClick={() =>
+            void runListingSyncDue(locale, true)
+              .then((r) => {
+                setMessage(
+                  t("opsListingSyncRunDone", { count: r.runs.length })
+                );
+                return load();
+              })
+              .catch((e) => setError(String(e)))
+          }
+        >
+          {t("opsListingSyncRunForce")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-run-due"
+          onClick={() =>
+            void runListingSyncDue(locale)
+              .then((r) =>
+                setMessage(
+                  t("opsListingSyncRunDone", { count: r.runs.length })
+                )
+              )
+              .catch(() => setError(t("opsListingSyncDisabled")))
+          }
+        >
+          {t("opsListingSyncRunDue")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-schedule-export"
+          onClick={() =>
+            void downloadListingSyncScheduleCsv(locale).then(() =>
+              setMessage(t("opsListingSyncScheduleExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncScheduleExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-export"
+          onClick={() =>
+            void downloadListingSyncJobsCsv(locale).then(() =>
+              setMessage(t("opsListingSyncExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncExportJobs")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-job-export"
+          disabled={!syncJobs[0]}
+          onClick={() => {
+            const job = syncJobs[0];
+            if (!job) return;
+            void downloadListingSyncJobCsv(locale, job.id).then(() =>
+              setMessage(t("opsListingSyncJobExportDone"))
+            );
+          }}
+        >
+          {t("opsListingSyncJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-status-export"
+          onClick={() =>
+            void downloadListingSyncOpsStatusCsv(locale).then(() =>
+              setMessage(t("opsListingSyncStatusExportDone"))
+            )
+          }
+        >
+          {t("opsListingSyncStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-sync-amz-export"
+          onClick={() =>
+            void downloadListingSyncJobsForListingCsv(
+              locale,
+              "listing-amz-001"
+            ).then(() => setMessage(t("opsListingSyncAmzExportDone")))}
+        >
+          {t("opsListingSyncAmzExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-export"
+          onClick={() =>
+            void downloadReconciliationAlertsExport(locale).then(() =>
+              setMessage(t("opsReconciliationExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-direct-export"
+          onClick={() =>
+            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
+              setMessage(t("opsReconciliationDirectExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationDirectExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-report-export"
+          onClick={() =>
+            void downloadReconciliationAlertsReportCsv(locale).then(() =>
+              setMessage(t("opsReconciliationReportExportDone"))
+            )
+          }
+        >
+          {t("opsReconciliationReportExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-reconciliation-alert-export"
+          disabled={!alerts[0]}
+          onClick={() => {
+            const alert = alerts[0];
+            if (!alert) return;
+            void downloadReconciliationAlertCsv(locale, alert.id).then(() =>
+              setMessage(t("opsReconciliationAlertExportDone"))
+            );
+          }}
+        >
+          {t("opsReconciliationAlertExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsCsv(locale).then(() =>
+              setMessage(t("opsRepricingBatchExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-job-export"
+          onClick={() =>
+            void downloadLatestRepricingBatchJobCsv(locale)
+              .then(() => setMessage(t("opsRepricingBatchJobExportDone")))
+              .catch(() => setError(t("opsRepricingBatchJobExportEmpty")))
+          }
+        >
+          {t("opsRepricingBatchJobExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-shard-plan-export"
+          onClick={() =>
+            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
+              () => setMessage(t("opsRepricingBatchShardPlanExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchShardPlanExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-repricing-batch-summary-export"
+          onClick={() =>
+            void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
+              setMessage(t("opsRepricingBatchSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsRepricingBatchSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-listing-ingest-status-export"
+          onClick={() =>
+            void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
+              () => setMessage(t("listingIngestStatusExportDone"))
+            )
+          }
+        >
+          {t("opsListingIngestStatusExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-feature-flags-export"
+          onClick={() =>
+            void downloadFeatureFlagsCsv(locale).then(() =>
+              setMessage(t("readinessFeatureFlagsExportDone"))
+            )
+          }
+        >
+          {t("opsFeatureFlagsExportCsv")}
+        </button>
+        {syncJobs.length > 0 && (
+          <DataTable testId="ops-listing-sync-jobs" maxHeight={280}>
+            <DataTableRoot>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHead>{t("opsListingSyncJobListing")}</DataTableHead>
+                  <DataTableHead>{t("batchStatus")}</DataTableHead>
+                  <DataTableHead>{t("opsListingSyncJobPrice")}</DataTableHead>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {syncJobs.map((j) => (
+                  <DataTableRow key={j.id}>
+                    <DataTableCell>
+                      <code className="text-xs">{j.listing_id}</code>
+                    </DataTableCell>
+                    <DataTableCell>{j.status}</DataTableCell>
+                    <DataTableCell className="tabular-nums">
+                      {j.channel_price_mxn != null
+                        ? `${j.channel_price_mxn} MXN`
+                        : "—"}
+                    </DataTableCell>
+                  </DataTableRow>
+                ))}
+              </DataTableBody>
+            </DataTableRoot>
+          </DataTable>
+        )}
+      </Surface>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-landed-cost-import">
+        <h2 className="text-base font-semibold">{t("opsLandedCostImport")}</h2>
+        <p className="text-sm text-muted-foreground">{t("opsLandedCostImportHint")}</p>
+        <textarea
+          rows={3}
+          value={importCsv}
+          onChange={(e) => setImportCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void importLandedCostCsv(locale, importCsv).then((r) =>
+              setMessage(
+                t("opsLandedCostImportDone", { count: r.updated.length })
+              )
+            )
+          }
+        >
+          {t("opsLandedCostImportRun")}
+        </button>
+        {workerCount > 0 && (
+          <p className="text-sm text-muted-foreground" data-testid="ops-workers-live">
+            {t("opsWorkersLive", { count: workerCount })}
+          </p>
+        )}
+        <button
+          type="button"
+          data-testid="ops-workers-summary-export"
+          onClick={() =>
+            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
+              setMessage(t("opsWorkersSummaryExportDone"))
+            )
+          }
+        >
+          {t("opsWorkersSummaryExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-workers-export"
+          onClick={() =>
+            void downloadWorkerHeartbeatsCsv(locale).then(() =>
+              setMessage(t("opsWorkersExportDone"))
+            )
+          }
+        >
+          {t("opsWorkersExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-worker-heartbeat-export"
+          disabled={!primaryWorkerId}
+          onClick={() => {
+            if (!primaryWorkerId) return;
+            void downloadWorkerHeartbeatCsv(locale, primaryWorkerId).then(() =>
+              setMessage(t("opsWorkerHeartbeatExportDone"))
+            );
+          }}
+        >
+          {t("opsWorkerHeartbeatExportCsv")}
+        </button>
+      </Surface>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-cost-sheet-import">
+        <h2 className="text-base font-semibold">{t("opsCostSheetImport")}</h2>
+        <textarea
+          rows={3}
+          value={costSheetImportCsv}
+          onChange={(e) => setCostSheetImportCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void importCostSheetsCsv(locale, costSheetImportCsv).then((r) =>
+              setMessage(t("opsCostSheetImportDone", { count: r.created.length }))
+            )
+          }
+        >
+          {t("opsCostSheetImportRun")}
+        </button>
+      </Surface>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-tariff-hs">
+        <h2 className="text-base font-semibold">{t("opsTariffHs")}</h2>
+        <DataTable testId="ops-tariff-table" maxHeight={240}>
+          <DataTableRoot>
+            <DataTableHeader>
+              <DataTableRow>
+                <DataTableHead>HS</DataTableHead>
+                <DataTableHead>{t("opsTariffRate")}</DataTableHead>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {tariffRows.map((row) => (
+                <DataTableRow key={row.hs_code}>
+                  <DataTableCell>
+                    <code className="text-xs">{row.hs_code}</code>
+                  </DataTableCell>
+                  <DataTableCell>{(row.tariff_rate * 100).toFixed(1)}%</DataTableCell>
+                </DataTableRow>
+              ))}
+            </DataTableBody>
+          </DataTableRoot>
+        </DataTable>
+        <button
+          type="button"
+          data-testid="ops-hs-landed-preview"
+          onClick={() =>
+            void previewLandedCostFromHs(locale, DEMO_SKU, 1000).then((r) =>
+              setMessage(
+                t("opsHsLandedPreviewDone", {
+                  hs: r.hs_code,
+                  landed: r.computed.landed_cost_mxn,
+                })
+              )
+            )
+          }
+        >
+          {t("opsHsLandedPreview")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-tariff-export"
+          onClick={() =>
+            void downloadTariffHsRatesCsv(locale).then(() =>
+              setMessage(t("opsTariffExportDone"))
+            )
+          }
+        >
+          {t("opsTariffExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-tariff-rate-export"
+          onClick={() =>
+            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
+              setMessage(t("opsTariffRateExportDone"))
+            )
+          }
+        >
+          {t("opsTariffRateExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-fx-export"
+          onClick={() =>
+            void downloadFxRatesCsv(locale).then(() =>
+              setMessage(t("opsFxExportDone"))
+            )
+          }
+        >
+          {t("opsFxExportCsv")}
+        </button>
+        <button
+          type="button"
+          data-testid="ops-fx-rate-export"
+          onClick={() =>
+            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
+              setMessage(t("opsFxRateExportDone"))
+            )
+          }
+        >
+          {t("opsFxRateExportCsv")}
+        </button>
+      </Surface>
+
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-adjustment-preview">
+        <h2 className="text-base font-semibold">{t("opsAdjustmentPreview")}</h2>
+        <p className="text-sm text-muted-foreground">{t("opsAdjustmentPreviewHint")}</p>
+        <textarea
+          rows={3}
+          value={adjustmentCsv}
+          onChange={(e) => setAdjustmentCsv(e.target.value)}
+          style={{ width: "100%", fontFamily: "monospace" }}
+        />
+        <button
+          type="button"
+          onClick={() =>
+            void previewAdjustmentPricesCsv(locale, adjustmentCsv).then((r) =>
+              setMessage(
+                t("opsAdjustmentPreviewDone", {
+                  status: r.preview.status,
+                  count: r.preview.items.length,
+                })
+              )
+            )
+          }
+        >
+          {t("opsAdjustmentPreviewRun")}
+        </button>
+      </Surface>
+
+        <ExportHub title={t("exportActions")} description={t("exportHubHint")}>
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           data-testid="ops-auth-export"
@@ -833,657 +1485,9 @@ export function OpsCenterPage() {
           {t("opsI18nGlossaryTermExportCsv")}
         </button>
       </div>
-      </ExportPanel>
+        </ExportHub>
+      </AdvancedSection>
 
-      {metrics && (
-        <OpsMetricsCard
-          metrics={metrics}
-          repricingBatchQueued={repricingBatchQueued}
-          repricingBatchDriver={repricingBatchDriver}
-          onExport={() =>
-            void downloadOpsMetricsCsv(locale).then(() =>
-              setMessage(t("opsMetricsExportDone"))
-            )
-          }
-        />
-      )}
-
-      <section className="card controls">
-        <button type="button" onClick={() => void promote()}>
-          {t("opsPromotePending")}
-        </button>
-        <button type="button" onClick={() => void publishBatch()}>
-          {t("opsBatchPublish")}
-        </button>
-        <button type="button" onClick={() => void runReconcile()}>
-          {t("opsRunReconcile")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-export-pricing-csv"
-          onClick={() => void downloadPricingSnapshotCsv(locale, DEMO_SKU)}
-        >
-          {t("opsExportPricingCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-export-tenant-pricing-csv"
-          onClick={() =>
-            void downloadTenantPricingSnapshotsCsv(locale).then(() =>
-              setMessage(t("opsTenantPricingExportDone"))
-            )
-          }
-        >
-          {t("opsTenantPricingExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-export-pricing-row-csv"
-          onClick={() =>
-            void downloadPricingSnapshotRowCsv(
-              locale,
-              DEMO_SKU,
-              "MERCADO_LIBRE"
-            ).then(() => setMessage(t("opsPricingRowExportDone")))
-          }
-        >
-          {t("opsPricingRowExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-version-backup"
-          onClick={() => void downloadVersionBackup(locale)}
-        >
-          {t("opsVersionBackup")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-version-backup-csv"
-          onClick={() =>
-            void downloadVersionBackupCsv(locale).then(() =>
-              setMessage(t("opsVersionBackupCsvDone"))
-            )
-          }
-        >
-          {t("opsVersionBackupCsv")}
-        </button>
-      </section>
-
-      <section className="card" data-testid="ops-listing-sync-schedule">
-        <h2>{t("opsListingSyncSchedule")}</h2>
-        <label>
-          <input
-            type="checkbox"
-            checked={syncEnabled}
-            onChange={(e) => setSyncEnabled(e.target.checked)}
-          />
-          {t("opsListingSyncEnabled")}
-        </label>
-        <label>
-          {t("opsListingSyncCron")}
-          <input
-            type="text"
-            value={syncCron}
-            onChange={(e) => setSyncCron(e.target.value)}
-            style={{ width: "100%", fontFamily: "monospace" }}
-          />
-        </label>
-        <p className="hint" data-testid="ops-listing-sync-summary">
-          {t("opsListingSyncSummary", {
-            ok: syncJobOk,
-            failed: syncJobFailed,
-            sampled: syncJobOk + syncJobFailed,
-          })}
-        </p>
-        <p className="hint" data-testid="ops-listing-sync-last-run">
-          {t("opsListingSyncLastRun")}:{" "}
-          {syncLastRun ? new Date(syncLastRun).toLocaleString(locale) : "—"}
-        </p>
-        <button
-          type="button"
-          onClick={() =>
-            void updateListingSyncSchedule(locale, {
-              enabled: syncEnabled,
-              cron_expression: syncCron,
-            }).then(() => setMessage(t("policySaved")))
-          }
-        >
-          {t("opsListingSyncSave")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-run-force"
-          onClick={() =>
-            void runListingSyncDue(locale, true)
-              .then((r) => {
-                setMessage(
-                  t("opsListingSyncRunDone", { count: r.runs.length })
-                );
-                return load();
-              })
-              .catch((e) => setError(String(e)))
-          }
-        >
-          {t("opsListingSyncRunForce")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-run-due"
-          onClick={() =>
-            void runListingSyncDue(locale)
-              .then((r) =>
-                setMessage(
-                  t("opsListingSyncRunDone", { count: r.runs.length })
-                )
-              )
-              .catch(() => setError(t("opsListingSyncDisabled")))
-          }
-        >
-          {t("opsListingSyncRunDue")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-schedule-export"
-          onClick={() =>
-            void downloadListingSyncScheduleCsv(locale).then(() =>
-              setMessage(t("opsListingSyncScheduleExportDone"))
-            )
-          }
-        >
-          {t("opsListingSyncScheduleExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-export"
-          onClick={() =>
-            void downloadListingSyncJobsCsv(locale).then(() =>
-              setMessage(t("opsListingSyncExportDone"))
-            )
-          }
-        >
-          {t("opsListingSyncExportJobs")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-job-export"
-          disabled={!syncJobs[0]}
-          onClick={() => {
-            const job = syncJobs[0];
-            if (!job) return;
-            void downloadListingSyncJobCsv(locale, job.id).then(() =>
-              setMessage(t("opsListingSyncJobExportDone"))
-            );
-          }}
-        >
-          {t("opsListingSyncJobExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-status-export"
-          onClick={() =>
-            void downloadListingSyncOpsStatusCsv(locale).then(() =>
-              setMessage(t("opsListingSyncStatusExportDone"))
-            )
-          }
-        >
-          {t("opsListingSyncStatusExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-sync-amz-export"
-          onClick={() =>
-            void downloadListingSyncJobsForListingCsv(
-              locale,
-              "listing-amz-001"
-            ).then(() => setMessage(t("opsListingSyncAmzExportDone")))}
-        >
-          {t("opsListingSyncAmzExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-reconciliation-export"
-          onClick={() =>
-            void downloadReconciliationAlertsExport(locale).then(() =>
-              setMessage(t("opsReconciliationExportDone"))
-            )
-          }
-        >
-          {t("opsReconciliationExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-reconciliation-direct-export"
-          onClick={() =>
-            void downloadReconciliationAlertsDirectCsv(locale).then(() =>
-              setMessage(t("opsReconciliationDirectExportDone"))
-            )
-          }
-        >
-          {t("opsReconciliationDirectExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-reconciliation-report-export"
-          onClick={() =>
-            void downloadReconciliationAlertsReportCsv(locale).then(() =>
-              setMessage(t("opsReconciliationReportExportDone"))
-            )
-          }
-        >
-          {t("opsReconciliationReportExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-reconciliation-alert-export"
-          disabled={!alerts[0]}
-          onClick={() => {
-            const alert = alerts[0];
-            if (!alert) return;
-            void downloadReconciliationAlertCsv(locale, alert.id).then(() =>
-              setMessage(t("opsReconciliationAlertExportDone"))
-            );
-          }}
-        >
-          {t("opsReconciliationAlertExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-repricing-batch-export"
-          onClick={() =>
-            void downloadRepricingBatchJobsCsv(locale).then(() =>
-              setMessage(t("opsRepricingBatchExportDone"))
-            )
-          }
-        >
-          {t("opsRepricingBatchExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-repricing-batch-job-export"
-          onClick={() =>
-            void downloadLatestRepricingBatchJobCsv(locale)
-              .then(() => setMessage(t("opsRepricingBatchJobExportDone")))
-              .catch(() => setError(t("opsRepricingBatchJobExportEmpty")))
-          }
-        >
-          {t("opsRepricingBatchJobExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-repricing-batch-shard-plan-export"
-          onClick={() =>
-            void downloadRepricingBatchShardPlanCsv(locale, DEMO_SKU, 2).then(
-              () => setMessage(t("opsRepricingBatchShardPlanExportDone"))
-            )
-          }
-        >
-          {t("opsRepricingBatchShardPlanExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-repricing-batch-summary-export"
-          onClick={() =>
-            void downloadRepricingBatchJobsSummaryCsv(locale).then(() =>
-              setMessage(t("opsRepricingBatchSummaryExportDone"))
-            )
-          }
-        >
-          {t("opsRepricingBatchSummaryExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-listing-ingest-status-export"
-          onClick={() =>
-            void downloadListingIngestStatusCsv(locale, "listing-ml-001").then(
-              () => setMessage(t("listingIngestStatusExportDone"))
-            )
-          }
-        >
-          {t("opsListingIngestStatusExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-feature-flags-export"
-          onClick={() =>
-            void downloadFeatureFlagsCsv(locale).then(() =>
-              setMessage(t("readinessFeatureFlagsExportDone"))
-            )
-          }
-        >
-          {t("opsFeatureFlagsExportCsv")}
-        </button>
-        {syncJobs.length > 0 && (
-          <table
-            className="batch-table"
-            data-testid="ops-listing-sync-jobs"
-          >
-            <thead>
-              <tr>
-                <th>{t("opsListingSyncJobListing")}</th>
-                <th>{t("batchStatus")}</th>
-                <th>{t("opsListingSyncJobPrice")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {syncJobs.map((j) => (
-                <tr key={j.id}>
-                  <td>
-                    <code>{j.listing_id}</code>
-                  </td>
-                  <td>{j.status}</td>
-                  <td>
-                    {j.channel_price_mxn != null
-                      ? `${j.channel_price_mxn} MXN`
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      <section className="card" data-testid="ops-landed-cost-import">
-        <h2>{t("opsLandedCostImport")}</h2>
-        <p className="hint">{t("opsLandedCostImportHint")}</p>
-        <textarea
-          rows={3}
-          value={importCsv}
-          onChange={(e) => setImportCsv(e.target.value)}
-          style={{ width: "100%", fontFamily: "monospace" }}
-        />
-        <button
-          type="button"
-          onClick={() =>
-            void importLandedCostCsv(locale, importCsv).then((r) =>
-              setMessage(
-                t("opsLandedCostImportDone", { count: r.updated.length })
-              )
-            )
-          }
-        >
-          {t("opsLandedCostImportRun")}
-        </button>
-        {workerCount > 0 && (
-          <p className="hint" data-testid="ops-workers-live">
-            {t("opsWorkersLive", { count: workerCount })}
-          </p>
-        )}
-        <button
-          type="button"
-          data-testid="ops-workers-summary-export"
-          onClick={() =>
-            void downloadOpsWorkersStatusSummaryCsv(locale).then(() =>
-              setMessage(t("opsWorkersSummaryExportDone"))
-            )
-          }
-        >
-          {t("opsWorkersSummaryExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-workers-export"
-          onClick={() =>
-            void downloadWorkerHeartbeatsCsv(locale).then(() =>
-              setMessage(t("opsWorkersExportDone"))
-            )
-          }
-        >
-          {t("opsWorkersExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-worker-heartbeat-export"
-          disabled={!primaryWorkerId}
-          onClick={() => {
-            if (!primaryWorkerId) return;
-            void downloadWorkerHeartbeatCsv(locale, primaryWorkerId).then(() =>
-              setMessage(t("opsWorkerHeartbeatExportDone"))
-            );
-          }}
-        >
-          {t("opsWorkerHeartbeatExportCsv")}
-        </button>
-      </section>
-
-      <section className="card" data-testid="ops-cost-sheet-import">
-        <h2>{t("opsCostSheetImport")}</h2>
-        <textarea
-          rows={3}
-          value={costSheetImportCsv}
-          onChange={(e) => setCostSheetImportCsv(e.target.value)}
-          style={{ width: "100%", fontFamily: "monospace" }}
-        />
-        <button
-          type="button"
-          onClick={() =>
-            void importCostSheetsCsv(locale, costSheetImportCsv).then((r) =>
-              setMessage(t("opsCostSheetImportDone", { count: r.created.length }))
-            )
-          }
-        >
-          {t("opsCostSheetImportRun")}
-        </button>
-      </section>
-
-      <section className="card" data-testid="ops-tariff-hs">
-        <h2>{t("opsTariffHs")}</h2>
-        <table className="batch-table">
-          <thead>
-            <tr>
-              <th>HS</th>
-              <th>{t("opsTariffRate")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tariffRows.map((row) => (
-              <tr key={row.hs_code}>
-                <td>
-                  <code>{row.hs_code}</code>
-                </td>
-                <td>{(row.tariff_rate * 100).toFixed(1)}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button
-          type="button"
-          data-testid="ops-hs-landed-preview"
-          onClick={() =>
-            void previewLandedCostFromHs(locale, DEMO_SKU, 1000).then((r) =>
-              setMessage(
-                t("opsHsLandedPreviewDone", {
-                  hs: r.hs_code,
-                  landed: r.computed.landed_cost_mxn,
-                })
-              )
-            )
-          }
-        >
-          {t("opsHsLandedPreview")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-tariff-export"
-          onClick={() =>
-            void downloadTariffHsRatesCsv(locale).then(() =>
-              setMessage(t("opsTariffExportDone"))
-            )
-          }
-        >
-          {t("opsTariffExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-tariff-rate-export"
-          onClick={() =>
-            void downloadTariffHsRateCsv(locale, "HS-ELECTRONICS-MX").then(() =>
-              setMessage(t("opsTariffRateExportDone"))
-            )
-          }
-        >
-          {t("opsTariffRateExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-fx-export"
-          onClick={() =>
-            void downloadFxRatesCsv(locale).then(() =>
-              setMessage(t("opsFxExportDone"))
-            )
-          }
-        >
-          {t("opsFxExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-fx-rate-export"
-          onClick={() =>
-            void downloadFxRateCsv(locale, "USD", "MXN").then(() =>
-              setMessage(t("opsFxRateExportDone"))
-            )
-          }
-        >
-          {t("opsFxRateExportCsv")}
-        </button>
-      </section>
-
-      <section className="card" data-testid="ops-adjustment-preview">
-        <h2>{t("opsAdjustmentPreview")}</h2>
-        <p className="hint">{t("opsAdjustmentPreviewHint")}</p>
-        <textarea
-          rows={3}
-          value={adjustmentCsv}
-          onChange={(e) => setAdjustmentCsv(e.target.value)}
-          style={{ width: "100%", fontFamily: "monospace" }}
-        />
-        <button
-          type="button"
-          onClick={() =>
-            void previewAdjustmentPricesCsv(locale, adjustmentCsv).then((r) =>
-              setMessage(
-                t("opsAdjustmentPreviewDone", {
-                  status: r.preview.status,
-                  count: r.preview.items.length,
-                })
-              )
-            )
-          }
-        >
-          {t("opsAdjustmentPreviewRun")}
-        </button>
-      </section>
-
-      <section className="card">
-        <h2>{t("opsQueue")}</h2>
-        <button
-          type="button"
-          data-testid="ops-repricing-queue-export"
-          onClick={() =>
-            void downloadRepricingQueueCsv(locale).then(() =>
-              setMessage(t("opsRepricingQueueExportDone"))
-            )
-          }
-        >
-          {t("opsRepricingQueueExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-repricing-queue-sku-export"
-          onClick={() =>
-            void downloadSkuRepricingQueueCsv(locale, DEMO_SKU).then(() =>
-              setMessage(t("opsRepricingQueueSkuExportDone"))
-            )
-          }
-        >
-          {t("opsRepricingQueueSkuExportCsv")}
-        </button>
-        <button
-          type="button"
-          data-testid="ops-price-version-export"
-          disabled={items.length === 0}
-          onClick={() =>
-            items[0]
-              ? void downloadPriceVersionCsv(locale, items[0].version_id).then(
-                  () => setMessage(t("opsPriceVersionExportDone"))
-                )
-              : undefined
-          }
-        >
-          {t("opsPriceVersionExportCsv")}
-        </button>
-        <table className="batch-table" data-testid="repricing-queue-table">
-          <thead>
-            <tr>
-              <th>{t("opsSelect")}</th>
-              <th>{t("channel")}</th>
-              <th>{t("batchStatus")}</th>
-              <th>{t("activePrice")} (MXN)</th>
-              <th>{t("batchCreated")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={5}>{t("opsQueueEmpty")}</td>
-              </tr>
-            ) : (
-              items.map((row) => (
-                <tr key={row.version_id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(row.version_id)}
-                      disabled={row.state !== "suggested"}
-                      onChange={() => toggle(row.version_id)}
-                    />
-                  </td>
-                  <td>{channelLabel(row.channel)}</td>
-                  <td>
-                    <span className={`status status-${row.state}`}>
-                      {row.state}
-                    </span>
-                  </td>
-                  <td>{row.publish_price_mxn}</td>
-                  <td>{new Date(row.created_at).toLocaleString(locale)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
-
-      <section className="card">
-        <h2>{t("opsReconAlerts")}</h2>
-        <table className="batch-table" data-testid="reconciliation-alerts-table">
-          <thead>
-            <tr>
-              <th>{t("channel")}</th>
-              <th>{t("opsReconActive")}</th>
-              <th>{t("opsReconChannel")}</th>
-              <th>{t("opsReconDelta")}</th>
-              <th>{t("batchCreated")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {alerts.length === 0 ? (
-              <tr>
-                <td colSpan={5}>{t("opsReconEmpty")}</td>
-              </tr>
-            ) : (
-              alerts.map((a) => (
-                <tr key={a.id}>
-                  <td>{channelLabel(a.channel)}</td>
-                  <td>{a.active_price_mxn}</td>
-                  <td>{a.channel_price_mxn}</td>
-                  <td>{a.delta_mxn}</td>
-                  <td>{new Date(a.created_at).toLocaleString(locale)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </section>
     </div>
   );
 }
