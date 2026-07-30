@@ -94,6 +94,9 @@ import {
   type CostSheetRow,
 } from "../api/client";
 import { ChannelPricingColumn, type ChannelSimulation } from "./ChannelPricingColumn";
+import { PageHeader } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 type PricingMode = "cost" | "competitive_with_floor";
 
@@ -271,8 +274,27 @@ export function PricingPage() {
 
   return (
     <div className="page page-wide">
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      <PageHeader title={t("navPricing")} />
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-900">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
+      {crossChannelWarning && (
+        <Alert variant="destructive" className="mb-4" data-testid="cross-channel-guard-banner">
+          <AlertDescription>
+            {t("crossChannelSpreadWarning", {
+              spread: crossChannelWarning.spread_pct,
+              max: crossChannelWarning.max_spread_pct,
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="shop-actions">
         <button
           type="button"
@@ -1034,14 +1056,6 @@ export function PricingPage() {
           {t("pricingNotificationTemplateExportCsv")}
         </button>
       </div>
-      {crossChannelWarning && (
-        <p className="error" data-testid="cross-channel-guard-banner">
-          {t("crossChannelSpreadWarning", {
-            spread: crossChannelWarning.spread_pct,
-            max: crossChannelWarning.max_spread_pct,
-          })}
-        </p>
-      )}
 
       {mlCtx && (
         <section className="card">
@@ -1190,9 +1204,9 @@ export function PricingPage() {
             </label>
           </div>
         )}
-        <button type="button" data-testid="simulate-both" onClick={() => void runSimulateAll()}>
+        <Button type="button" data-testid="simulate-both" onClick={() => void runSimulateAll()}>
           {t("simulateBoth")}
-        </button>
+        </Button>
         <button
           type="button"
           data-testid="i18n-glossary-export"

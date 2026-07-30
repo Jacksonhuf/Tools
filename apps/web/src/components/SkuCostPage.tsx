@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   applyLandedFromCostSheet,
   applyLandedFromFx,
@@ -13,6 +14,39 @@ import {
   type CostSheetRow,
 } from "../api/client";
 import { useCanPricingWrite } from "../auth/AuthContext";
+import { PageHeader } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function SkuCostPage() {
   const { t, i18n } = useTranslation();
@@ -27,7 +61,6 @@ export function SkuCostPage() {
   const [batchNo, setBatchNo] = useState("BATCH-001");
   const [cogsAmount, setCogsAmount] = useState(100);
   const [cogsCurrency, setCogsCurrency] = useState("USD");
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const selectedSku = skus.find((s) => s.id === selectedSkuId) ?? null;
@@ -72,7 +105,7 @@ export function SkuCostPage() {
     try {
       await patchSkuLandedCost(locale, selectedSkuId, landedEdit);
       await loadSkus();
-      setMessage(t("landedSaved"));
+      toast.success(t("landedSaved"));
     } catch (e) {
       setError(String(e));
     }
@@ -88,7 +121,7 @@ export function SkuCostPage() {
         cogs_currency: cogsCurrency,
       });
       await loadCostSheets();
-      setMessage(t("costSheetCreated"));
+      toast.success(t("costSheetCreated"));
     } catch (e) {
       setError(String(e));
     }
@@ -102,7 +135,7 @@ export function SkuCostPage() {
       const r = await applyLandedFromCostSheet(locale, selectedSkuId, latest.id);
       setLandedEdit(r.sku.landed_cost_mxn);
       await loadSkus();
-      setMessage(t("costSheetLandedApplied", { landed: r.sku.landed_cost_mxn }));
+      toast.success(t("costSheetLandedApplied", { landed: r.sku.landed_cost_mxn }));
     } catch (e) {
       setError(String(e));
     }
@@ -119,160 +152,217 @@ export function SkuCostPage() {
       });
       setLandedEdit(r.sku.landed_cost_mxn);
       await loadSkus();
-      setMessage(t("skuCostFxApplied", { landed: r.sku.landed_cost_mxn }));
+      toast.success(t("skuCostFxApplied", { landed: r.sku.landed_cost_mxn }));
     } catch (e) {
       setError(String(e));
     }
   };
 
   return (
-    <div className="page page-wide" data-testid="sku-cost-page">
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+    <TooltipProvider>
+      <div className="page page-wide" data-testid="sku-cost-page">
+        <PageHeader title={t("skuCostTitle")} description={t("skuCostHint")} />
 
-      <section className="card">
-        <h2>{t("skuCostTitle")}</h2>
-        <p className="hint">{t("skuCostHint")}</p>
-        <label>
-          {t("sku")}
-          <select
-            data-testid="sku-cost-selector"
-            value={selectedSkuId}
-            onChange={(e) => setSelectedSkuId(e.target.value)}
-          >
-            {skus.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.sku_code} — {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {selectedSku && (
-          <p data-testid="sku-cost-landed-display">
-            {t("landedCost")}: {fmt(selectedSku.landed_cost_mxn)}
-          </p>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
-      </section>
 
-      <section className="card" data-testid="sku-cost-landed-panel">
-        <h3>{t("landedCost")}</h3>
-        <label>
-          {t("landedCost")} (MXN)
-          <input
-            type="number"
-            data-testid="sku-cost-landed-input"
-            value={landedEdit}
-            disabled={!canWrite}
-            onChange={(e) => setLandedEdit(Number(e.target.value))}
-          />
-        </label>
-        {canWrite ? (
-          <button
-            type="button"
-            data-testid="sku-cost-landed-save"
-            onClick={() => void saveLanded()}
-          >
-            {t("saveLanded")}
-          </button>
-        ) : (
-          <p className="hint">{t("skuCostReadOnly")}</p>
-        )}
-      </section>
-
-      <section className="card" data-testid="sku-cost-sheets-panel">
-        <h3>{t("costSheetsTitle")}</h3>
-        <button
-          type="button"
-          data-testid="sku-cost-template-download"
-          onClick={() =>
-            void downloadCostSheetsTemplate(locale).then(() =>
-              setMessage(t("skuCostTemplateDone"))
-            )
-          }
-        >
-          {t("skuCostTemplateDownload")}
-        </button>
-        {canWrite && (
-          <>
-            <label>
-              {t("costSheetBatch")}
-              <input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
-            </label>
-            <label>
-              COGS
-              <input
-                type="number"
-                value={cogsAmount}
-                onChange={(e) => setCogsAmount(Number(e.target.value))}
-              />
-            </label>
-            <label>
-              {t("skuCostCurrency")}
-              <select
-                value={cogsCurrency}
-                onChange={(e) => setCogsCurrency(e.target.value)}
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>{t("sku")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2 max-w-md">
+              <Label htmlFor="sku-select">{t("sku")}</Label>
+              <Select value={selectedSkuId} onValueChange={setSelectedSkuId}>
+                <SelectTrigger id="sku-select" data-testid="sku-cost-selector">
+                  <SelectValue placeholder={t("sku")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {skus.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.sku_code} — {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedSku && (
+              <div
+                className="inline-flex flex-col rounded-lg border bg-primary/5 px-4 py-3"
+                data-testid="sku-cost-landed-display"
               >
-                <option value="USD">USD</option>
-                <option value="MXN">MXN</option>
-              </select>
-            </label>
-            <button
-              type="button"
-              data-testid="sku-cost-sheet-add"
-              onClick={() => void addCostSheet()}
+                <span className="text-xs font-medium uppercase text-muted-foreground">
+                  {t("landedCost")}
+                </span>
+                <span className="text-2xl font-bold tabular-nums text-primary">
+                  {fmt(selectedSku.landed_cost_mxn)}
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-4" data-testid="sku-cost-landed-panel">
+          <CardHeader>
+            <CardTitle>{t("landedCost")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2 max-w-xs">
+              <Label htmlFor="landed-input">{t("landedCost")} (MXN)</Label>
+              <Input
+                id="landed-input"
+                type="number"
+                data-testid="sku-cost-landed-input"
+                value={landedEdit}
+                disabled={!canWrite}
+                onChange={(e) => setLandedEdit(Number(e.target.value))}
+              />
+            </div>
+            {canWrite ? (
+              <Button
+                data-testid="sku-cost-landed-save"
+                onClick={() => void saveLanded()}
+              >
+                {t("saveLanded")}
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("skuCostReadOnly")}</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card data-testid="sku-cost-sheets-panel">
+          <CardHeader className="flex flex-row items-start justify-between space-y-0">
+            <div>
+              <CardTitle>{t("costSheetsTitle")}</CardTitle>
+              <CardDescription>{t("costSheetBatch")}</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="sku-cost-template-download"
+              onClick={() =>
+                void downloadCostSheetsTemplate(locale).then(() =>
+                  toast.success(t("skuCostTemplateDone"))
+                )
+              }
             >
-              {t("costSheetAdd")}
-            </button>
-            <button
-              type="button"
-              data-testid="sku-cost-sheet-apply-landed"
-              onClick={() => void applySheetLanded()}
+              {t("skuCostTemplateDownload")}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {canWrite && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-2">
+                    <Label>{t("costSheetBatch")}</Label>
+                    <Input value={batchNo} onChange={(e) => setBatchNo(e.target.value)} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>COGS</Label>
+                    <Input
+                      type="number"
+                      value={cogsAmount}
+                      onChange={(e) => setCogsAmount(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>{t("skuCostCurrency")}</Label>
+                    <Select value={cogsCurrency} onValueChange={setCogsCurrency}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="MXN">MXN</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button data-testid="sku-cost-sheet-add" onClick={() => void addCostSheet()}>
+                    {t("costSheetAdd")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    data-testid="sku-cost-sheet-apply-landed"
+                    onClick={() => void applySheetLanded()}
+                  >
+                    {t("costSheetApplyLanded")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    data-testid="sku-cost-fx-apply"
+                    onClick={() => void applyFxLanded()}
+                  >
+                    {t("skuCostFxApply")}
+                  </Button>
+                </div>
+              </>
+            )}
+            <Button
+              variant="outline"
+              data-testid="sku-cost-sheets-export"
+              disabled={!selectedSkuId}
+              onClick={() =>
+                selectedSkuId &&
+                void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
+                  toast.success(t("costSheetExportDone"))
+                )
+              }
             >
-              {t("costSheetApplyLanded")}
-            </button>
-            <button
-              type="button"
-              data-testid="sku-cost-fx-apply"
-              onClick={() => void applyFxLanded()}
-            >
-              {t("skuCostFxApply")}
-            </button>
-          </>
-        )}
-        <button
-          type="button"
-          data-testid="sku-cost-sheets-export"
-          disabled={!selectedSkuId}
-          onClick={() =>
-            selectedSkuId &&
-            void downloadCostSheetsCsv(locale, selectedSkuId).then(() =>
-              setMessage(t("costSheetExportDone"))
-            )
-          }
-        >
-          {t("costSheetExportCsv")}
-        </button>
-        <ul>
-          {costSheets.slice(0, 5).map((s) => (
-            <li key={s.id}>
-              <code>{s.batch_no}</code>: {s.cogs_amount} {s.cogs_currency}
-              {canWrite && selectedSkuId && (
-                <button
-                  type="button"
-                  data-testid={`sku-cost-sheet-export-${s.id}`}
-                  onClick={() =>
-                    void downloadCostSheetCsv(locale, selectedSkuId, s.id).then(
-                      () => setMessage(t("costSheetRowExportDone"))
-                    )
-                  }
-                >
-                  CSV
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
+              {t("costSheetExportCsv")}
+            </Button>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("costSheetBatch")}</TableHead>
+                  <TableHead>COGS</TableHead>
+                  <TableHead className="w-[80px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {costSheets.slice(0, 5).map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell>
+                      <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                        {s.batch_no}
+                      </code>
+                    </TableCell>
+                    <TableCell className="tabular-nums">
+                      {s.cogs_amount} {s.cogs_currency}
+                    </TableCell>
+                    <TableCell>
+                      {canWrite && selectedSkuId && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              data-testid={`sku-cost-sheet-export-${s.id}`}
+                              onClick={() =>
+                                void downloadCostSheetCsv(locale, selectedSkuId, s.id).then(
+                                  () => toast.success(t("costSheetRowExportDone"))
+                                )
+                              }
+                            >
+                              CSV
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t("costSheetRowExportCsv")}</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </TooltipProvider>
   );
 }

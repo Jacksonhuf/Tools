@@ -31,17 +31,17 @@ test.describe("Adjustment approval E2E", () => {
     await page.getByTestId("adjustment-price-ml").fill("1510");
     await page.getByTestId("adjustment-create-batch").click();
 
-    await expect(page.locator(".status-pending_approval").first()).toBeVisible({
+    await expect(page.getByTestId("batch-status-pending_approval").first()).toBeVisible({
       timeout: 15_000,
     });
 
     await page.getByTestId("adjustment-approve").click();
-    await expect(page.locator(".status-approved").first()).toBeVisible({
+    await expect(page.getByTestId("batch-status-approved").first()).toBeVisible({
       timeout: 10_000,
     });
 
     await page.getByTestId("adjustment-apply").click();
-    await expect(page.locator(".status-applied").first()).toBeVisible({
+    await expect(page.getByTestId("batch-status-applied").first()).toBeVisible({
       timeout: 15_000,
     });
   });
