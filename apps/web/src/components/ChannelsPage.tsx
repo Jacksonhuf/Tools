@@ -1088,7 +1088,7 @@ export function ChannelsPage() {
           <TabsTrigger value="adapter">{t("channelAdapterTitle")}</TabsTrigger>
           <TabsTrigger value="shops">{t("shopList")}</TabsTrigger>
           {sandboxNote && (
-            <TabsTrigger value="sandbox">
+            <TabsTrigger value="sandbox" data-testid="channels-tab-sandbox">
               {t("channelSandboxEventsTitle")}
             </TabsTrigger>
           )}
