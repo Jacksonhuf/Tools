@@ -742,6 +742,9 @@ export interface ChannelAdapterStatus {
   driver: string;
   publish_http_url_configured: boolean;
   listing_pull_http_url_configured: boolean;
+  channel_live_acknowledged?: boolean;
+  live_publish_armed?: boolean;
+  deploy_env_auto_driver?: boolean;
   ready: boolean;
   note: string;
 }
