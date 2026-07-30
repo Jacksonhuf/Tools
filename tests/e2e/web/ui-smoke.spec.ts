@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { selectWebLanguage } from "./helpers";
 
 /**
  * TC-E2E-I18N-003 / dual-channel load (P0-E8-04 Playwright scaffold).
@@ -11,7 +12,7 @@ test.describe("Web smoke", () => {
       timeout: 20_000,
     });
 
-    await page.getByLabel("language").selectOption("en");
+    await selectWebLanguage(page, "en");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       /Pricing|Precios|定价/
     );
@@ -34,7 +35,7 @@ test.describe("Web smoke", () => {
       timeout: 15_000,
     });
 
-    await page.getByLabel("language").selectOption("es-MX");
+    await selectWebLanguage(page, "es-MX");
     await expect(
       page.getByRole("button", { name: /Simular ambos canales/i })
     ).toBeVisible();

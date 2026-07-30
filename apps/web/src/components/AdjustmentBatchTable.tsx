@@ -59,7 +59,12 @@ export function AdjustmentBatchTable({
           >
             <TableCell className="font-mono text-xs">{b.id}</TableCell>
             <TableCell>
-              <Badge variant={statusBadgeVariant(b.status)}>{b.status}</Badge>
+              <Badge
+                variant={statusBadgeVariant(b.status)}
+                data-testid={`batch-status-${b.status}`}
+              >
+                {b.status}
+              </Badge>
             </TableCell>
             <TableCell>{b.reason_code ?? "—"}</TableCell>
             <TableCell className="max-w-md truncate">

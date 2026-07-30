@@ -283,7 +283,10 @@ export function AdjustmentBatchesPage() {
           <CardContent className="space-y-4">
             <p className="text-sm">
               {t("batchStatus")}:{" "}
-              <Badge variant={statusBadgeVariant(selected.status)}>
+              <Badge
+                variant={statusBadgeVariant(selected.status)}
+                data-testid={`batch-status-${selected.status}`}
+              >
                 {selected.status}
               </Badge>
             </p>
