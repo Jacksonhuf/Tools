@@ -18,6 +18,7 @@ export function pricingContextToCsv(
 ): string {
   const ctx = view.context;
   const active = ctx.versions.active;
+  const suggested = ctx.versions.suggested;
   const competitors = ctx as typeof ctx & {
     competitors?: {
       offers?: unknown[];
@@ -27,7 +28,7 @@ export function pricingContextToCsv(
   const anchor = competitors.competitors?.anchor;
   const offerCount = competitors.competitors?.offers?.length ?? 0;
   const lines = [
-    "exported_at,sku_id,channel,landed_cost_mxn,active_version_id,active_price_mxn,floor_ml_mxn,floor_amz_mxn,anchor_median_mxn,competitor_offer_count",
+    "exported_at,sku_id,channel,landed_cost_mxn,active_version_id,active_price_mxn,suggested_version_id,suggested_price_mxn,floor_ml_mxn,floor_amz_mxn,anchor_median_mxn,competitor_offer_count",
   ];
   lines.push(
     [
@@ -37,6 +38,8 @@ export function pricingContextToCsv(
       ctx.sku.landed_cost_mxn,
       cell(active.version_id ?? ""),
       active.publish_price_mxn,
+      cell(suggested?.version_id ?? ""),
+      suggested?.publish_price_mxn ?? "",
       ctx.floors.mercado_libre.amount_mxn,
       ctx.floors.amazon_mx.amount_mxn,
       anchor?.median_mxn ?? "",
