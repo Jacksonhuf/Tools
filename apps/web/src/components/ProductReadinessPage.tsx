@@ -79,6 +79,25 @@ import {
   type FeatureFlagsSnapshot,
   type ProductReadinessSnapshot,
 } from "../api/client";
+import { ExportPanel } from "@/components/layout/ExportPanel";
+import { PageHeader, statusBadgeVariant } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function ProductReadinessPage() {
   const { t, i18n } = useTranslation();
@@ -110,19 +129,31 @@ export function ProductReadinessPage() {
 
   return (
     <div className="page page-wide">
-      <h1>{t("readinessTitle")}</h1>
-      <p className="hint">{t("readinessHint")}</p>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="hint">{message}</p>}
+      <PageHeader title={t("readinessTitle")} description={t("readinessHint")} />
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
       {readiness && (
-        <section className="card" data-testid="product-readiness">
-          <h2>{t("readinessMilestones")}</h2>
-          <p data-testid="readiness-all-accepted">
-            {readiness.all_accepted
-              ? t("readinessAllAccepted")
-              : t("readinessInProgress")}
-          </p>
+        <Card className="mb-4" data-testid="product-readiness">
+          <CardHeader>
+            <CardTitle>{t("readinessMilestones")}</CardTitle>
+            <p className="text-sm text-muted-foreground" data-testid="readiness-all-accepted">
+              {readiness.all_accepted
+                ? t("readinessAllAccepted")
+                : t("readinessInProgress")}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+          <ExportPanel title={t("exportActions")}>
+          <div className="shop-actions flex flex-wrap gap-2">
           <button
             type="button"
             data-testid="readiness-agent-readiness-export"
@@ -889,38 +920,45 @@ export function ProductReadinessPage() {
           >
             {t("readinessP5ExportCsv")}
           </button>
-          <table className="batch-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>{t("batchStatus")}</th>
-                <th>{t("readinessSummary")}</th>
-              </tr>
-            </thead>
-            <tbody>
+          </div>
+          </ExportPanel>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>{t("batchStatus")}</TableHead>
+                <TableHead>{t("readinessSummary")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {readiness.milestones.map((m) => (
-                <tr key={m.id}>
-                  <td>
+                <TableRow key={m.id}>
+                  <TableCell>
                     <code>{m.id}</code>
-                  </td>
-                  <td>
-                    <span className={`status status-${m.status}`}>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadgeVariant(m.status)}>
                       {m.status}
-                    </span>
-                  </td>
-                  <td>{m.summary}</td>
-                </tr>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{m.summary}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </section>
+            </TableBody>
+          </Table>
+          </CardContent>
+        </Card>
       )}
 
       {flags && (
-        <section className="card" data-testid="feature-flags-panel">
-          <h2>{t("readinessFeatureFlags")}</h2>
-          <button
+        <Card data-testid="feature-flags-panel">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>{t("readinessFeatureFlags")}</CardTitle>
+            <div className="flex flex-wrap gap-2">
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             data-testid="readiness-feature-flags-export"
             onClick={() =>
               void downloadFeatureFlagsCsv(locale).then(() =>
@@ -929,9 +967,11 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessFeatureFlagsExportCsv")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             data-testid="readiness-feature-flag-export"
             onClick={() =>
               void downloadFeatureFlagCsv(locale, "agent_copilot").then(() =>
@@ -940,20 +980,36 @@ export function ProductReadinessPage() {
             }
           >
             {t("readinessFeatureFlagExportCsv")}
-          </button>
-          <dl className="adapter-status-dl">
+          </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Flag</TableHead>
+                <TableHead>{t("batchStatus")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
             {Object.entries(flags)
               .filter(([k]) => k !== "generated_at")
               .map(([key, value]) => (
-                <div key={key}>
-                  <dt>
+                <TableRow key={key}>
+                  <TableCell>
                     <code>{key}</code>
-                  </dt>
-                  <dd>{value ? t("readinessFlagOn") : t("readinessFlagOff")}</dd>
-                </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={value ? "default" : "secondary"}>
+                      {value ? t("readinessFlagOn") : t("readinessFlagOff")}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-          </dl>
-        </section>
+            </TableBody>
+          </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

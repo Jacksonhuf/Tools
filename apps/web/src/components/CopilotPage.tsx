@@ -100,6 +100,9 @@ import {
   type Channel,
   type CopilotChatMessage,
 } from "../api/client";
+import { CopilotChatPanel } from "./CopilotChatPanel";
+import { PageHeader } from "@/components/layout/AppLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LISTINGS: Array<{ id: string; channel: Channel }> = [
   { id: LISTING_BY_CHANNEL.MERCADO_LIBRE, channel: "MERCADO_LIBRE" },
@@ -375,8 +378,7 @@ export function CopilotPage() {
 
   return (
     <div className="page page-wide">
-      <h1>{t("copilotTitle")}</h1>
-      <p className="hint">{t("copilotHint")}</p>
+      <PageHeader title={t("copilotTitle")} description={t("copilotHint")} />
       {p4Ready != null && (
         <p className="hint" data-testid="p4-readiness">
           P4: {p4Ready ? t("copilotP4Ready") : t("copilotP4NotReady")}{" "}
@@ -1335,8 +1337,16 @@ export function CopilotPage() {
           </div>
         </section>
       )}
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {message && (
+        <Alert className="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      )}
 
       <section className="card controls">
         <label>
@@ -1360,46 +1370,23 @@ export function CopilotPage() {
         {contextSnippet && <p className="highlight">{contextSnippet}</p>}
       </section>
 
-      <section className="card">
-        <h2>{t("copilotChatTitle")}</h2>
-        <div className="copilot-chat" data-testid="copilot-chat">
-          {chatMessages.map((m, idx) => (
-            <p key={`${m.created_at}-${idx}`} className={`chat-${m.role}`}>
-              <strong>{m.role === "user" ? "You" : "Copilot"}:</strong>{" "}
-              {m.content}
-            </p>
-          ))}
-        </div>
-        <label>
-          <textarea
-            rows={2}
-            value={chatInput}
-            placeholder={t("copilotChatPlaceholder")}
-            onChange={(e) => setChatInput(e.target.value)}
-          />
-        </label>
-        <button
-          type="button"
-          disabled={!sessionId}
-          onClick={() => void sendChat()}
-        >
-          {t("copilotChatSend")}
-        </button>
-        <button
-          type="button"
-          data-testid="copilot-session-export"
-          disabled={!sessionId}
-          onClick={() =>
-            sessionId
-              ? void downloadCopilotSessionCsv(locale, sessionId).then(() =>
-                  setMessage(t("copilotSessionExportDone"))
-                )
-              : undefined
-          }
-        >
-          {t("copilotSessionExportCsv")}
-        </button>
-      </section>
+      <CopilotChatPanel
+        title={t("copilotChatTitle")}
+        messages={chatMessages}
+        chatInput={chatInput}
+        placeholder={t("copilotChatPlaceholder")}
+        sendLabel={t("copilotChatSend")}
+        exportLabel={t("copilotSessionExportCsv")}
+        sessionId={sessionId}
+        onInputChange={setChatInput}
+        onSend={() => void sendChat()}
+        onExport={() => {
+          if (!sessionId) return;
+          void downloadCopilotSessionCsv(locale, sessionId).then(() =>
+            setMessage(t("copilotSessionExportDone"))
+          );
+        }}
+      />
 
       {tools.length > 0 && (
         <section className="card">
