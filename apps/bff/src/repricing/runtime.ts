@@ -23,6 +23,8 @@ import { evaluateListingStale } from "./stale.js";
 import { checkDynamicRepricingGuards } from "./guards.js";
 import { versionStateForAction } from "./action.js";
 import { isWithinMexicoBusinessHours } from "./business-hours.js";
+import type { AppLocale } from "@mx-pricing/i18n-format";
+import { dispatchNotification } from "../notification-delivery.js";
 
 export class IngestFailedError extends Error {
   constructor() {
@@ -172,7 +174,8 @@ export async function processRepricingEvent(
   listingHealth: ListingHealthRepository,
   repricingActivity: RepricingActivityRepository,
   tenantId: string,
-  eventId: string
+  eventId: string,
+  locale: AppLocale = "en"
 ): Promise<
   | { version_id: string; state: string; skipped?: false }
   | { skipped: true; reason: string }
@@ -189,8 +192,28 @@ export async function processRepricingEvent(
     throw new Error("LISTING_NOT_FOUND");
   }
 
+  const prevStale = await listingHealth.getStale(event.listing_id);
   await evaluateListingStale(competitors, listingHealth, event.listing_id);
   const staleState = await listingHealth.getStale(event.listing_id);
+  if (
+    !prevStale.competitor_stale_frozen &&
+    staleState.competitor_stale_frozen
+  ) {
+    try {
+      await dispatchNotification({
+        tenant_id: tenantId,
+        locale,
+        template_id: "ingest.stale_freeze",
+        listing_id: event.listing_id,
+        vars: {
+          listing_id: event.listing_id,
+          stale_since: staleState.competitor_stale_since ?? "—",
+        },
+      });
+    } catch {
+      /* notification must not block repricing */
+    }
+  }
   if (staleState.competitor_stale_frozen) {
     return { skipped: true, reason: "STALE_COMPETITOR_DATA" };
   }
@@ -316,5 +339,42 @@ export async function processRepricingEvent(
   });
   await repricing.markProcessed(eventId, `proc:${eventId}`);
   await repricingActivity.recordApply(event.listing_id);
+
+  try {
+    const payload = event.payload as Partial<CompetitorPriceChangedPayload>;
+    let externalRef = "—";
+    if (payload.offer_id) {
+      const matched = offers.find((o) => o.id === payload.offer_id);
+      externalRef = matched?.external_ref ?? "—";
+    }
+    await dispatchNotification({
+      tenant_id: tenantId,
+      locale,
+      template_id: "repricing.competitor_price_changed",
+      listing_id: event.listing_id,
+      vars: {
+        listing_id: event.listing_id,
+        external_ref: externalRef,
+        sale_price_mxn: comp.publish_price_mxn,
+        version_id: version.id,
+      },
+    });
+    if (version.state === "pending") {
+      await dispatchNotification({
+        tenant_id: tenantId,
+        locale,
+        template_id: "repricing.suggested_pending",
+        listing_id: event.listing_id,
+        vars: {
+          sku_id: sku.id,
+          channel: listing.channel,
+          rule_action: rule.action,
+        },
+      });
+    }
+  } catch {
+    /* notification must not block repricing */
+  }
+
   return { version_id: version.id, state: version.state };
 }
