@@ -8,6 +8,7 @@ import type {
   ListingHealthRepository,
 } from "./repositories/dynamic-rule-types.js";
 import type { RepricingActivityRepository } from "./repositories/repricing-activity-types.js";
+import type { AppLocale } from "@mx-pricing/i18n-format";
 import { processRepricingEvent } from "./repricing/runtime.js";
 
 export function repricingShardIndex(
@@ -52,6 +53,7 @@ export async function runRepricingBatchShard(input: {
   skuId: string;
   shardIndex: number;
   shardTotal: number;
+  locale?: AppLocale;
 }) {
   const plan = planRepricingShards(
     input.tenantId,
@@ -96,7 +98,8 @@ export async function runRepricingBatchShard(input: {
           input.listingHealth,
           input.repricingActivity,
           input.tenantId,
-          ev.id
+          ev.id,
+          input.locale ?? "en"
         );
         if ("skipped" in result && result.skipped) {
           processed.push({

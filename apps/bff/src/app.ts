@@ -59,7 +59,7 @@ import {
   flushListingDebounce,
   notifyObservationChange,
   processRepricingEvent,
-  runMockIngest,
+  runCompetitorIngest,
   IngestFailedError,
 } from "./repricing/runtime.js";
 import {
@@ -215,6 +215,8 @@ import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
 import { buildListingIngestStatus } from "./listing-ingest-status.js";
 import { listingIngestStatusToCsv } from "./listing-ingest-status-csv.js";
+import { getCompetitorIngestStatus, CompetitorScrapeComplianceError } from "./competitor-ingest-config.js";
+import { runDueCompetitorIngest } from "./competitor-ingest-run-due.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import { adjustmentApprovalPolicyToCsv } from "./adjustment-approval-policy-csv.js";
@@ -346,6 +348,11 @@ import {
   notificationTemplateToCsv,
   notificationTemplatesToCsv,
 } from "./notification-template-csv.js";
+import {
+  listNotificationInbox,
+  markNotificationRead,
+} from "./notification-delivery.js";
+import { notificationInboxToCsv } from "./notification-inbox-csv.js";
 import { reconciliationAlertsToCsv } from "./reconciliation-report-service.js";
 
 export type AppEnv = {
@@ -597,6 +604,36 @@ export function createApp(options: CreateAppOptions = {}) {
         "Content-Disposition": `attachment; filename="notification-template.csv"`,
       },
     });
+  });
+
+  app.get("/api/v1/notifications/inbox", async (c) => {
+    const tenantId = c.get("tenantId");
+    const items = await listNotificationInbox(tenantId);
+    return c.json({ items });
+  });
+
+  app.get("/api/v1/notifications/inbox/export", async (c) => {
+    const tenantId = c.get("tenantId");
+    const locale = c.get("locale");
+    const exportedAt = new Date().toISOString();
+    const items = await listNotificationInbox(tenantId);
+    const csv = notificationInboxToCsv(locale, items, exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="notification-inbox-${locale}.csv"`,
+      },
+    });
+  });
+
+  app.post("/api/v1/notifications/:notificationId/read", async (c) => {
+    const tenantId = c.get("tenantId");
+    const notificationId = c.req.param("notificationId");
+    const updated = await markNotificationRead(tenantId, notificationId);
+    if (!updated) {
+      throw new HTTPException(404, { message: "NOTIFICATION_NOT_FOUND" });
+    }
+    return c.json({ notification: updated });
   });
 
   app.get("/api/v1/skus/:skuId/pricing-context/export", async (c) => {
@@ -3556,17 +3593,21 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
     try {
-      const result = await runMockIngest(
+      const result = await runCompetitorIngest(
         catalog,
         competitors,
         repricing,
         listingHealth,
+        shops,
         listingAdapter,
         tenantId,
         listingId
       );
       return c.json(result);
     } catch (e) {
+      if (e instanceof CompetitorScrapeComplianceError) {
+        return c.json({ error: e.message }, 403);
+      }
       if (e instanceof IngestFailedError) {
         return c.json({ error: "INGEST_FAILED" }, 503);
       }
@@ -3575,6 +3616,28 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/ops/competitor-ingest/status", (c) =>
+    c.json(getCompetitorIngestStatus())
+  );
+
+  app.post("/api/v1/ops/competitor-ingest/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as { force?: boolean };
+    const result = await runDueCompetitorIngest(
+      {
+        catalog,
+        competitors,
+        repricing,
+        listingHealth,
+        shops,
+        listingAdapter,
+      },
+      tenantId,
+      { force: body.force }
+    );
+    return c.json(result);
   });
 
   app.post("/api/v1/listings/:listingId/repricing-events/flush", async (c) => {
@@ -3650,7 +3713,8 @@ export function createApp(options: CreateAppOptions = {}) {
         listingHealth,
         repricingActivity,
         tenantId,
-        eventId
+        eventId,
+        c.get("locale")
       );
       return c.json(result);
     } catch (e) {

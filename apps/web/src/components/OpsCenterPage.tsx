@@ -57,6 +57,10 @@ import {
   downloadCompetitorAnchorCsv,
   downloadNotificationTemplatesCsv,
   downloadNotificationTemplateCsv,
+  fetchNotificationInbox,
+  markNotificationRead,
+  downloadNotificationInboxCsv,
+  type NotificationInboxItem,
   downloadDigestQueuedJobsSummaryCsv,
   downloadLatestDigestQueuedJobCsv,
   downloadLatestDigestDispatchCsv,
@@ -160,11 +164,12 @@ export function OpsCenterPage() {
   const [syncJobFailed, setSyncJobFailed] = useState(0);
   const [repricingBatchQueued, setRepricingBatchQueued] = useState(0);
   const [repricingBatchDriver, setRepricingBatchDriver] = useState("memory");
+  const [notifications, setNotifications] = useState<NotificationInboxItem[]>([]);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed, syncStatus, repricingBatch] =
+      const [data, alertData, ops, workers, tariffs, syncSchedule, syncJobFeed, syncStatus, repricingBatch, inbox] =
         await Promise.all([
         fetchRepricingQueue(locale, DEMO_SKU),
         fetchReconciliationAlerts(locale),
@@ -175,6 +180,7 @@ export function OpsCenterPage() {
         fetchListingSyncJobs(locale, 8),
         fetchListingSyncOpsStatus(locale),
         fetchRepricingBatchJobsSummary(locale),
+        fetchNotificationInbox(locale),
       ]);
       setItems(data.items);
       setAlerts(alertData.items);
@@ -190,6 +196,7 @@ export function OpsCenterPage() {
       setSyncJobFailed(syncStatus.job_summary.failed);
       setRepricingBatchQueued(repricingBatch.summary.queued);
       setRepricingBatchDriver(repricingBatch.driver);
+      setNotifications(inbox.items);
       setSelected(
         new Set(
           data.items.filter((i) => i.state === "suggested").map((i) => i.version_id)
@@ -367,6 +374,72 @@ export function OpsCenterPage() {
           </>
         }
       />
+
+      <Surface variant="elevated" padding="md" className="mb-6 space-y-4" data-testid="ops-notification-inbox">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">{t("opsNotificationInboxTitle")}</h2>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-testid="ops-notification-inbox-export"
+            onClick={() =>
+              void downloadNotificationInboxCsv(locale).then(() =>
+                setMessage(t("opsNotificationInboxExportDone"))
+              )
+            }
+          >
+            {t("opsNotificationInboxExportCsv")}
+          </Button>
+        </div>
+        <DataTable
+          testId="ops-notification-inbox-table"
+          isEmpty={notifications.length === 0}
+          emptyMessage={t("opsNotificationInboxEmpty")}
+          maxHeight={280}
+          className="border-0 shadow-none ring-0"
+        >
+          <DataTableRoot>
+            <DataTableHeader>
+              <DataTableRow className="hover:bg-transparent">
+                <DataTableHead>{t("opsNotificationSubject")}</DataTableHead>
+                <DataTableHead>{t("opsNotificationEvent")}</DataTableHead>
+                <DataTableHead>{t("batchCreated")}</DataTableHead>
+                <DataTableHead />
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {notifications.map((n) => (
+                <DataTableRow key={n.id} className={n.read_at ? "opacity-60" : undefined}>
+                  <DataTableCell>
+                    <div className="font-medium">{n.subject}</div>
+                    <div className="text-xs text-muted-foreground">{n.body}</div>
+                  </DataTableCell>
+                  <DataTableCell className="font-mono text-xs">{n.event}</DataTableCell>
+                  <DataTableCell className="text-muted-foreground">
+                    {new Date(n.created_at).toLocaleString(locale)}
+                  </DataTableCell>
+                  <DataTableCell>
+                    {!n.read_at && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        data-testid={`ops-notification-read-${n.id}`}
+                        onClick={() =>
+                          void markNotificationRead(locale, n.id).then(() => load())
+                        }
+                      >
+                        {t("opsNotificationMarkRead")}
+                      </Button>
+                    )}
+                  </DataTableCell>
+                </DataTableRow>
+              ))}
+            </DataTableBody>
+          </DataTableRoot>
+        </DataTable>
+      </Surface>
 
       <Surface variant="elevated" padding="md" className="mb-6">
         <h2 className="mb-4 text-base font-semibold">{t("opsReconAlerts")}</h2>

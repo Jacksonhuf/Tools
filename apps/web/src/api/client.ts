@@ -1432,8 +1432,43 @@ export async function fetchIngestStatus(locale: string, listingId: string) {
     tier: string;
     next_run_at: string;
     interval_ms: number;
+    ingest_driver?: string;
+    include_shipping?: boolean;
+    compliant_scrape_enabled?: boolean;
     ingest_failed?: boolean;
     ingest_failed_at?: string | null;
+  }>;
+}
+
+export async function runCompetitorIngestDue(
+  locale: string,
+  force = false
+) {
+  const res = await fetch(`/api/v1/ops/competitor-ingest/run-due`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ force }),
+  });
+  if (!res.ok) throw new Error(`competitor-ingest-run-due ${res.status}`);
+  return res.json() as Promise<{
+    runs: Array<{
+      listing_id: string;
+      observations_created: number;
+      tier: string;
+      error?: string;
+    }>;
+  }>;
+}
+
+export async function fetchCompetitorIngestStatus(locale: string) {
+  const res = await fetch(`/api/v1/ops/competitor-ingest/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`competitor-ingest-status ${res.status}`);
+  return res.json() as Promise<{
+    driver: string;
+    include_shipping: boolean;
+    compliant_scrape_enabled: boolean;
   }>;
 }
 
@@ -1446,6 +1481,7 @@ export async function runIngest(locale: string, listingId: string) {
   return res.json() as Promise<{
     observations_created: number;
     tier: string;
+    driver?: string;
   }>;
 }
 
@@ -2106,6 +2142,49 @@ export async function fetchNotificationTemplates(locale: string) {
     locale: string;
     templates: Array<{ id: string; event_class: string }>;
   }>;
+}
+
+export type NotificationInboxItem = {
+  id: string;
+  template_id: string;
+  event: string;
+  channel: string;
+  subject: string;
+  body: string;
+  listing_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export async function fetchNotificationInbox(locale: string) {
+  const res = await fetch(`/api/v1/notifications/inbox`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-inbox ${res.status}`);
+  return res.json() as Promise<{ items: NotificationInboxItem[] }>;
+}
+
+export async function markNotificationRead(locale: string, notificationId: string) {
+  const res = await fetch(`/api/v1/notifications/${notificationId}/read`, {
+    method: "POST",
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-read ${res.status}`);
+  return res.json() as Promise<{ notification: NotificationInboxItem }>;
+}
+
+export async function downloadNotificationInboxCsv(locale: string): Promise<void> {
+  const res = await fetch(`/api/v1/notifications/inbox/export`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`notification-inbox-export ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notification-inbox-${locale}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
