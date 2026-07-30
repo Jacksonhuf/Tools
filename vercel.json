@@ -6,11 +6,8 @@
   "outputDirectory": "apps/web/dist",
   "framework": null,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/index.ts": {
