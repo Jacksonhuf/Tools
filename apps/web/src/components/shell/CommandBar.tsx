@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { Moon, Search, Sun, User } from "lucide-react";
+import { Bot, Moon, Search, Sun, User } from "lucide-react";
+import { useAgent } from "@/components/agent/AgentContext";
+import { AgentStatusBar } from "@/components/agent/AgentStatusBar";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,6 +20,7 @@ export function CommandBar({
 }) {
   const { t, i18n } = useTranslation();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { status, pendingBatches, togglePanel } = useAgent();
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -41,13 +44,24 @@ export function CommandBar({
       </button>
 
       <div className="flex items-center gap-1.5">
-        <div
-          className="hidden items-center gap-1.5 rounded-md border border-border/50 bg-surface-2 px-2 py-1 text-xs text-muted-foreground sm:flex"
-          data-testid="agent-status-idle"
+        <AgentStatusBar
+          status={status}
+          pendingCount={pendingBatches.length}
+          onClick={togglePanel}
+        />
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 border-border/60 bg-surface-2 px-2.5 text-xs"
+          data-testid="agent-panel-toggle"
+          onClick={togglePanel}
+          aria-label={t("agentPanelOpen")}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-success" />
-          {t("agentStatusIdle")}
-        </div>
+          <Bot className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{t("agentPanelOpen")}</span>
+        </Button>
 
         <Button
           type="button"

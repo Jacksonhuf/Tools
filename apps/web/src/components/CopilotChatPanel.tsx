@@ -18,6 +18,7 @@ export function CopilotChatPanel({
   sendLabel,
   exportLabel,
   sessionId,
+  compact = false,
   onInputChange,
   onSend,
   onExport,
@@ -29,17 +30,19 @@ export function CopilotChatPanel({
   sendLabel: string;
   exportLabel: string;
   sessionId: string | null;
+  compact?: boolean;
   onInputChange: (value: string) => void;
   onSend: () => void;
   onExport: () => void;
 }) {
-  return (
-    <Card data-testid="copilot-chat-panel">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ScrollArea className="h-80 rounded-lg border bg-muted/20 p-4">
+  const chatArea = (
+    <>
+      <ScrollArea
+        className={cn(
+          "rounded-lg border bg-muted/20 p-4",
+          compact ? "h-[calc(100vh-22rem)]" : "h-80"
+        )}
+      >
           <div className="flex flex-col gap-3" data-testid="copilot-chat">
             {messages.map((m, idx) => (
               <div
@@ -58,28 +61,45 @@ export function CopilotChatPanel({
               </div>
             ))}
           </div>
-        </ScrollArea>
-        <Textarea
-          rows={2}
-          value={chatInput}
-          placeholder={placeholder}
-          onChange={(e) => onInputChange(e.target.value)}
-        />
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" disabled={!sessionId} onClick={onSend}>
-            {sendLabel}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!sessionId}
-            data-testid="copilot-session-export"
-            onClick={onExport}
-          >
-            {exportLabel}
-          </Button>
-        </div>
-      </CardContent>
+      </ScrollArea>
+      <Textarea
+        rows={compact ? 3 : 2}
+        value={chatInput}
+        placeholder={placeholder}
+        onChange={(e) => onInputChange(e.target.value)}
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" disabled={!sessionId} onClick={onSend}>
+          {sendLabel}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!sessionId}
+          data-testid="copilot-session-export"
+          onClick={onExport}
+        >
+          {exportLabel}
+        </Button>
+      </div>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <div className="space-y-4" data-testid="copilot-chat-panel">
+        <p className="text-sm font-medium">{title}</p>
+        {chatArea}
+      </div>
+    );
+  }
+
+  return (
+    <Card data-testid="copilot-chat-panel">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">{chatArea}</CardContent>
     </Card>
   );
 }

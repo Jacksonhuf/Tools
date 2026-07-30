@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useAgent } from "@/components/agent/AgentContext";
 import {
   CommandDialog,
   CommandEmpty,
@@ -21,6 +22,7 @@ export function CommandPalette({
   onNavigate: (tab: AppTab) => void;
 }) {
   const { t } = useTranslation();
+  const { setPanelOpen } = useAgent();
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -78,6 +80,15 @@ export function CommandPalette({
             }}
           >
             {t("commandPaletteAdjustments")}
+          </CommandItem>
+          <CommandItem
+            value="copilot agent panel chat"
+            onSelect={() => {
+              setPanelOpen(true);
+              onOpenChange(false);
+            }}
+          >
+            {t("commandPaletteCopilot")}
           </CommandItem>
         </CommandGroup>
       </CommandList>
