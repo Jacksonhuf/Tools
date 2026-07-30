@@ -143,6 +143,8 @@ import { evaluateP5Readiness } from "./p5-readiness.js";
 import { p5ReadinessToCsv } from "./p5-readiness-csv.js";
 import { evaluateP3Readiness } from "./p3-readiness.js";
 import { p3ReadinessToCsv } from "./p3-readiness-csv.js";
+import { evaluateReleaseGate } from "./release-gate.js";
+import { releaseGateToCsv } from "./release-gate-csv.js";
 import { evaluateAgentReadiness } from "./agent-readiness.js";
 import { p4ReadinessToCsv } from "./p4-readiness-csv.js";
 import { validateVersionBackupSnapshot } from "./version-backup-validate.js";
@@ -4973,6 +4975,21 @@ export function createApp(options: CreateAppOptions = {}) {
 
   app.get("/api/v1/product/readiness", async (c) => {
     return c.json(getProductReadinessSummary());
+  });
+
+  app.get("/api/v1/product/release-gate/export", async (c) => {
+    const exportedAt = new Date().toISOString();
+    const csv = releaseGateToCsv(evaluateReleaseGate(), exportedAt);
+    return new Response(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="release-gate.csv"`,
+      },
+    });
+  });
+
+  app.get("/api/v1/product/release-gate", async (c) => {
+    return c.json(evaluateReleaseGate());
   });
 
   app.get("/api/v1/rule-compiler/status/export", async (c) => {

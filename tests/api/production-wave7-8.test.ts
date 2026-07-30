@@ -52,7 +52,9 @@ describe("GET /api/v1/production/go-live (Wave 8)", () => {
     expect(json.milestone).toBe("GO-LIVE");
     const golden = json.checks.find((c) => c.id === "GL-GOLDEN-MANIFEST");
     expect(golden?.passed).toBe(true);
-    expect(evaluateGoLiveReadiness().checks.length).toBeGreaterThanOrEqual(6);
+    const nfrRel = json.checks.find((c) => c.id === "TC-NFR-REL-003");
+    expect(nfrRel?.passed).toBe(true);
+    expect(evaluateGoLiveReadiness().checks.length).toBeGreaterThanOrEqual(8);
   });
 });
 
