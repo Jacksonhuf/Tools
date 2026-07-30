@@ -75,6 +75,7 @@ export function CompetitorsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ingestTier, setIngestTier] = useState("T1");
+  const [ingestDriver, setIngestDriver] = useState("mock");
   const [ruleFrozen, setRuleFrozen] = useState(false);
   const [staleFrozen, setStaleFrozen] = useState(false);
   const [ingestFailed, setIngestFailed] = useState(false);
@@ -108,6 +109,7 @@ export function CompetitorsPage() {
       setLatestCurveDate(curve.points[0]?.date ?? null);
       const ingest = await fetchIngestStatus(locale, listingId);
       setIngestTier(ingest.tier);
+      setIngestDriver(ingest.ingest_driver ?? "mock");
       setIngestFailed(Boolean(ingest.ingest_failed));
       const dr = await fetchDynamicRule(locale, listingId);
       setRuleFrozen(dr.rule.frozen);
@@ -251,6 +253,12 @@ export function CompetitorsPage() {
           <KpiMetric
             label={t("ingestTier")}
             value={ingestTier}
+          />
+          <KpiMetric
+            label={t("ingestDriver")}
+            value={
+              <span data-testid="competitor-ingest-driver">{ingestDriver}</span>
+            }
           />
         </KpiStrip>
 

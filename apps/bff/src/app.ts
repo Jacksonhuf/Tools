@@ -59,7 +59,7 @@ import {
   flushListingDebounce,
   notifyObservationChange,
   processRepricingEvent,
-  runMockIngest,
+  runCompetitorIngest,
   IngestFailedError,
 } from "./repricing/runtime.js";
 import {
@@ -215,6 +215,8 @@ import { buildListingSyncOpsStatus } from "./listing-sync-ops-status.js";
 import { listingSyncJobsToCsv } from "./listing-sync-jobs-csv.js";
 import { buildListingIngestStatus } from "./listing-ingest-status.js";
 import { listingIngestStatusToCsv } from "./listing-ingest-status-csv.js";
+import { getCompetitorIngestStatus, CompetitorScrapeComplianceError } from "./competitor-ingest-config.js";
+import { runDueCompetitorIngest } from "./competitor-ingest-run-due.js";
 import { buildWaterfallExportCsv } from "./waterfall-export.js";
 import { getAdjustmentApprovalPolicy } from "./adjustment-approval-policy.js";
 import { adjustmentApprovalPolicyToCsv } from "./adjustment-approval-policy-csv.js";
@@ -3556,17 +3558,21 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.get("tenantId");
     const listingId = c.req.param("listingId");
     try {
-      const result = await runMockIngest(
+      const result = await runCompetitorIngest(
         catalog,
         competitors,
         repricing,
         listingHealth,
+        shops,
         listingAdapter,
         tenantId,
         listingId
       );
       return c.json(result);
     } catch (e) {
+      if (e instanceof CompetitorScrapeComplianceError) {
+        return c.json({ error: e.message }, 403);
+      }
       if (e instanceof IngestFailedError) {
         return c.json({ error: "INGEST_FAILED" }, 503);
       }
@@ -3575,6 +3581,28 @@ export function createApp(options: CreateAppOptions = {}) {
       }
       throw e;
     }
+  });
+
+  app.get("/api/v1/ops/competitor-ingest/status", (c) =>
+    c.json(getCompetitorIngestStatus())
+  );
+
+  app.post("/api/v1/ops/competitor-ingest/run-due", async (c) => {
+    const tenantId = c.get("tenantId");
+    const body = (await c.req.json().catch(() => ({}))) as { force?: boolean };
+    const result = await runDueCompetitorIngest(
+      {
+        catalog,
+        competitors,
+        repricing,
+        listingHealth,
+        shops,
+        listingAdapter,
+      },
+      tenantId,
+      { force: body.force }
+    );
+    return c.json(result);
   });
 
   app.post("/api/v1/listings/:listingId/repricing-events/flush", async (c) => {

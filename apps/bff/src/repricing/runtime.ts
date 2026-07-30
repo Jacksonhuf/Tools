@@ -23,6 +23,40 @@ import { evaluateListingStale } from "./stale.js";
 import { checkDynamicRepricingGuards } from "./guards.js";
 import { versionStateForAction } from "./action.js";
 import { isWithinMexicoBusinessHours } from "./business-hours.js";
+import type { ShopRepository } from "../repositories/shop-types.js";
+import {
+  assertCompetitorScrapeAllowed,
+  CompetitorScrapeComplianceError,
+  competitorIngestIncludeShipping,
+  resolveCompetitorIngestDriver,
+} from "../competitor-ingest-config.js";
+import { pullCompetitorPrice } from "../competitor-ingest-http.js";
+import { buildObservationRawJson } from "../competitor-buy-box.js";
+import { LISTING_ID_BY_SHOP } from "../channel-publish-service.js";
+
+const SHOP_BY_LISTING: Record<string, string> = Object.fromEntries(
+  Object.entries(LISTING_ID_BY_SHOP).map(([shop, listing]) => [listing, shop])
+);
+
+async function resolveIngestShop(
+  shops: ShopRepository,
+  tenantId: string,
+  listingId: string
+) {
+  const shopId = SHOP_BY_LISTING[listingId];
+  if (!shopId) return undefined;
+  const shop = await shops.getShop(tenantId, shopId);
+  if (!shop || shop.auth_status !== "connected" || !shop.external_seller_id) {
+    return undefined;
+  }
+  const access_token = await shops.getAccessToken(shopId);
+  if (!access_token) return undefined;
+  return {
+    shop_id: shopId,
+    external_seller_id: shop.external_seller_id,
+    access_token,
+  };
+}
 
 export class IngestFailedError extends Error {
   constructor() {
@@ -97,46 +131,66 @@ export async function flushListingDebounce(
   });
 }
 
-export async function runMockIngest(
+export async function runCompetitorIngest(
   catalog: CatalogRepository,
   competitors: CompetitorRepository,
   repricing: RepricingRepository,
   listingHealth: ListingHealthRepository,
+  shops: ShopRepository,
   listingAdapter: ListingPullAdapter,
   tenantId: string,
   listingId: string
-): Promise<{ observations_created: number; tier: IngestTier }> {
+): Promise<{ observations_created: number; tier: IngestTier; driver: string }> {
   const listing = await catalog.getListing(tenantId, listingId);
   if (!listing) {
     throw new Error("LISTING_NOT_FOUND");
   }
   const schedule = await ensureIngestSchedule(repricing, listingId);
   const offers = await competitors.listOffers(listingId);
+  const driver = resolveCompetitorIngestDriver();
+  const includeShipping = competitorIngestIncludeShipping();
+  const ingestShop =
+    driver === "channel"
+      ? await resolveIngestShop(shops, tenantId, listingId)
+      : undefined;
+  if (driver === "channel" && !ingestShop) {
+    await listingHealth.setIngestFailed(listingId, true);
+    throw new IngestFailedError();
+  }
   let created = 0;
   try {
     for (const offer of offers) {
+      assertCompetitorScrapeAllowed(offer.external_ref);
       const prev = await competitors.latestObservation(offer.id);
-      const snap = await listingAdapter.pullListing(
-        {
-          shop_id: "ingest-mock",
-          channel: offer.channel,
-          external_seller_id: "INGEST",
-        },
-        offer.external_ref
-      );
+      const pulled = await pullCompetitorPrice({
+        driver,
+        listingAdapter,
+        channel: offer.channel,
+        externalRef: offer.external_ref,
+        offerId: offer.id,
+        listingId,
+        shop: ingestShop,
+      });
       const effective = computeEffectivePrice({
-        sale_price: snap.price_mxn,
-        include_shipping: false,
+        sale_price: pulled.sale_price,
+        list_price: pulled.list_price,
+        shipping_addon: pulled.shipping_addon,
+        include_shipping: includeShipping,
       });
       if (prev && prev.effective_price === effective) {
         continue;
       }
       const observation = await competitors.addObservation({
         offer_id: offer.id,
-        observed_at: snap.synced_at,
-        sale_price: snap.price_mxn,
+        observed_at: pulled.observed_at,
+        sale_price: pulled.sale_price,
+        list_price: pulled.list_price ?? null,
+        shipping_addon: pulled.shipping_addon ?? 0,
         effective_price: effective,
-        raw_json: { source: "mock-ingest" },
+        raw_json: buildObservationRawJson({
+          source: pulled.source,
+          buy_box_winner: pulled.buy_box_winner,
+        }),
       });
       created += 1;
       await notifyObservationChange(repricing, tenantId, {
@@ -154,14 +208,47 @@ export async function runMockIngest(
     await listingHealth.setIngestFailed(listingId, false);
   } catch (e) {
     await listingHealth.setIngestFailed(listingId, true);
-    throw new IngestFailedError();
+    if (e instanceof CompetitorScrapeComplianceError) {
+      throw e;
+    }
+    throw e instanceof IngestFailedError ? e : new IngestFailedError();
   }
   await repricing.upsertIngestSchedule({
     listing_id: listingId,
     tier: schedule.tier,
     next_run_at: nextRunFromNow(schedule.tier),
   });
-  return { observations_created: created, tier: schedule.tier };
+  return { observations_created: created, tier: schedule.tier, driver };
+}
+
+/** @deprecated Use runCompetitorIngest */
+export async function runMockIngest(
+  catalog: CatalogRepository,
+  competitors: CompetitorRepository,
+  repricing: RepricingRepository,
+  listingHealth: ListingHealthRepository,
+  listingAdapter: ListingPullAdapter,
+  tenantId: string,
+  listingId: string
+): Promise<{ observations_created: number; tier: IngestTier }> {
+  const shops = {
+    getShop: async () => undefined,
+    getAccessToken: async () => null,
+  } as unknown as ShopRepository;
+  const result = await runCompetitorIngest(
+    catalog,
+    competitors,
+    repricing,
+    listingHealth,
+    shops,
+    listingAdapter,
+    tenantId,
+    listingId
+  );
+  return {
+    observations_created: result.observations_created,
+    tier: result.tier,
+  };
 }
 
 export async function processRepricingEvent(

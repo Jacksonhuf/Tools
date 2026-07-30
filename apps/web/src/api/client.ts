@@ -1429,8 +1429,43 @@ export async function fetchIngestStatus(locale: string, listingId: string) {
     tier: string;
     next_run_at: string;
     interval_ms: number;
+    ingest_driver?: string;
+    include_shipping?: boolean;
+    compliant_scrape_enabled?: boolean;
     ingest_failed?: boolean;
     ingest_failed_at?: string | null;
+  }>;
+}
+
+export async function runCompetitorIngestDue(
+  locale: string,
+  force = false
+) {
+  const res = await fetch(`/api/v1/ops/competitor-ingest/run-due`, {
+    method: "POST",
+    headers: headers(locale),
+    body: JSON.stringify({ force }),
+  });
+  if (!res.ok) throw new Error(`competitor-ingest-run-due ${res.status}`);
+  return res.json() as Promise<{
+    runs: Array<{
+      listing_id: string;
+      observations_created: number;
+      tier: string;
+      error?: string;
+    }>;
+  }>;
+}
+
+export async function fetchCompetitorIngestStatus(locale: string) {
+  const res = await fetch(`/api/v1/ops/competitor-ingest/status`, {
+    headers: headers(locale),
+  });
+  if (!res.ok) throw new Error(`competitor-ingest-status ${res.status}`);
+  return res.json() as Promise<{
+    driver: string;
+    include_shipping: boolean;
+    compliant_scrape_enabled: boolean;
   }>;
 }
 
@@ -1443,6 +1478,7 @@ export async function runIngest(locale: string, listingId: string) {
   return res.json() as Promise<{
     observations_created: number;
     tier: string;
+    driver?: string;
   }>;
 }
 
