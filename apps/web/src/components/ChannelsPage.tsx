@@ -319,18 +319,18 @@ export function ChannelsPage() {
             <CardDescription>{adapterStatus.note}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-          <dl className="adapter-status-dl">
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <dt>{t("channelAdapterDriver")}</dt>
-              <dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("channelAdapterDriver")}</dt>
+              <dd className="m-0 font-medium">
                 <code data-testid="channel-adapter-driver">
                   {adapterStatus.driver}
                 </code>
               </dd>
             </div>
             <div>
-              <dt>{t("batchStatus")}</dt>
-              <dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("batchStatus")}</dt>
+              <dd className="m-0 font-medium">
                 <Badge
                   variant={statusBadgeVariant(
                     adapterStatus.ready ? "connected" : "disconnected"
@@ -344,16 +344,16 @@ export function ChannelsPage() {
               </dd>
             </div>
             <div>
-              <dt>{t("channelAdapterPublishHttp")}</dt>
-              <dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("channelAdapterPublishHttp")}</dt>
+              <dd className="m-0 font-medium">
                 {adapterStatus.publish_http_url_configured
                   ? t("channelAdapterConfigured")
                   : t("channelAdapterNotConfigured")}
               </dd>
             </div>
             <div>
-              <dt>{t("channelAdapterPullHttp")}</dt>
-              <dd>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("channelAdapterPullHttp")}</dt>
+              <dd className="m-0 font-medium">
                 {adapterStatus.listing_pull_http_url_configured
                   ? t("channelAdapterConfigured")
                   : t("channelAdapterNotConfigured")}

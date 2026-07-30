@@ -102,6 +102,16 @@ import {
 } from "../api/client";
 import { CopilotChatPanel } from "./CopilotChatPanel";
 import { PageIntent } from "@/components/patterns/PageIntent";
+import { Surface } from "@/components/primitives/Surface";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRoot,
+  DataTableRow,
+} from "@/components/patterns/DataTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LISTINGS: Array<{ id: string; channel: Channel }> = [
@@ -424,8 +434,8 @@ export function CopilotPage() {
         </Alert>
       )}
 
-      <section className="card" data-testid="copilot-digest-schedule">
-        <h2>{t("copilotDigestScheduleTitle")}</h2>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="copilot-digest-schedule">
+        <h2 className="text-base font-semibold">{t("copilotDigestScheduleTitle")}</h2>
         <label>
           <input
             type="checkbox"
@@ -443,7 +453,7 @@ export function CopilotPage() {
             style={{ width: "100%", fontFamily: "monospace" }}
           />
         </label>
-        <p className="hint">
+        <p className="text-sm text-muted-foreground">
           {t("copilotDigestLastDispatch")}:{" "}
           {digestLastRun ? new Date(digestLastRun).toLocaleString(locale) : "—"}
         </p>
@@ -458,7 +468,7 @@ export function CopilotPage() {
         >
           {t("copilotDigestScheduleExportCsv")}
         </button>
-        <div className="shop-actions">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() =>
@@ -1182,10 +1192,10 @@ export function CopilotPage() {
             {t("copilotAuditRowExportCsv")}
           </button>
         </div>
-      </section>
-      <section className="card" data-testid="copilot-digest-jobs">
-        <h2>{t("copilotDigestJobsTitle")}</h2>
-        <p className="hint" data-testid="copilot-digest-jobs-summary">
+      </Surface>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="copilot-digest-jobs">
+        <h2 className="text-base font-semibold">{t("copilotDigestJobsTitle")}</h2>
+        <p className="text-sm text-muted-foreground" data-testid="copilot-digest-jobs-summary">
           {digestJobs
             ? t("copilotDigestJobsSummary", {
                 queued: digestJobs.queue.queued,
@@ -1194,7 +1204,7 @@ export function CopilotPage() {
               })
             : t("copilotDigestJobsLoading")}
         </p>
-        <div className="shop-actions">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             data-testid="copilot-digest-dispatches-export"
@@ -1249,10 +1259,10 @@ export function CopilotPage() {
             {t("copilotDigestJobExportCsv")}
           </button>
         </div>
-      </section>
-      <section className="card" data-testid="copilot-digest-dlq">
-        <h2>{t("copilotDigestDlqTitle")}</h2>
-        <p className="hint" data-testid="copilot-digest-dlq-summary">
+      </Surface>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="copilot-digest-dlq">
+        <h2 className="text-base font-semibold">{t("copilotDigestDlqTitle")}</h2>
+        <p className="text-sm text-muted-foreground" data-testid="copilot-digest-dlq-summary">
           {digestDlq
             ? t("copilotDigestDlqSummary", {
                 dead: digestDlq.queue.dead_letter,
@@ -1260,7 +1270,7 @@ export function CopilotPage() {
               })
             : t("copilotDigestDlqLoading")}
         </p>
-        <div className="shop-actions">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() =>
@@ -1304,17 +1314,17 @@ export function CopilotPage() {
             {t("copilotDigestDlqJobExportCsv")}
           </button>
         </div>
-      </section>
+      </Surface>
       {digestNarrative && (
-        <section className="card" data-testid="copilot-digest">
-          <h2>{t("copilotDigestTitle")}</h2>
+        <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="copilot-digest">
+          <h2 className="text-base font-semibold">{t("copilotDigestTitle")}</h2>
           <p>{digestNarrative}</p>
           {digestEmailStub && (
-            <p className="hint" data-testid="digest-email-stub">
+            <p className="text-sm text-muted-foreground" data-testid="digest-email-stub">
               {t("copilotDigestEmailStub")}: {digestEmailStub}
             </p>
           )}
-          <div className="shop-actions">
+          <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => void loadDigest()}>
               {t("copilotDigestRefresh")}
             </button>
@@ -1346,10 +1356,10 @@ export function CopilotPage() {
               {t("copilotDigestDateExportCsv")}
             </button>
           </div>
-        </section>
+        </Surface>
       )}
 
-      <section className="card controls">
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
         <label>
           {t("channel")}
           <select
@@ -1368,8 +1378,8 @@ export function CopilotPage() {
         <button type="button" onClick={() => void loadContext()}>
           {t("copilotLoadContext")}
         </button>
-        {contextSnippet && <p className="highlight">{contextSnippet}</p>}
-      </section>
+        {contextSnippet && <p className="text-2xl font-bold text-primary">{contextSnippet}</p>}
+      </Surface>
 
       <CopilotChatPanel
         title={t("copilotChatTitle")}
@@ -1390,20 +1400,20 @@ export function CopilotPage() {
       />
 
       {tools.length > 0 && (
-        <section className="card">
-          <h2>{t("copilotToolsTitle")}</h2>
-          <ul className="tool-catalog">
+        <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
+          <h2 className="text-base font-semibold">{t("copilotToolsTitle")}</h2>
+          <ul className="m-0 list-none space-y-2 p-0">
             {tools.map((tool) => (
-              <li key={tool.name}>
+              <li key={tool.name} className="rounded-md border bg-muted/30 p-3 text-sm">
                 <code>{tool.name}</code> — {tool.mode}: {tool.description}
               </li>
             ))}
           </ul>
-        </section>
+        </Surface>
       )}
 
-      <section className="card">
-        <h2>{t("copilotRuleCompile")}</h2>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
+        <h2 className="text-base font-semibold">{t("copilotRuleCompile")}</h2>
         <label>
           {t("copilotNlInput")}
           <textarea
@@ -1412,7 +1422,7 @@ export function CopilotPage() {
             onChange={(e) => setNlText(e.target.value)}
           />
         </label>
-        <div className="shop-actions">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setNlText(t("copilotNlExample"))}
@@ -1432,14 +1442,14 @@ export function CopilotPage() {
         </div>
         {explanation && <p>{explanation}</p>}
         {draftJson && (
-          <pre className="draft-preview" data-testid="rule-draft-preview">
+          <pre className="mt-3 overflow-x-auto rounded-md border bg-slate-950 p-4 font-mono text-xs text-slate-100" data-testid="rule-draft-preview">
             {draftJson}
           </pre>
         )}
-      </section>
+      </Surface>
 
-      <section className="card">
-        <h2>{t("copilotAdjustmentDraft")}</h2>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
+        <h2 className="text-base font-semibold">{t("copilotAdjustmentDraft")}</h2>
         <label>
           {t("copilotAdjustmentPrice")}
           <input
@@ -1451,30 +1461,34 @@ export function CopilotPage() {
         <button type="button" onClick={() => void createAdjustmentDraft()}>
           {t("copilotAdjustmentCreate")}
         </button>
-      </section>
+      </Surface>
 
       {audit.length > 0 && (
-        <section className="card">
-          <h2>{t("copilotAuditTitle")}</h2>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Tool</th>
-                <th>Summary</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {audit.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.tool_name}</td>
-                  <td>{row.result_summary}</td>
-                  <td>{new Date(row.created_at).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
+          <h2 className="text-base font-semibold">{t("copilotAuditTitle")}</h2>
+          <DataTable testId="copilot-audit-table" maxHeight={320}>
+            <DataTableRoot>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHead>Tool</DataTableHead>
+                  <DataTableHead>Summary</DataTableHead>
+                  <DataTableHead>Time</DataTableHead>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {audit.map((row) => (
+                  <DataTableRow key={row.id}>
+                    <DataTableCell className="font-mono text-xs">{row.tool_name}</DataTableCell>
+                    <DataTableCell>{row.result_summary}</DataTableCell>
+                    <DataTableCell className="text-muted-foreground">
+                      {new Date(row.created_at).toLocaleString(locale)}
+                    </DataTableCell>
+                  </DataTableRow>
+                ))}
+              </DataTableBody>
+            </DataTableRoot>
+          </DataTable>
+        </Surface>
       )}
     </div>
   );

@@ -353,7 +353,7 @@ export function PricingPage() {
         onCompetitorAmzChange={setCompetitorAmz}
       />
 
-      <div className="dual-channel mb-6" data-testid="dual-channel-grid">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2" data-testid="dual-channel-grid">
         {mlCtx && (
           <Surface variant="elevated" padding="md" className="channel-card">
             <ChannelPricingColumn

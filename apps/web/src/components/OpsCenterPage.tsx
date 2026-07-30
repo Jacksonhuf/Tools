@@ -406,7 +406,7 @@ export function OpsCenterPage() {
 
       <AdvancedSection title={t("advancedSection")} description={t("opsAdvancedHint")}>
 
-      <section className="card controls">
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4">
         <button
           type="button"
           data-testid="ops-export-pricing-csv"
@@ -456,10 +456,10 @@ export function OpsCenterPage() {
         >
           {t("opsVersionBackupCsv")}
         </button>
-      </section>
+      </Surface>
 
-      <section className="card" data-testid="ops-listing-sync-schedule">
-        <h2>{t("opsListingSyncSchedule")}</h2>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-listing-sync-schedule">
+        <h2 className="text-base font-semibold">{t("opsListingSyncSchedule")}</h2>
         <label>
           <input
             type="checkbox"
@@ -477,14 +477,14 @@ export function OpsCenterPage() {
             style={{ width: "100%", fontFamily: "monospace" }}
           />
         </label>
-        <p className="hint" data-testid="ops-listing-sync-summary">
+        <p className="text-sm text-muted-foreground" data-testid="ops-listing-sync-summary">
           {t("opsListingSyncSummary", {
             ok: syncJobOk,
             failed: syncJobFailed,
             sampled: syncJobOk + syncJobFailed,
           })}
         </p>
-        <p className="hint" data-testid="ops-listing-sync-last-run">
+        <p className="text-sm text-muted-foreground" data-testid="ops-listing-sync-last-run">
           {t("opsListingSyncLastRun")}:{" "}
           {syncLastRun ? new Date(syncLastRun).toLocaleString(locale) : "—"}
         </p>
@@ -702,39 +702,38 @@ export function OpsCenterPage() {
           {t("opsFeatureFlagsExportCsv")}
         </button>
         {syncJobs.length > 0 && (
-          <table
-            className="batch-table"
-            data-testid="ops-listing-sync-jobs"
-          >
-            <thead>
-              <tr>
-                <th>{t("opsListingSyncJobListing")}</th>
-                <th>{t("batchStatus")}</th>
-                <th>{t("opsListingSyncJobPrice")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {syncJobs.map((j) => (
-                <tr key={j.id}>
-                  <td>
-                    <code>{j.listing_id}</code>
-                  </td>
-                  <td>{j.status}</td>
-                  <td>
-                    {j.channel_price_mxn != null
-                      ? `${j.channel_price_mxn} MXN`
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable testId="ops-listing-sync-jobs" maxHeight={280}>
+            <DataTableRoot>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHead>{t("opsListingSyncJobListing")}</DataTableHead>
+                  <DataTableHead>{t("batchStatus")}</DataTableHead>
+                  <DataTableHead>{t("opsListingSyncJobPrice")}</DataTableHead>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {syncJobs.map((j) => (
+                  <DataTableRow key={j.id}>
+                    <DataTableCell>
+                      <code className="text-xs">{j.listing_id}</code>
+                    </DataTableCell>
+                    <DataTableCell>{j.status}</DataTableCell>
+                    <DataTableCell className="tabular-nums">
+                      {j.channel_price_mxn != null
+                        ? `${j.channel_price_mxn} MXN`
+                        : "—"}
+                    </DataTableCell>
+                  </DataTableRow>
+                ))}
+              </DataTableBody>
+            </DataTableRoot>
+          </DataTable>
         )}
-      </section>
+      </Surface>
 
-      <section className="card" data-testid="ops-landed-cost-import">
-        <h2>{t("opsLandedCostImport")}</h2>
-        <p className="hint">{t("opsLandedCostImportHint")}</p>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-landed-cost-import">
+        <h2 className="text-base font-semibold">{t("opsLandedCostImport")}</h2>
+        <p className="text-sm text-muted-foreground">{t("opsLandedCostImportHint")}</p>
         <textarea
           rows={3}
           value={importCsv}
@@ -754,7 +753,7 @@ export function OpsCenterPage() {
           {t("opsLandedCostImportRun")}
         </button>
         {workerCount > 0 && (
-          <p className="hint" data-testid="ops-workers-live">
+          <p className="text-sm text-muted-foreground" data-testid="ops-workers-live">
             {t("opsWorkersLive", { count: workerCount })}
           </p>
         )}
@@ -793,10 +792,10 @@ export function OpsCenterPage() {
         >
           {t("opsWorkerHeartbeatExportCsv")}
         </button>
-      </section>
+      </Surface>
 
-      <section className="card" data-testid="ops-cost-sheet-import">
-        <h2>{t("opsCostSheetImport")}</h2>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-cost-sheet-import">
+        <h2 className="text-base font-semibold">{t("opsCostSheetImport")}</h2>
         <textarea
           rows={3}
           value={costSheetImportCsv}
@@ -813,28 +812,30 @@ export function OpsCenterPage() {
         >
           {t("opsCostSheetImportRun")}
         </button>
-      </section>
+      </Surface>
 
-      <section className="card" data-testid="ops-tariff-hs">
-        <h2>{t("opsTariffHs")}</h2>
-        <table className="batch-table">
-          <thead>
-            <tr>
-              <th>HS</th>
-              <th>{t("opsTariffRate")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tariffRows.map((row) => (
-              <tr key={row.hs_code}>
-                <td>
-                  <code>{row.hs_code}</code>
-                </td>
-                <td>{(row.tariff_rate * 100).toFixed(1)}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-tariff-hs">
+        <h2 className="text-base font-semibold">{t("opsTariffHs")}</h2>
+        <DataTable testId="ops-tariff-table" maxHeight={240}>
+          <DataTableRoot>
+            <DataTableHeader>
+              <DataTableRow>
+                <DataTableHead>HS</DataTableHead>
+                <DataTableHead>{t("opsTariffRate")}</DataTableHead>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {tariffRows.map((row) => (
+                <DataTableRow key={row.hs_code}>
+                  <DataTableCell>
+                    <code className="text-xs">{row.hs_code}</code>
+                  </DataTableCell>
+                  <DataTableCell>{(row.tariff_rate * 100).toFixed(1)}%</DataTableCell>
+                </DataTableRow>
+              ))}
+            </DataTableBody>
+          </DataTableRoot>
+        </DataTable>
         <button
           type="button"
           data-testid="ops-hs-landed-preview"
@@ -895,11 +896,11 @@ export function OpsCenterPage() {
         >
           {t("opsFxRateExportCsv")}
         </button>
-      </section>
+      </Surface>
 
-      <section className="card" data-testid="ops-adjustment-preview">
-        <h2>{t("opsAdjustmentPreview")}</h2>
-        <p className="hint">{t("opsAdjustmentPreviewHint")}</p>
+      <Surface variant="elevated" padding="md" className="mb-4 space-y-4" data-testid="ops-adjustment-preview">
+        <h2 className="text-base font-semibold">{t("opsAdjustmentPreview")}</h2>
+        <p className="text-sm text-muted-foreground">{t("opsAdjustmentPreviewHint")}</p>
         <textarea
           rows={3}
           value={adjustmentCsv}
@@ -921,7 +922,7 @@ export function OpsCenterPage() {
         >
           {t("opsAdjustmentPreviewRun")}
         </button>
-      </section>
+      </Surface>
 
         <ExportHub title={t("exportActions")} description={t("exportHubHint")}>
       <div className="flex flex-wrap gap-2">

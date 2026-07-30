@@ -6,7 +6,6 @@ import i18n from "./i18n";
 import { App } from "./App";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import "./index.css";
-import "./legacy.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
