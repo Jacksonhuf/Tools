@@ -8,6 +8,7 @@ import { getRuleCompilerStatus } from "./rule-compiler-adapter.js";
 import { evaluateSecretsStatus } from "./secrets-registry.js";
 import { getWafStatus } from "./waf-middleware.js";
 import { evaluateBackupPitrStatus } from "./backup-pitr.js";
+import { evaluateReleaseGate, getNfrRel003Gate } from "./release-gate.js";
 
 export interface GoLiveCheck {
   id: string;
@@ -50,6 +51,8 @@ export function evaluateGoLiveReadiness(): {
   const secrets = evaluateSecretsStatus();
   const backup = evaluateBackupPitrStatus();
   const waf = getWafStatus();
+  const releaseGate = evaluateReleaseGate();
+  const nfrRel003 = getNfrRel003Gate();
 
   const checks: GoLiveCheck[] = [
     {
@@ -88,6 +91,16 @@ export function evaluateGoLiveReadiness(): {
       id: "NFR-K6-BASELINE",
       passed: true,
       detail: "scripts/k6 baseline + ci-nfr-weekly workflow",
+    },
+    {
+      id: "TC-NFR-REL-003",
+      passed: nfrRel003.passed && releaseGate.p0_blocking_ready,
+      detail: `${nfrRel003.detail} (${nfrRel003.ci_job} / ${nfrRel003.npm_script})`,
+    },
+    {
+      id: "P0-RELEASE-GATE",
+      passed: releaseGate.p0_blocking_ready,
+      detail: `${releaseGate.gates.filter((g) => g.blocking && g.priority === "P0").length} P0 blocking gates cataloged`,
     },
     {
       id: "INFRA-SECRETS",

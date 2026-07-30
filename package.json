@@ -15,6 +15,8 @@
     "test:e2e:install": "playwright install chromium",
     "test:golden": "vitest run tests/golden/golden.test.ts",
     "test:nfr": "vitest run tests/nfr/",
+    "test:nfr-rel": "vitest run tests/api/ingest-nfr.test.ts -t \"TC-NFR-REL-003\"",
+    "test:release-gate": "npm run test:golden && npm run test:api && vitest run tests/api/repricing-guards.test.ts tests/api/ingest-nfr.test.ts -t \"TC-NFR-REL-003\"",
     "nfr:baseline": "node scripts/nfr/node-load-baseline.mjs",
     "security:scan": "node scripts/security/scan-secrets.mjs",
     "secrets:validate": "node scripts/secrets/validate-env.mjs",

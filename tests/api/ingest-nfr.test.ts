@@ -98,6 +98,33 @@ describe("TC-NFR-REL-003 ingest failure does not lower active", () => {
     expect(active).toHaveLength(1);
     expect(active[0].publish_price_mxn).toBe(2000);
   });
+
+  it("run-due marks ingest_failed when competitor channel pull fails", async () => {
+    const { app, listingAdapter } = createTestApp();
+    await app.request("/api/v1/listings/listing-ml-001/competitors", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ external_ref: "MLM-RUN-DUE-FAIL" }),
+    });
+    listingAdapter.failNextPull = true;
+    const run = await app.request("/api/v1/ops/competitor-ingest/run-due", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ force: true }),
+    });
+    expect(run.status).toBe(200);
+    const body = (await run.json()) as {
+      runs: Array<{ listing_id: string; error?: string }>;
+    };
+    const mlRun = body.runs.find((r) => r.listing_id === "listing-ml-001");
+    expect(mlRun?.error).toBe("INGEST_FAILED");
+    const status = await app.request(
+      "/api/v1/listings/listing-ml-001/ingest/status",
+      { headers: { ...AUTH, ...TENANT } }
+    );
+    const ingest = (await status.json()) as { ingest_failed: boolean };
+    expect(ingest.ingest_failed).toBe(true);
+  });
 });
 
 describe("P3-E1-03 auto_pending action", () => {

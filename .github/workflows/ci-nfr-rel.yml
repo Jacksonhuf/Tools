@@ -1,0 +1,22 @@
+name: ci-nfr-rel
+
+on:
+  push:
+    branches: [main, "cursor/**"]
+  pull_request:
+
+jobs:
+  nfr-rel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: TC-NFR-REL-003 ingest failure no downgrade (P3-E3-05)
+        run: npm run test:nfr-rel
+      - name: Release gate API catalog
+        run: npx vitest run tests/api/release-gate.test.ts
