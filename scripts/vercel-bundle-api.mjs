@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 /**
- * Bundle the Vercel serverless entry so workspace imports resolve at runtime.
- * Output: api/index.js (consumed by Vercel; source is api/handler.ts).
+ * Bundle the Vercel serverless entry as CommonJS with workspace packages inlined.
+ * Vercel treats api/*.js as CJS unless the repo root has "type": "module"; ESM output
+ * caused FUNCTION_INVOCATION_FAILED. Heavy runtime deps stay external (hono, pg, redis).
  */
 import * as esbuild from "esbuild";
-import { readFileSync } from "node:fs";
 
-const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-const workspaceNames = [
-  ...Object.keys(pkg.dependencies ?? {}),
-  ...Object.keys(pkg.devDependencies ?? {}),
-].filter((name) => name.startsWith("@mx-pricing/"));
+const runtimeExternals = [
+  "hono",
+  "hono/*",
+  "@hono/node-server",
+  "pg",
+  "pg-native",
+  "redis",
+];
 
 await esbuild.build({
   entryPoints: ["api/handler.ts"],
@@ -18,9 +21,9 @@ await esbuild.build({
   bundle: true,
   platform: "node",
   target: "node20",
-  format: "esm",
-  packages: "external",
-  external: ["pg-native"],
+  format: "cjs",
+  packages: "bundle",
+  external: runtimeExternals,
   logLevel: "info",
 });
 
@@ -28,6 +31,7 @@ console.log(
   JSON.stringify({
     ok: true,
     outfile: "api/index.js",
-    external_workspace_packages: workspaceNames,
+    format: "cjs",
+    runtime_externals: runtimeExternals,
   })
 );
