@@ -96,7 +96,7 @@ See [go-live-checklist.md](./go-live-checklist.md) for full cutover gates.
 | Symptom | Fix |
 |---------|-----|
 | `FUNCTION_INVOCATION_TIMEOUT` on `/api/*` | Ensure API handlers use Vercel Web API exports (`export default app` for Hono, or `export default { fetch() {} }`). A plain `export default function (req) { return Response.json(...) }` is treated as legacy `(req, res)` and will hang until timeout. |
-| `FUNCTION_INVOCATION_FAILED` on `/api/*` | Redeploy after `npm run build:vercel` (bundles `api/[...path].mjs` as **ESM**). Do **not** rewrite `/api/*` to `/api` — that strips the request path. Use `curl …/api/v1/ping` for a fast health check. Ensure production env vars from `config/vercel.env.production.example` are set. |
+| `FUNCTION_INVOCATION_FAILED` on `/api/*` | Redeploy after `npm run build:vercel` (bundles `api/index.mjs` exporting the Hono app). Use `export default app` or `export default { fetch() {} }` — not `export default function`. `vercel.json` rewrites `/api/*` → `/api`; use `curl …/api/v1/ping` for a fast health check. |
 | `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` on many pages | API requests are hitting SPA `index.html`. Ensure root `vercel.json` rewrites `/api/*` before SPA fallback; run BFF locally with `npm run dev:bff` (or use `vite preview` with BFF on :3000). |
 | Build fails with Root Directory error | Clear Root Directory in Vercel settings |
 | 401 on all API routes | Set `AUTH_DRIVER=oidc_jwt` and JWT secret; use real Bearer JWT in production |
