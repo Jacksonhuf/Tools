@@ -1,23 +1,14 @@
-import { handle } from "hono/vercel";
-import { createApp } from "../apps/bff/dist/app.js";
-import { getCatalogRepository } from "../apps/bff/dist/repositories/index.js";
-import { applyVercelServerlessDefaults } from "./vercel-serverless-env.js";
-
-let honoHandler: ReturnType<typeof handle> | undefined;
-
+/** Minimal Vercel handler to verify /api routing before loading the full BFF bundle. */
 export default async function handler(req: Request): Promise<Response> {
-  try {
-    if (!honoHandler) {
-      applyVercelServerlessDefaults();
-      getCatalogRepository();
-      honoHandler = handle(createApp());
-    }
-    return honoHandler(req);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return Response.json(
-      { error: "FUNCTION_BOOT_FAILED", message },
-      { status: 500, headers: { "content-type": "application/json" } }
-    );
+  const url = new URL(req.url);
+  if (url.pathname === "/api/v1/ping") {
+    return Response.json({
+      ok: true,
+      service: "mx-pricing-bff",
+      vercel: process.env.VERCEL === "1",
+    });
   }
+
+  const { default: bffHandler } = await import("./bff-handler.mjs");
+  return bffHandler(req);
 }

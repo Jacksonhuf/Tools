@@ -13,6 +13,10 @@
     "api/index.mjs": {
       "maxDuration": 30,
       "memory": 1024
+    },
+    "api/bff-handler.mjs": {
+      "maxDuration": 30,
+      "memory": 1024
     }
   }
 }
