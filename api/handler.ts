@@ -7,6 +7,10 @@ let honoHandler: ReturnType<typeof handle> | undefined;
 export default async function handler(req: Request): Promise<Response> {
   try {
     if (!honoHandler) {
+      // Default to in-memory stores on Vercel unless Postgres is explicitly enabled.
+      if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+        process.env.CATALOG_DRIVER = "memory";
+      }
       getCatalogRepository();
       honoHandler = handle(createApp());
     }

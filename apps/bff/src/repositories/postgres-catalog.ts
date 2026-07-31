@@ -2,6 +2,7 @@ import pg from "pg";
 import type { CatalogRepository, CreateVersionParams } from "./types.js";
 import { rowToSku } from "./types.js";
 import type { PriceVersionRecord, VersionState } from "../version-store.js";
+import { createPgPool } from "../pg-pool.js";
 
 function mapVersionRow(row: Record<string, unknown>): PriceVersionRecord {
   return {
@@ -26,7 +27,7 @@ export class PostgresCatalogRepository implements CatalogRepository {
   constructor(connectionStringOrPool: string | pg.Pool) {
     this.pool =
       typeof connectionStringOrPool === "string"
-        ? new pg.Pool({ connectionString: connectionStringOrPool })
+        ? createPgPool(connectionStringOrPool)
         : connectionStringOrPool;
   }
 
