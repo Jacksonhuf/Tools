@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Bundle the Vercel catch-all API handler (api/[...path].mjs).
- * Do not rewrite /api/* to /api — that strips the original path and breaks routing.
+ * Bundle the Vercel API entry (api/index.mjs) exporting the Hono app directly.
+ * vercel.json rewrites /api/* to /api; Hono routes keep the original path in Request.url.
  */
 import * as esbuild from "esbuild";
 
@@ -16,7 +16,7 @@ const runtimeExternals = [
 
 await esbuild.build({
   entryPoints: ["api/bff-handler.ts"],
-  outfile: "api/[...path].mjs",
+  outfile: "api/index.mjs",
   bundle: true,
   platform: "node",
   target: "node20",
@@ -29,7 +29,7 @@ await esbuild.build({
 console.log(
   JSON.stringify({
     ok: true,
-    outfile: "api/[...path].mjs",
+    outfile: "api/index.mjs",
     format: "esm",
     runtime_externals: runtimeExternals,
   })

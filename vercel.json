@@ -6,6 +6,7 @@
   "outputDirectory": "apps/web/dist",
   "framework": null,
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
@@ -13,7 +14,7 @@
       "maxDuration": 10,
       "memory": 256
     },
-    "api/[...path].mjs": {
+    "api/index.mjs": {
       "maxDuration": 30,
       "memory": 1024
     }
