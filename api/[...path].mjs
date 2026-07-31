@@ -1,6 +1,3 @@
-// api/bff-handler.ts
-import { handle } from "hono/vercel";
-
 // apps/bff/dist/app.js
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -14885,23 +14882,9 @@ function applyVercelServerlessDefaults() {
 }
 
 // api/bff-handler.ts
-var honoHandler;
-async function handler(req) {
-  try {
-    if (!honoHandler) {
-      applyVercelServerlessDefaults();
-      getCatalogRepository();
-      honoHandler = handle(createApp());
-    }
-    return honoHandler(req);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return Response.json(
-      { error: "FUNCTION_BOOT_FAILED", message },
-      { status: 500, headers: { "content-type": "application/json" } }
-    );
-  }
-}
+applyVercelServerlessDefaults();
+getCatalogRepository();
+var bff_handler_default = createApp();
 export {
-  handler as default
+  bff_handler_default as default
 };
