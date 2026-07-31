@@ -8,6 +8,36 @@ const LISTING_BY_CHANNEL = {
 const AUTH = "dev-token";
 const TENANT = "tenant-demo";
 
+/** Optional override when API is on another origin (e.g. local BFF). */
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
+function apiUrl(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  return `${API_BASE}${path}`;
+}
+
+function apiFetch(input: string, init?: RequestInit): Promise<Response> {
+  return apiFetch(apiUrl(input), init);
+}
+
+async function parseJsonResponse<T = any>(res: Response): Promise<T> {
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    const preview = (await res.text()).slice(0, 160);
+    if (preview.trimStart().startsWith("<!")) {
+      throw new Error(
+        "API returned HTML instead of JSON. Start the BFF (npm run dev:bff) or check /api routing on Vercel."
+      );
+    }
+    throw new Error(
+      `Expected JSON but got ${contentType || "unknown"}: ${preview}`
+    );
+  }
+  return parseJsonResponse(res) as Promise<T>;
+}
+
 export type Channel = keyof typeof LISTING_BY_CHANNEL;
 
 function headers(locale: string): HeadersInit {
@@ -20,9 +50,9 @@ function headers(locale: string): HeadersInit {
 }
 
 export async function fetchSkus(locale: string) {
-  const res = await fetch(`/api/v1/skus`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/skus`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`skus ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{
       id: string;
       sku_code: string;
@@ -46,13 +76,13 @@ export interface AuthMeResponse {
 }
 
 export async function fetchAuthMe(locale: string): Promise<AuthMeResponse> {
-  const res = await fetch(`/api/v1/auth/me`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/auth/me`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`auth-me ${res.status}`);
-  return res.json() as Promise<AuthMeResponse>;
+  return parseJsonResponse(res) as Promise<AuthMeResponse>;
 }
 
 export async function downloadSkusCatalogCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/skus/export`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/skus/export`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`skus-export ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -67,7 +97,7 @@ export async function downloadSkuCatalogCsv(
   locale: string,
   skuId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/export`,
     { headers: headers(locale) }
   );
@@ -86,13 +116,13 @@ export async function patchSkuLandedCost(
   skuId: string,
   landed_cost_mxn: number
 ) {
-  const res = await fetch(`/api/v1/skus/${skuId}`, {
+  const res = await apiFetch(`/api/v1/skus/${skuId}`, {
     method: "PATCH",
     headers: headers(locale),
     body: JSON.stringify({ landed_cost_mxn }),
   });
   if (!res.ok) throw new Error(`patch sku ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function patchSkuPolicy(
@@ -104,13 +134,13 @@ export async function patchSkuPolicy(
     pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
   }
 ) {
-  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/policy`, {
+  const res = await apiFetch(`/api/v1/skus/${encodeURIComponent(skuId)}/policy`, {
     method: "PATCH",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`patch policy ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     id: string;
     policy: {
       target_margin_pct: number;
@@ -129,34 +159,34 @@ export async function batchPatchSkuPolicies(
     pricing_mode?: "cost" | "competitive" | "competitive_with_floor";
   }>
 ) {
-  const res = await fetch(`/api/v1/skus/policy/batch`, {
+  const res = await apiFetch(`/api/v1/skus/policy/batch`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ items }),
   });
   if (!res.ok) throw new Error(`sku-policy-batch ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     updated: Array<{ sku_id: string }>;
     errors: Array<{ sku_id: string; error: string }>;
   }>;
 }
 
 export async function fetchSharedFeeTemplates(locale: string) {
-  const res = await fetch(`/api/v1/tenants/tenant-demo/shared-fee-templates`, {
+  const res = await apiFetch(`/api/v1/tenants/tenant-demo/shared-fee-templates`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`shared-fee-templates ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{ id: string; name: string; channel: string }>;
   }>;
 }
 
 export async function fetchCategoryRuleTemplates(locale: string) {
-  const res = await fetch(`/api/v1/category-rule-templates`, {
+  const res = await apiFetch(`/api/v1/category-rule-templates`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`category-rule-templates ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{ category_id: string; name: string }>;
   }>;
 }
@@ -164,7 +194,7 @@ export async function fetchCategoryRuleTemplates(locale: string) {
 export async function downloadCategoryRuleTemplatesCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/category-rule-templates/export`, {
+  const res = await apiFetch(`/api/v1/category-rule-templates/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`category-rule-templates-export ${res.status}`);
@@ -181,7 +211,7 @@ export async function downloadCategoryRuleTemplateCsv(
   locale: string,
   categoryId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/category-rule-templates/${encodeURIComponent(categoryId)}/export`,
     { headers: headers(locale) }
   );
@@ -198,7 +228,7 @@ export async function downloadCategoryRuleTemplateCsv(
 export async function downloadSharedFeeTemplatesCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/shared-fee-templates/export`, {
+  const res = await apiFetch(`/api/v1/shared-fee-templates/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`shared-fee-templates-export ${res.status}`);
@@ -215,7 +245,7 @@ export async function downloadCompetitorOffersCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/competitors/export`,
     { headers: headers(locale) }
   );
@@ -233,7 +263,7 @@ export async function downloadCompetitorOfferCsv(
   locale: string,
   offerId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/competitor-offers/${encodeURIComponent(offerId)}/export`,
     { headers: headers(locale) }
   );
@@ -248,7 +278,7 @@ export async function downloadCompetitorOfferCsv(
 }
 
 export async function downloadOpsMetricsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/ops/metrics/export`, {
+  const res = await apiFetch(`/api/v1/ops/metrics/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`ops-metrics-export ${res.status}`);
@@ -266,7 +296,7 @@ export async function applySharedFeeTemplate(
   skuId: string,
   templateId: string
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/apply-shared-fee-template`,
     {
       method: "POST",
@@ -275,7 +305,7 @@ export async function applySharedFeeTemplate(
     }
   );
   if (!res.ok) throw new Error(`apply-fee-template ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function syncListingChannel(
@@ -283,26 +313,26 @@ export async function syncListingChannel(
   listingId: string,
   external_ref: string
 ) {
-  const res = await fetch(`/api/v1/listings/${listingId}/sync`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/sync`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ external_ref }),
   });
   if (!res.ok) throw new Error(`listing-sync ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     job: { id: string; status: string };
     snapshot: { price_mxn: number };
   }>;
 }
 
 export async function importCostSheetsCsv(locale: string, csv: string) {
-  const res = await fetch(`/api/v1/imports/cost-sheets`, {
+  const res = await apiFetch(`/api/v1/imports/cost-sheets`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ csv }),
   });
   if (!res.ok) throw new Error(`cost-sheets-import ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     parse_errors: string[];
     created: Array<{ sku_id: string; cost_sheet_id: string }>;
     skipped: unknown[];
@@ -320,11 +350,11 @@ export interface CostSheetRow {
 }
 
 export async function fetchCostSheets(locale: string, skuId: string) {
-  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
+  const res = await apiFetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`cost-sheets ${res.status}`);
-  return res.json() as Promise<{ items: CostSheetRow[] }>;
+  return parseJsonResponse(res) as Promise<{ items: CostSheetRow[] }>;
 }
 
 export async function createCostSheetRow(
@@ -338,13 +368,13 @@ export async function createCostSheetRow(
     freight_alloc_rule?: "PER_UNIT" | "WEIGHT_BASED";
   }
 ) {
-  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
+  const res = await apiFetch(`/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`create cost-sheet ${res.status}`);
-  return res.json() as Promise<CostSheetRow>;
+  return parseJsonResponse(res) as Promise<CostSheetRow>;
 }
 
 export async function applyLandedFromCostSheet(
@@ -352,7 +382,7 @@ export async function applyLandedFromCostSheet(
   skuId: string,
   cost_sheet_id: string
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-cost-sheet`,
     {
       method: "POST",
@@ -361,7 +391,7 @@ export async function applyLandedFromCostSheet(
     }
   );
   if (!res.ok) throw new Error(`landed-from-cost-sheet ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     computed: { landed_cost_mxn: number };
     sku: { landed_cost_mxn: number };
   }>;
@@ -377,7 +407,7 @@ export async function applyLandedFromFx(
     apply?: boolean;
   }
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-fx`,
     {
       method: "POST",
@@ -386,14 +416,14 @@ export async function applyLandedFromFx(
     }
   );
   if (!res.ok) throw new Error(`landed-from-fx ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     computed: { landed_cost_mxn: number };
     sku: { landed_cost_mxn: number };
   }>;
 }
 
 export async function downloadCostSheetsTemplate(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/imports/cost-sheets/template`, {
+  const res = await apiFetch(`/api/v1/imports/cost-sheets/template`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`cost-sheets-template ${res.status}`);
@@ -407,12 +437,12 @@ export async function downloadCostSheetsTemplate(locale: string): Promise<void> 
 }
 
 export async function fetchPricingContext(locale: string, channel: Channel) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${DEMO_SKU}/pricing-context?channel=${channel}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`context ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function downloadPricingContextCsv(
@@ -420,7 +450,7 @@ export async function downloadPricingContextCsv(
   channel: Channel,
   skuId = DEMO_SKU
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/pricing-context/export?channel=${channel}`,
     { headers: headers(locale) }
   );
@@ -447,18 +477,18 @@ export interface CrossChannelGuardResponse {
 }
 
 export async function fetchCrossChannelGuard(locale: string) {
-  const res = await fetch(`/api/v1/skus/${DEMO_SKU}/cross-channel-guard`, {
+  const res = await apiFetch(`/api/v1/skus/${DEMO_SKU}/cross-channel-guard`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`cross-channel-guard ${res.status}`);
-  return res.json() as Promise<CrossChannelGuardResponse>;
+  return parseJsonResponse(res) as Promise<CrossChannelGuardResponse>;
 }
 
 export async function downloadCrossChannelGuardCsv(
   locale: string,
   skuId = DEMO_SKU
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/cross-channel-guard/export`,
     { headers: headers(locale) }
   );
@@ -476,13 +506,13 @@ export async function simulatePricing(
   locale: string,
   body: Record<string, unknown>
 ) {
-  const res = await fetch(`/api/v1/skus/${DEMO_SKU}/pricing/simulate`, {
+  const res = await apiFetch(`/api/v1/skus/${DEMO_SKU}/pricing/simulate`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`simulate ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function publishPrice(
@@ -491,12 +521,12 @@ export async function publishPrice(
   explicit_price_mxn: number
 ) {
   const listingId = LISTING_BY_CHANNEL[channel];
-  const res = await fetch(`/api/v1/listings/${listingId}/price-versions`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/price-versions`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ explicit_price_mxn, reason: "web-ui" }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   return { ok: res.ok, status: res.status, json };
 }
 
@@ -523,12 +553,12 @@ export async function publishChannelPrice(
   } = {}
 ) {
   const listingId = LISTING_BY_CHANNEL[channel];
-  const res = await fetch(`/api/v1/listings/${listingId}/channel-publish`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/channel-publish`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
-  const json = (await res.json()) as ChannelPublishResult;
+  const json = (await parseJsonResponse(res)) as ChannelPublishResult;
   return { ok: res.ok, status: res.status, json };
 }
 
@@ -537,12 +567,12 @@ export async function publishShopChannelPrice(
   shopId: string,
   body: { retry_on_step?: boolean } = {}
 ) {
-  const res = await fetch(`/api/v1/shops/${shopId}/channel-publish`, {
+  const res = await apiFetch(`/api/v1/shops/${shopId}/channel-publish`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
-  const json = (await res.json()) as ChannelPublishResult;
+  const json = (await parseJsonResponse(res)) as ChannelPublishResult;
   return { ok: res.ok, status: res.status, json };
 }
 
@@ -574,17 +604,17 @@ export interface AdjustmentBatch {
 }
 
 export async function fetchAdjustmentBatches(locale: string) {
-  const res = await fetch(`/api/v1/adjustment-batches`, {
+  const res = await apiFetch(`/api/v1/adjustment-batches`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`adjustment-batches ${res.status}`);
-  return res.json() as Promise<{ items: AdjustmentBatch[] }>;
+  return parseJsonResponse(res) as Promise<{ items: AdjustmentBatch[] }>;
 }
 
 export async function downloadAdjustmentApprovalPolicyCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/adjustment-batches/approval-policy/export`, {
+  const res = await apiFetch(`/api/v1/adjustment-batches/approval-policy/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`adjustment-approval-policy-export ${res.status}`);
@@ -604,12 +634,12 @@ export async function createAdjustmentBatch(
     items: Array<{ listing_id: string; explicit_price_mxn: number }>;
   }
 ) {
-  const res = await fetch(`/api/v1/adjustment-batches`, {
+  const res = await apiFetch(`/api/v1/adjustment-batches`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) {
     throw new Error(
       typeof json === "object" && json && "error" in json
@@ -621,20 +651,20 @@ export async function createAdjustmentBatch(
 }
 
 export async function approveAdjustmentBatch(locale: string, batchId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/adjustment-batches/${batchId}/approve`,
     { method: "POST", headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`approve batch ${res.status}`);
-  return res.json() as Promise<AdjustmentBatch>;
+  return parseJsonResponse(res) as Promise<AdjustmentBatch>;
 }
 
 export async function applyAdjustmentBatch(locale: string, batchId: string) {
-  const res = await fetch(`/api/v1/adjustment-batches/${batchId}/apply`, {
+  const res = await apiFetch(`/api/v1/adjustment-batches/${batchId}/apply`, {
     method: "POST",
     headers: headers(locale),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) {
     throw new Error(
       typeof json === "object" && json && "error" in json
@@ -658,11 +688,11 @@ export interface ShopSummary {
 }
 
 export async function fetchChannelSandboxStatus(locale: string) {
-  const res = await fetch(`/api/v1/channels/sandbox/status`, {
+  const res = await apiFetch(`/api/v1/channels/sandbox/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`sandbox status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     enabled: boolean;
     mode: string;
     note: string;
@@ -672,7 +702,7 @@ export async function fetchChannelSandboxStatus(locale: string) {
 export async function downloadChannelSandboxStatusCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/channels/sandbox/status/export`, {
+  const res = await apiFetch(`/api/v1/channels/sandbox/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`channel-sandbox-status-export ${res.status}`);
@@ -696,18 +726,18 @@ export interface ChannelSandboxEvent {
 }
 
 export async function fetchChannelSandboxEvents(locale: string, limit = 20) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/channels/sandbox/events?limit=${encodeURIComponent(String(limit))}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`sandbox events ${res.status}`);
-  return res.json() as Promise<{ items: ChannelSandboxEvent[] }>;
+  return parseJsonResponse(res) as Promise<{ items: ChannelSandboxEvent[] }>;
 }
 
 export async function downloadChannelSandboxEventsCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/channels/sandbox/events/export`, {
+  const res = await apiFetch(`/api/v1/channels/sandbox/events/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`sandbox-events-export ${res.status}`);
@@ -724,7 +754,7 @@ export async function downloadChannelSandboxEventCsv(
   locale: string,
   eventId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/channels/sandbox/events/${encodeURIComponent(eventId)}/export`,
     { headers: headers(locale) }
   );
@@ -750,17 +780,17 @@ export interface ChannelAdapterStatus {
 }
 
 export async function fetchChannelAdapterStatus(locale: string) {
-  const res = await fetch(`/api/v1/channels/adapters/status`, {
+  const res = await apiFetch(`/api/v1/channels/adapters/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`adapter status ${res.status}`);
-  return res.json() as Promise<ChannelAdapterStatus>;
+  return parseJsonResponse(res) as Promise<ChannelAdapterStatus>;
 }
 
 export async function downloadChannelAdapterStatusCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/channels/adapters/status/export`, {
+  const res = await apiFetch(`/api/v1/channels/adapters/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`channel-adapters-export ${res.status}`);
@@ -774,13 +804,13 @@ export async function downloadChannelAdapterStatusCsv(
 }
 
 export async function fetchShops(locale: string) {
-  const res = await fetch(`/api/v1/shops`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/shops`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops ${res.status}`);
-  return res.json() as Promise<{ items: ShopSummary[] }>;
+  return parseJsonResponse(res) as Promise<{ items: ShopSummary[] }>;
 }
 
 export async function downloadShopsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/shops/export`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/shops/export`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`shops-export ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -795,7 +825,7 @@ export async function downloadShopCsv(
   locale: string,
   shopId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/shops/${encodeURIComponent(shopId)}/export`,
     { headers: headers(locale) }
   );
@@ -813,7 +843,7 @@ export async function downloadListingCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${encodeURIComponent(listingId)}/export`,
     { headers: headers(locale) }
   );
@@ -828,12 +858,12 @@ export async function downloadListingCsv(
 }
 
 export async function startShopOAuth(locale: string, shopId: string) {
-  const res = await fetch(`/api/v1/shops/${shopId}/oauth/start`, {
+  const res = await apiFetch(`/api/v1/shops/${shopId}/oauth/start`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`oauth start ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     state: string;
     authorization_url: string;
     channel: Channel;
@@ -845,13 +875,13 @@ export async function mockCompleteShopOAuth(
   shopId: string,
   state?: string
 ) {
-  const res = await fetch(`/api/v1/shops/${shopId}/oauth/mock-complete`, {
+  const res = await apiFetch(`/api/v1/shops/${shopId}/oauth/mock-complete`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(state ? { state } : {}),
   });
   if (!res.ok) throw new Error(`oauth complete ${res.status}`);
-  return res.json() as Promise<{ shop: ShopSummary }>;
+  return parseJsonResponse(res) as Promise<{ shop: ShopSummary }>;
 }
 
 export async function pullShopListing(
@@ -859,12 +889,12 @@ export async function pullShopListing(
   shopId: string,
   external_ref: string
 ) {
-  const res = await fetch(`/api/v1/shops/${shopId}/listings/pull`, {
+  const res = await apiFetch(`/api/v1/shops/${shopId}/listings/pull`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ external_ref }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) {
     throw new Error(
       typeof json === "object" && json && "error" in json
@@ -893,11 +923,11 @@ export interface CompetitorOfferRow {
 }
 
 export async function fetchCompetitorOffers(locale: string, listingId: string) {
-  const res = await fetch(`/api/v1/listings/${listingId}/competitors`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/competitors`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`competitors ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: CompetitorOfferRow[];
     anchor: {
       count: number;
@@ -919,13 +949,13 @@ export async function createCompetitorOffer(
     is_primary?: boolean;
   }
 ) {
-  const res = await fetch(`/api/v1/listings/${listingId}/competitors`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/competitors`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`create competitor ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function addCompetitorObservation(
@@ -940,13 +970,13 @@ export async function addCompetitorObservation(
     buy_box_winner?: boolean;
   }
 ) {
-  const res = await fetch(`/api/v1/competitor-offers/${offerId}/observations`, {
+  const res = await apiFetch(`/api/v1/competitor-offers/${offerId}/observations`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`observation ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function fetchPriceHistory(
@@ -954,12 +984,12 @@ export async function fetchPriceHistory(
   listingId: string,
   range: "7d" | "30d" = "7d"
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/price-history?range=${range}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`price-history ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     observations: Array<{
       id: string;
       effective_price: number;
@@ -972,7 +1002,7 @@ export async function downloadPriceObservationCsv(
   locale: string,
   observationId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/price-observations/${encodeURIComponent(observationId)}/export`,
     { headers: headers(locale) }
   );
@@ -991,7 +1021,7 @@ export async function downloadPriceHistoryCsv(
   listingId: string,
   range: "7d" | "30d" = "7d"
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/price-history/export?range=${range}`,
     { headers: headers(locale) }
   );
@@ -1009,7 +1039,7 @@ export async function downloadRepricingEventsCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/repricing-events/export`,
     { headers: headers(locale) }
   );
@@ -1028,12 +1058,12 @@ export async function fetchListingRepricingEvents(
   listingId: string,
   limit = 20
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${encodeURIComponent(listingId)}/repricing-events?limit=${limit}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`repricing-events ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{ id: string; type: string; status: string }>;
   }>;
 }
@@ -1042,7 +1072,7 @@ export async function downloadRepricingEventCsv(
   locale: string,
   eventId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/repricing-events/${encodeURIComponent(eventId)}/export`,
     { headers: headers(locale) }
   );
@@ -1059,7 +1089,7 @@ export async function downloadRepricingEventCsv(
 export async function downloadAdjustmentBatchesIndexCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/adjustment-batches/export`, {
+  const res = await apiFetch(`/api/v1/adjustment-batches/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`adjustment-batches-export ${res.status}`);
@@ -1077,12 +1107,12 @@ export async function fetchCompetitorCurve(
   listingId: string,
   range: "7d" | "30d" = "7d"
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/competitors/curve?range=${range}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`competitor-curve ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     points: Array<{ date: string; avg_effective_mxn: number }>;
   }>;
 }
@@ -1093,7 +1123,7 @@ export async function downloadCompetitorCurvePointCsv(
   curveDate: string,
   range: "7d" | "30d" = "7d"
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${encodeURIComponent(listingId)}/competitors/curve/${encodeURIComponent(curveDate)}/export?range=${range}`,
     { headers: headers(locale) }
   );
@@ -1116,14 +1146,14 @@ export async function downloadWaterfallExportCsv(
     competitor_price_mxn?: number;
   }
 ): Promise<void> {
-  const post = await fetch(`/api/v1/exports`, {
+  const post = await apiFetch(`/api/v1/exports`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ kind: "waterfall_csv", ...body }),
   });
   if (!post.ok) throw new Error(`waterfall-export ${post.status}`);
-  const meta = (await post.json()) as { download_path: string };
-  const dl = await fetch(meta.download_path, { headers: headers(locale) });
+  const meta = (await parseJsonResponse(post)) as { download_path: string };
+  const dl = await apiFetch(meta.download_path, { headers: headers(locale) });
   if (!dl.ok) throw new Error(`waterfall-download ${dl.status}`);
   const blob = await dl.blob();
   const url = URL.createObjectURL(blob);
@@ -1135,11 +1165,11 @@ export async function downloadWaterfallExportCsv(
 }
 
 export async function fetchListingSyncSchedule(locale: string) {
-  const res = await fetch(`/api/v1/ops/listing-sync/schedule`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/schedule`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-schedule ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     enabled: boolean;
     cron_expression: string;
     last_run_at: string | null;
@@ -1149,7 +1179,7 @@ export async function fetchListingSyncSchedule(locale: string) {
 export async function downloadListingSyncScheduleCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/ops/listing-sync/schedule/export`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/schedule/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-schedule-export ${res.status}`);
@@ -1166,23 +1196,23 @@ export async function updateListingSyncSchedule(
   locale: string,
   body: { enabled?: boolean; cron_expression?: string }
 ) {
-  const res = await fetch(`/api/v1/ops/listing-sync/schedule`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/schedule`, {
     method: "PUT",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`listing-sync-schedule-update ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function runListingSyncDue(locale: string, force = false) {
   const qs = force ? "?force=true" : "";
-  const res = await fetch(`/api/v1/ops/listing-sync/run-due${qs}`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/run-due${qs}`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-run-due ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     runs: Array<{ listing_id: string; job: { status: string } }>;
   }>;
 }
@@ -1196,19 +1226,19 @@ export type ListingSyncJobRow = {
 };
 
 export async function fetchListingSyncJobs(locale: string, limit = 10) {
-  const res = await fetch(`/api/v1/ops/listing-sync/jobs?limit=${limit}`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/jobs?limit=${limit}`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-jobs ${res.status}`);
-  return res.json() as Promise<{ items: ListingSyncJobRow[] }>;
+  return parseJsonResponse(res) as Promise<{ items: ListingSyncJobRow[] }>;
 }
 
 export async function fetchListingSyncOpsStatus(locale: string) {
-  const res = await fetch(`/api/v1/ops/listing-sync/status`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     schedule: { enabled: boolean; last_run_at: string | null };
     job_summary: {
       sampled: number;
@@ -1223,15 +1253,15 @@ export async function fetchListingSyncJobsForListing(
   locale: string,
   listingId: string
 ) {
-  const res = await fetch(`/api/v1/listings/${listingId}/sync/jobs`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/sync/jobs`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-jobs-listing ${res.status}`);
-  return res.json() as Promise<{ items: ListingSyncJobRow[] }>;
+  return parseJsonResponse(res) as Promise<{ items: ListingSyncJobRow[] }>;
 }
 
 export async function downloadListingSyncJobsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/ops/listing-sync/jobs/export`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/jobs/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-jobs-export ${res.status}`);
@@ -1248,7 +1278,7 @@ export async function downloadListingSyncJobCsv(
   locale: string,
   jobId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/ops/listing-sync/jobs/${encodeURIComponent(jobId)}/export`,
     { headers: headers(locale) }
   );
@@ -1265,7 +1295,7 @@ export async function downloadListingSyncJobCsv(
 export async function downloadListingSyncOpsStatusCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/ops/listing-sync/status/export`, {
+  const res = await apiFetch(`/api/v1/ops/listing-sync/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`listing-sync-status-export ${res.status}`);
@@ -1282,7 +1312,7 @@ export async function downloadListingSyncJobsForListingCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/sync/jobs/export`,
     { headers: headers(locale) }
   );
@@ -1299,7 +1329,7 @@ export async function downloadListingSyncJobsForListingCsv(
 export async function downloadReconciliationAlertsDirectCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/reconciliation-alerts/export`, {
+  const res = await apiFetch(`/api/v1/reconciliation-alerts/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`reconciliation-alerts-direct ${res.status}`);
@@ -1316,7 +1346,7 @@ export async function downloadReconciliationAlertCsv(
   locale: string,
   alertId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/reconciliation-alerts/${encodeURIComponent(alertId)}/export`,
     { headers: headers(locale) }
   );
@@ -1335,14 +1365,14 @@ async function downloadExportCsv(
   body: Record<string, unknown>,
   filename: string
 ): Promise<void> {
-  const post = await fetch(`/api/v1/exports`, {
+  const post = await apiFetch(`/api/v1/exports`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!post.ok) throw new Error(`export ${post.status}`);
-  const meta = (await post.json()) as { download_path: string };
-  const dl = await fetch(meta.download_path, { headers: headers(locale) });
+  const meta = (await parseJsonResponse(post)) as { download_path: string };
+  const dl = await apiFetch(meta.download_path, { headers: headers(locale) });
   if (!dl.ok) throw new Error(`export-download ${dl.status}`);
   const blob = await dl.blob();
   const url = URL.createObjectURL(blob);
@@ -1380,7 +1410,7 @@ export async function downloadAdjustmentBatchIndexCsv(
   locale: string,
   batchId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/adjustment-batches/${encodeURIComponent(batchId)}/index/export`,
     { headers: headers(locale) }
   );
@@ -1409,7 +1439,7 @@ export async function downloadCompetitorCurveDirect(
   listingId: string,
   range: "7d" | "30d" = "7d"
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/competitors/curve/export?range=${range}`,
     { headers: headers(locale) }
   );
@@ -1424,11 +1454,11 @@ export async function downloadCompetitorCurveDirect(
 }
 
 export async function fetchIngestStatus(locale: string, listingId: string) {
-  const res = await fetch(`/api/v1/listings/${listingId}/ingest/status`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/ingest/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`ingest status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     tier: string;
     next_run_at: string;
     interval_ms: number;
@@ -1444,13 +1474,13 @@ export async function runCompetitorIngestDue(
   locale: string,
   force = false
 ) {
-  const res = await fetch(`/api/v1/ops/competitor-ingest/run-due`, {
+  const res = await apiFetch(`/api/v1/ops/competitor-ingest/run-due`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ force }),
   });
   if (!res.ok) throw new Error(`competitor-ingest-run-due ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     runs: Array<{
       listing_id: string;
       observations_created: number;
@@ -1461,11 +1491,11 @@ export async function runCompetitorIngestDue(
 }
 
 export async function fetchCompetitorIngestStatus(locale: string) {
-  const res = await fetch(`/api/v1/ops/competitor-ingest/status`, {
+  const res = await apiFetch(`/api/v1/ops/competitor-ingest/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`competitor-ingest-status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     driver: string;
     include_shipping: boolean;
     compliant_scrape_enabled: boolean;
@@ -1473,12 +1503,12 @@ export async function fetchCompetitorIngestStatus(locale: string) {
 }
 
 export async function runIngest(locale: string, listingId: string) {
-  const res = await fetch(`/api/v1/listings/${listingId}/ingest/run`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/ingest/run`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`ingest run ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     observations_created: number;
     tier: string;
     driver?: string;
@@ -1486,12 +1516,12 @@ export async function runIngest(locale: string, listingId: string) {
 }
 
 export async function fetchDynamicRule(locale: string, listingId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`dynamic rule ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     rule: {
       enabled: boolean;
       frozen: boolean;
@@ -1506,7 +1536,7 @@ export async function downloadDynamicRepricingRuleCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${encodeURIComponent(listingId)}/dynamic-repricing-rule/export`,
     { headers: headers(locale) }
   );
@@ -1525,7 +1555,7 @@ export async function updateDynamicRule(
   listingId: string,
   body: Record<string, unknown>
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule`,
     {
       method: "PUT",
@@ -1534,45 +1564,45 @@ export async function updateDynamicRule(
     }
   );
   if (!res.ok) throw new Error(`update rule ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function unfreezeDynamicRule(locale: string, listingId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule/unfreeze`,
     { method: "POST", headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`unfreeze ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function checkCompetitorStale(locale: string, listingId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/competitors/stale-check`,
     { method: "POST", headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`stale-check ${res.status}`);
-  return res.json() as Promise<{ stale: boolean }>;
+  return parseJsonResponse(res) as Promise<{ stale: boolean }>;
 }
 
 export async function flushRepricingEvents(locale: string, listingId: string) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/repricing-events/flush`,
     { method: "POST", headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`flush ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     event: { id: string; type: string } | null;
   }>;
 }
 
 export async function processRepricingEvent(locale: string, eventId: string) {
-  const res = await fetch(`/api/v1/repricing-events/${eventId}/process`, {
+  const res = await apiFetch(`/api/v1/repricing-events/${eventId}/process`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`process event ${res.status}`);
-  return res.json() as Promise<{ version_id?: string; state?: string }>;
+  return parseJsonResponse(res) as Promise<{ version_id?: string; state?: string }>;
 }
 
 export interface RepricingQueueItem {
@@ -1585,15 +1615,15 @@ export interface RepricingQueueItem {
 }
 
 export async function fetchRepricingQueue(locale: string, skuId: string) {
-  const res = await fetch(`/api/v1/skus/${skuId}/repricing-queue`, {
+  const res = await apiFetch(`/api/v1/skus/${skuId}/repricing-queue`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`repricing-queue ${res.status}`);
-  return res.json() as Promise<{ items: RepricingQueueItem[] }>;
+  return parseJsonResponse(res) as Promise<{ items: RepricingQueueItem[] }>;
 }
 
 export async function downloadRepricingQueueCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/repricing-queue/export`, {
+  const res = await apiFetch(`/api/v1/repricing-queue/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`repricing-queue-export ${res.status}`);
@@ -1610,7 +1640,7 @@ export async function downloadSkuRepricingQueueCsv(
   locale: string,
   skuId = DEMO_SKU
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/repricing-queue/export`,
     { headers: headers(locale) }
   );
@@ -1629,7 +1659,7 @@ export async function downloadRepricingBatchShardPlanCsv(
   skuId = DEMO_SKU,
   shardTotal = 2
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/repricing-batch/shard-plan/export?shard_total=${shardTotal}`,
     { headers: headers(locale) }
   );
@@ -1647,7 +1677,7 @@ export async function downloadSkuCategoryRuleTemplateCsv(
   locale: string,
   skuId = DEMO_SKU
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/category-rule-template/export`,
     { headers: headers(locale) }
   );
@@ -1664,7 +1694,7 @@ export async function downloadSkuCategoryRuleTemplateCsv(
 export async function downloadReconciliationAlertsReportCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/reports/reconciliation-alerts/export`, {
+  const res = await apiFetch(`/api/v1/reports/reconciliation-alerts/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`reconciliation-alerts-report-export ${res.status}`);
@@ -1681,13 +1711,13 @@ export async function promoteRepricingToPending(
   locale: string,
   versionIds: string[]
 ) {
-  const res = await fetch(`/api/v1/repricing-queue/promote-pending`, {
+  const res = await apiFetch(`/api/v1/repricing-queue/promote-pending`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ version_ids: versionIds }),
   });
   if (!res.ok) throw new Error(`promote pending ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     updated: RepricingQueueItem[];
     skipped: string[];
   }>;
@@ -1709,7 +1739,7 @@ export async function batchChannelPublish(
   listingIds: string[],
   options?: { idempotency_key?: string }
 ) {
-  const res = await fetch(`/api/v1/channel-publish/batch`, {
+  const res = await apiFetch(`/api/v1/channel-publish/batch`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({
@@ -1718,7 +1748,7 @@ export async function batchChannelPublish(
       idempotency_key: options?.idempotency_key,
     }),
   });
-  const json = (await res.json()) as BatchChannelPublishResult;
+  const json = (await parseJsonResponse(res)) as BatchChannelPublishResult;
   return { ok: res.ok, status: res.status, json };
 }
 
@@ -1734,11 +1764,11 @@ export interface ReconciliationAlert {
 }
 
 export async function fetchReconciliationAlerts(locale: string) {
-  const res = await fetch(`/api/v1/reconciliation-alerts`, {
+  const res = await apiFetch(`/api/v1/reconciliation-alerts`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`reconciliation-alerts ${res.status}`);
-  return res.json() as Promise<{ items: ReconciliationAlert[] }>;
+  return parseJsonResponse(res) as Promise<{ items: ReconciliationAlert[] }>;
 }
 
 export interface OpsMetricsSnapshot {
@@ -1771,9 +1801,9 @@ export interface OpsMetricsSnapshot {
 }
 
 export async function fetchOpsMetrics(locale: string) {
-  const res = await fetch(`/api/v1/ops/metrics`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/ops/metrics`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`ops-metrics ${res.status}`);
-  return res.json() as Promise<OpsMetricsSnapshot>;
+  return parseJsonResponse(res) as Promise<OpsMetricsSnapshot>;
 }
 
 export interface CrossChannelDashboardItem {
@@ -1794,17 +1824,17 @@ export interface CrossChannelDashboardSnapshot {
 }
 
 export async function fetchCrossChannelDashboard(locale: string) {
-  const res = await fetch(`/api/v1/cross-channel/dashboard`, {
+  const res = await apiFetch(`/api/v1/cross-channel/dashboard`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`cross-channel-dashboard ${res.status}`);
-  return res.json() as Promise<CrossChannelDashboardSnapshot>;
+  return parseJsonResponse(res) as Promise<CrossChannelDashboardSnapshot>;
 }
 
 export async function downloadCrossChannelDashboardCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/cross-channel/dashboard/export`, {
+  const res = await apiFetch(`/api/v1/cross-channel/dashboard/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`cross-channel-export ${res.status}`);
@@ -1821,7 +1851,7 @@ export async function downloadCrossChannelDashboardRowCsv(
   locale: string,
   skuId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/cross-channel/dashboard/${encodeURIComponent(skuId)}/export`,
     { headers: headers(locale) }
   );
@@ -1839,7 +1869,7 @@ export async function downloadCostSheetsCsv(
   locale: string,
   skuId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets/export`,
     { headers: headers(locale) }
   );
@@ -1858,7 +1888,7 @@ export async function downloadCostSheetCsv(
   skuId: string,
   sheetId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/skus/${encodeURIComponent(skuId)}/cost-sheets/${encodeURIComponent(sheetId)}/export`,
     { headers: headers(locale) }
   );
@@ -1908,11 +1938,11 @@ export async function downloadFirstReconciliationAlertCsv(
 }
 
 export async function fetchRepricingBatchJobsSummary(locale: string) {
-  const res = await fetch(`/api/v1/repricing-batch/jobs/summary`, {
+  const res = await apiFetch(`/api/v1/repricing-batch/jobs/summary`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`repricing-batch-summary ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     driver: string;
     summary: {
       sampled: number;
@@ -1931,12 +1961,12 @@ export async function fetchRepricingBatchJobs(
 ): Promise<{
   items: Array<{ job_id: string; status: string }>;
 }> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/repricing-batch/jobs?limit=${encodeURIComponent(String(limit))}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`repricing-batch-jobs ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{ job_id: string; status: string }>;
   }>;
 }
@@ -1945,7 +1975,7 @@ export async function downloadRepricingBatchJobCsv(
   locale: string,
   jobId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/repricing-batch/jobs/${encodeURIComponent(jobId)}/export`,
     { headers: headers(locale) }
   );
@@ -1973,7 +2003,7 @@ export async function downloadLatestRepricingBatchJobCsv(
 export async function downloadRepricingBatchJobsCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/repricing-batch/jobs/export`, {
+  const res = await apiFetch(`/api/v1/repricing-batch/jobs/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`repricing-batch-jobs-export ${res.status}`);
@@ -1989,7 +2019,7 @@ export async function downloadRepricingBatchJobsCsv(
 export async function downloadRepricingBatchJobsSummaryCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/repricing-batch/jobs/summary/export`, {
+  const res = await apiFetch(`/api/v1/repricing-batch/jobs/summary/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`repricing-batch-summary-export ${res.status}`);
@@ -2006,7 +2036,7 @@ export async function downloadListingIngestStatusCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/ingest/status/export`,
     { headers: headers(locale) }
   );
@@ -2021,7 +2051,7 @@ export async function downloadListingIngestStatusCsv(
 }
 
 export async function downloadFeatureFlagsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/feature-flags/export`, {
+  const res = await apiFetch(`/api/v1/feature-flags/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`feature-flags-export ${res.status}`);
@@ -2038,7 +2068,7 @@ export async function downloadFeatureFlagCsv(
   locale: string,
   flagKey: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/feature-flags/${encodeURIComponent(flagKey)}/export`,
     { headers: headers(locale) }
   );
@@ -2060,15 +2090,15 @@ export interface I18nGlossaryTerm {
 }
 
 export async function fetchI18nGlossary(locale: string) {
-  const res = await fetch(`/api/v1/i18n/glossary`, {
+  const res = await apiFetch(`/api/v1/i18n/glossary`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`i18n-glossary ${res.status}`);
-  return res.json() as Promise<{ locale: string; terms: I18nGlossaryTerm[] }>;
+  return parseJsonResponse(res) as Promise<{ locale: string; terms: I18nGlossaryTerm[] }>;
 }
 
 export async function downloadI18nGlossaryCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/i18n/glossary/export`, {
+  const res = await apiFetch(`/api/v1/i18n/glossary/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`i18n-glossary-export ${res.status}`);
@@ -2085,7 +2115,7 @@ export async function downloadI18nGlossaryTermCsv(
   locale: string,
   termKey: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/i18n/glossary/terms/export?term_key=${encodeURIComponent(termKey)}`,
     { headers: headers(locale) }
   );
@@ -2102,7 +2132,7 @@ export async function downloadI18nGlossaryTermCsv(
 export async function downloadNotificationTemplatesCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/notifications/templates/export`, {
+  const res = await apiFetch(`/api/v1/notifications/templates/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`notification-templates-export ${res.status}`);
@@ -2119,7 +2149,7 @@ export async function downloadNotificationTemplateCsv(
   locale: string,
   templateId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/notifications/templates/row/export?template_id=${encodeURIComponent(templateId)}`,
     { headers: headers(locale) }
   );
@@ -2134,11 +2164,11 @@ export async function downloadNotificationTemplateCsv(
 }
 
 export async function fetchNotificationTemplates(locale: string) {
-  const res = await fetch(`/api/v1/notifications/templates`, {
+  const res = await apiFetch(`/api/v1/notifications/templates`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`notification-templates ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     locale: string;
     templates: Array<{ id: string; event_class: string }>;
   }>;
@@ -2157,24 +2187,24 @@ export type NotificationInboxItem = {
 };
 
 export async function fetchNotificationInbox(locale: string) {
-  const res = await fetch(`/api/v1/notifications/inbox`, {
+  const res = await apiFetch(`/api/v1/notifications/inbox`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`notification-inbox ${res.status}`);
-  return res.json() as Promise<{ items: NotificationInboxItem[] }>;
+  return parseJsonResponse(res) as Promise<{ items: NotificationInboxItem[] }>;
 }
 
 export async function markNotificationRead(locale: string, notificationId: string) {
-  const res = await fetch(`/api/v1/notifications/${notificationId}/read`, {
+  const res = await apiFetch(`/api/v1/notifications/${notificationId}/read`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`notification-read ${res.status}`);
-  return res.json() as Promise<{ notification: NotificationInboxItem }>;
+  return parseJsonResponse(res) as Promise<{ notification: NotificationInboxItem }>;
 }
 
 export async function downloadNotificationInboxCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/notifications/inbox/export`, {
+  const res = await apiFetch(`/api/v1/notifications/inbox/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`notification-inbox-export ${res.status}`);
@@ -2188,7 +2218,7 @@ export async function downloadNotificationInboxCsv(locale: string): Promise<void
 }
 
 export async function downloadAuthStatusCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/auth/status/export`, {
+  const res = await apiFetch(`/api/v1/auth/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`auth-status-export ${res.status}`);
@@ -2202,13 +2232,13 @@ export async function downloadAuthStatusCsv(locale: string): Promise<void> {
 }
 
 export async function importLandedCostCsv(locale: string, csv: string) {
-  const res = await fetch(`/api/v1/imports/landed-cost`, {
+  const res = await apiFetch(`/api/v1/imports/landed-cost`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ csv }),
   });
   if (!res.ok) throw new Error(`landed-cost-import ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     updated: Array<{ sku_id: string; landed_cost_mxn: number }>;
     skipped: unknown[];
     parse_errors: string[];
@@ -2223,15 +2253,15 @@ export interface TariffHsRow {
 }
 
 export async function fetchTariffHsRates(locale: string) {
-  const res = await fetch(`/api/v1/tariff-hs-rates`, {
+  const res = await apiFetch(`/api/v1/tariff-hs-rates`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`tariff-hs-rates ${res.status}`);
-  return res.json() as Promise<{ items: TariffHsRow[] }>;
+  return parseJsonResponse(res) as Promise<{ items: TariffHsRow[] }>;
 }
 
 export async function downloadTariffHsRatesCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/tariff-hs-rates/export`, {
+  const res = await apiFetch(`/api/v1/tariff-hs-rates/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`tariff-hs-export ${res.status}`);
@@ -2248,7 +2278,7 @@ export async function downloadTariffHsRateCsv(
   locale: string,
   hsCode: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/tariff-hs-rates/${encodeURIComponent(hsCode)}/export`,
     { headers: headers(locale) }
   );
@@ -2267,26 +2297,26 @@ export async function previewLandedCostFromHs(
   skuId: string,
   cogs_amount: number
 ) {
-  const res = await fetch(`/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-hs`, {
+  const res = await apiFetch(`/api/v1/skus/${encodeURIComponent(skuId)}/landed-cost/from-hs`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ cogs_amount, cogs_currency: "MXN" }),
   });
   if (!res.ok) throw new Error(`landed-cost-from-hs ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     computed: { landed_cost_mxn: number; duty_mxn: number };
     hs_code: string;
   }>;
 }
 
 export async function previewAdjustmentPricesCsv(locale: string, csv: string) {
-  const res = await fetch(`/api/v1/imports/adjustment-prices`, {
+  const res = await apiFetch(`/api/v1/imports/adjustment-prices`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ csv }),
   });
   if (!res.ok) throw new Error(`adjustment-prices-import ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     parse_errors: string[];
     preview: {
       status: string;
@@ -2301,12 +2331,12 @@ export async function applyAdjustmentPricesCsv(
   csv: string,
   reason_code?: string
 ) {
-  const res = await fetch(`/api/v1/imports/adjustment-prices`, {
+  const res = await apiFetch(`/api/v1/imports/adjustment-prices`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ csv, reason_code, apply: true }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) {
     throw new Error(
       typeof json === "object" && json && "error" in json
@@ -2322,7 +2352,7 @@ export async function applyAdjustmentPricesCsv(
 }
 
 export async function downloadVersionBackup(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/ops/version-backup?format=download`, {
+  const res = await apiFetch(`/api/v1/ops/version-backup?format=download`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`version-backup ${res.status}`);
@@ -2336,7 +2366,7 @@ export async function downloadVersionBackup(locale: string): Promise<void> {
 }
 
 export async function downloadVersionBackupCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/ops/version-backup/export`, {
+  const res = await apiFetch(`/api/v1/ops/version-backup/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`version-backup-csv-export ${res.status}`);
@@ -2353,7 +2383,7 @@ export async function downloadPriceVersionCsv(
   locale: string,
   versionId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/price-versions/${encodeURIComponent(versionId)}/export`,
     { headers: headers(locale) }
   );
@@ -2380,11 +2410,11 @@ export async function downloadLatestQueuePriceVersionCsv(
 }
 
 export async function fetchWorkerStatus(locale: string) {
-  const res = await fetch(`/api/v1/ops/workers/status`, {
+  const res = await apiFetch(`/api/v1/ops/workers/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`workers-status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     workers: Array<{ worker_id: string; reported_at: string; stale: boolean }>;
     scripts: Record<string, string>;
   }>;
@@ -2394,7 +2424,7 @@ export async function downloadPricingSnapshotCsv(
   locale: string,
   skuId = DEMO_SKU
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/reports/pricing-snapshot/export?sku_id=${encodeURIComponent(skuId)}`,
     { headers: headers(locale) }
   );
@@ -2413,7 +2443,7 @@ export async function downloadPricingSnapshotRowCsv(
   skuId: string,
   channel: Channel
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/reports/pricing-snapshots/${encodeURIComponent(skuId)}/rows/${encodeURIComponent(channel)}/export`,
     { headers: headers(locale) }
   );
@@ -2430,7 +2460,7 @@ export async function downloadPricingSnapshotRowCsv(
 export async function downloadTenantPricingSnapshotsCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/reports/pricing-snapshots/export`, {
+  const res = await apiFetch(`/api/v1/reports/pricing-snapshots/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`pricing-snapshots-export ${res.status}`);
@@ -2448,12 +2478,12 @@ export async function reconcileListing(
   listingId: string,
   external_ref: string
 ) {
-  const res = await fetch(`/api/v1/listings/${listingId}/reconcile`, {
+  const res = await apiFetch(`/api/v1/listings/${listingId}/reconcile`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ external_ref }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) {
     throw new Error(
       typeof json === "object" && json && "error" in json
@@ -2489,7 +2519,7 @@ export async function compileDynamicRule(
   natural_language: string,
   session_id?: string
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule/compile`,
     {
       method: "POST",
@@ -2497,7 +2527,7 @@ export async function compileDynamicRule(
       body: JSON.stringify({ natural_language, session_id }),
     }
   );
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) throw new Error(`compile ${res.status}`);
   return json as {
     compile_id: string;
@@ -2509,11 +2539,11 @@ export async function compileDynamicRule(
 }
 
 export async function fetchRuleCompilerStatus(locale: string) {
-  const res = await fetch(`/api/v1/rule-compiler/status`, {
+  const res = await apiFetch(`/api/v1/rule-compiler/status`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`compiler status ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     driver: string;
     ready: boolean;
     note: string;
@@ -2524,7 +2554,7 @@ export async function fetchRuleCompilerStatus(locale: string) {
 export async function downloadRuleCompilerStatusCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/rule-compiler/status/export`, {
+  const res = await apiFetch(`/api/v1/rule-compiler/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`rule-compiler-export ${res.status}`);
@@ -2538,16 +2568,16 @@ export async function downloadRuleCompilerStatusCsv(
 }
 
 export async function fetchAgentTools(locale: string) {
-  const res = await fetch(`/api/v1/agent/tools`, { headers: headers(locale) });
+  const res = await apiFetch(`/api/v1/agent/tools`, { headers: headers(locale) });
   if (!res.ok) throw new Error(`agent tools ${res.status}`);
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   return json as {
     items: Array<{ name: string; mode: string; description: string }>;
   };
 }
 
 export async function downloadAgentToolsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/tools/export`, {
+  const res = await apiFetch(`/api/v1/agent/tools/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`agent-tools-export ${res.status}`);
@@ -2564,7 +2594,7 @@ export async function downloadAgentToolRowCsv(
   locale: string,
   toolName: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/tools/${encodeURIComponent(toolName)}/export`,
     { headers: headers(locale) }
   );
@@ -2579,7 +2609,7 @@ export async function downloadAgentToolRowCsv(
 }
 
 export async function downloadAgentReadinessCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/readiness/export`, {
+  const res = await apiFetch(`/api/v1/agent/readiness/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`agent-readiness-export ${res.status}`);
@@ -2596,7 +2626,7 @@ export async function downloadAgentReadinessCheckCsv(
   locale: string,
   checkId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/readiness/checks/export?check_id=${encodeURIComponent(checkId)}`,
     { headers: headers(locale) }
   );
@@ -2614,7 +2644,7 @@ export async function downloadCompetitorAnchorCsv(
   locale: string,
   listingId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/competitors/anchor/export`,
     { headers: headers(locale) }
   );
@@ -2629,7 +2659,7 @@ export async function downloadCompetitorAnchorCsv(
 }
 
 export async function downloadProductReadinessCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/product/readiness/export`, {
+  const res = await apiFetch(`/api/v1/product/readiness/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`product-readiness-export ${res.status}`);
@@ -2643,7 +2673,7 @@ export async function downloadProductReadinessCsv(locale: string): Promise<void>
 }
 
 export async function downloadP5ReadinessCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/product/readiness/p5/export`, {
+  const res = await apiFetch(`/api/v1/product/readiness/p5/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`p5-readiness-export ${res.status}`);
@@ -2657,7 +2687,7 @@ export async function downloadP5ReadinessCsv(locale: string): Promise<void> {
 }
 
 export async function downloadP4ReadinessCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/product/readiness/p4/export`, {
+  const res = await apiFetch(`/api/v1/product/readiness/p4/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`p4-readiness-export ${res.status}`);
@@ -2671,7 +2701,7 @@ export async function downloadP4ReadinessCsv(locale: string): Promise<void> {
 }
 
 export async function downloadP3ReadinessCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/product/readiness/p3/export`, {
+  const res = await apiFetch(`/api/v1/product/readiness/p3/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`p3-readiness-export ${res.status}`);
@@ -2688,7 +2718,7 @@ export async function downloadSharedFeeTemplateCsv(
   locale: string,
   templateId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/shared-fee-templates/${encodeURIComponent(templateId)}/export`,
     { headers: headers(locale) }
   );
@@ -2706,7 +2736,7 @@ export async function downloadTenantSharedFeeTemplatesCsv(
   locale: string,
   tenantId = "tenant-demo"
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/tenants/${encodeURIComponent(tenantId)}/shared-fee-templates/export`,
     { headers: headers(locale) }
   );
@@ -2721,7 +2751,7 @@ export async function downloadTenantSharedFeeTemplatesCsv(
 }
 
 export async function downloadAgentMilestonesCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/milestones/export`, {
+  const res = await apiFetch(`/api/v1/agent/milestones/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`agent-milestones-export ${res.status}`);
@@ -2738,7 +2768,7 @@ export async function downloadAgentMilestoneCsv(
   locale: string,
   milestoneId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/milestones/${encodeURIComponent(milestoneId)}/export`,
     { headers: headers(locale) }
   );
@@ -2756,7 +2786,7 @@ export async function downloadProductReadinessCheckCsv(
   locale: string,
   checkId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/product/readiness/checks/export?check_id=${encodeURIComponent(checkId)}`,
     { headers: headers(locale) }
   );
@@ -2771,11 +2801,11 @@ export async function downloadProductReadinessCheckCsv(
 }
 
 export async function fetchAgentToolAudit(locale: string, limit = 20) {
-  const res = await fetch(`/api/v1/agent/tool-audit?limit=${limit}`, {
+  const res = await apiFetch(`/api/v1/agent/tool-audit?limit=${limit}`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`tool audit ${res.status}`);
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   return json as {
     items: Array<{
       id: string;
@@ -2787,7 +2817,7 @@ export async function fetchAgentToolAudit(locale: string, limit = 20) {
 }
 
 export async function downloadAgentToolAuditCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/tool-audit/export`, {
+  const res = await apiFetch(`/api/v1/agent/tool-audit/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`tool-audit-export ${res.status}`);
@@ -2804,7 +2834,7 @@ export async function downloadAgentToolAuditRowCsv(
   locale: string,
   auditId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/tool-audit/${encodeURIComponent(auditId)}/export`,
     { headers: headers(locale) }
   );
@@ -2819,11 +2849,11 @@ export async function downloadAgentToolAuditRowCsv(
 }
 
 export async function fetchDigestSchedule(locale: string) {
-  const res = await fetch(`/api/v1/agent/digest/schedule`, {
+  const res = await apiFetch(`/api/v1/agent/digest/schedule`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-schedule ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     enabled: boolean;
     cron: string;
     email_to: string;
@@ -2832,7 +2862,7 @@ export async function fetchDigestSchedule(locale: string) {
 }
 
 export async function downloadDigestScheduleCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/digest/schedule/export`, {
+  const res = await apiFetch(`/api/v1/agent/digest/schedule/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-schedule-export ${res.status}`);
@@ -2854,30 +2884,30 @@ export async function updateDigestSchedule(
     timezone?: string;
   }
 ) {
-  const res = await fetch(`/api/v1/agent/digest/schedule`, {
+  const res = await apiFetch(`/api/v1/agent/digest/schedule`, {
     method: "PUT",
     headers: headers(locale),
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`digest-schedule-update ${res.status}`);
-  return res.json();
+  return parseJsonResponse(res);
 }
 
 export async function runDigestRunDue(locale: string, force = false) {
   const qs = force ? "?force=true" : "";
-  const res = await fetch(`/api/v1/agent/digest/run-due${qs}`, {
+  const res = await apiFetch(`/api/v1/agent/digest/run-due${qs}`, {
     method: "POST",
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-run-due ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     digest: { narrative: string };
     schedule: { last_dispatch_at: string | null };
   }>;
 }
 
 export async function downloadFxRatesCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/fx-rates/export`, {
+  const res = await apiFetch(`/api/v1/fx-rates/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`fx-rates-export ${res.status}`);
@@ -2895,7 +2925,7 @@ export async function downloadFxRateCsv(
   base = "USD",
   quote = "MXN"
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/fx-rates/${encodeURIComponent(base)}/${encodeURIComponent(quote)}/export`,
     { headers: headers(locale) }
   );
@@ -2910,12 +2940,12 @@ export async function downloadFxRateCsv(
 }
 
 export async function fetchDigestDeadLetterSummary(locale: string, limit = 20) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/jobs/dead-letter/summary?limit=${encodeURIComponent(String(limit))}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`digest-dlq-summary ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     tenant_id: string;
     queue: {
       queued: number;
@@ -2935,7 +2965,7 @@ export async function fetchDigestDeadLetterSummary(locale: string, limit = 20) {
 export async function downloadDigestDeadLetterSummaryCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/jobs/dead-letter/summary/export`,
     { headers: headers(locale) }
   );
@@ -2950,7 +2980,7 @@ export async function downloadDigestDeadLetterSummaryCsv(
 }
 
 export async function downloadDigestDeadLetterCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/digest/jobs/dead-letter/export`, {
+  const res = await apiFetch(`/api/v1/agent/digest/jobs/dead-letter/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-dlq-export ${res.status}`);
@@ -2967,7 +2997,7 @@ export async function downloadDigestDeadLetterJobCsv(
   locale: string,
   jobId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/jobs/dead-letter/${encodeURIComponent(jobId)}/export`,
     { headers: headers(locale) }
   );
@@ -2982,12 +3012,12 @@ export async function downloadDigestDeadLetterJobCsv(
 }
 
 export async function fetchDigestQueuedJobsSummary(locale: string, limit = 20) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/jobs/summary?limit=${encodeURIComponent(String(limit))}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`digest-jobs-summary ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     queue: {
       total: number;
       queued: number;
@@ -3005,7 +3035,7 @@ export async function fetchDigestQueuedJobsSummary(locale: string, limit = 20) {
 }
 
 export async function downloadDigestQueuedJobsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/digest/jobs/export`, {
+  const res = await apiFetch(`/api/v1/agent/digest/jobs/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-jobs-export ${res.status}`);
@@ -3022,7 +3052,7 @@ export async function downloadDigestQueuedJobCsv(
   locale: string,
   jobId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/jobs/${encodeURIComponent(jobId)}/export`,
     { headers: headers(locale) }
   );
@@ -3039,7 +3069,7 @@ export async function downloadDigestQueuedJobCsv(
 export async function downloadDigestQueuedJobsSummaryCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/agent/digest/jobs/summary/export`, {
+  const res = await apiFetch(`/api/v1/agent/digest/jobs/summary/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-jobs-summary-export ${res.status}`);
@@ -3053,7 +3083,7 @@ export async function downloadDigestQueuedJobsSummaryCsv(
 }
 
 export async function downloadDigestDispatchesCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/agent/digest/dispatches/export`, {
+  const res = await apiFetch(`/api/v1/agent/digest/dispatches/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest-dispatches-export ${res.status}`);
@@ -3070,7 +3100,7 @@ export async function downloadDigestDispatchCsv(
   locale: string,
   jobId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/dispatches/${encodeURIComponent(jobId)}/export`,
     { headers: headers(locale) }
   );
@@ -3085,18 +3115,18 @@ export async function downloadDigestDispatchCsv(
 }
 
 export async function fetchDigestDispatches(locale: string, limit = 20) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/dispatches?limit=${encodeURIComponent(String(limit))}`,
     { headers: headers(locale) }
   );
   if (!res.ok) throw new Error(`digest-dispatches ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     items: Array<{ job_id: string; status: string; updated_at: string }>;
   }>;
 }
 
 export async function downloadWorkerHeartbeatsCsv(locale: string): Promise<void> {
-  const res = await fetch(`/api/v1/ops/workers/status/export`, {
+  const res = await apiFetch(`/api/v1/ops/workers/status/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`workers-export ${res.status}`);
@@ -3113,7 +3143,7 @@ export async function downloadWorkerHeartbeatCsv(
   locale: string,
   workerId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/ops/workers/status/${encodeURIComponent(workerId)}/export`,
     { headers: headers(locale) }
   );
@@ -3347,7 +3377,7 @@ export async function downloadFirstNotificationTemplateCsv(
 export async function downloadOpsWorkersStatusSummaryCsv(
   locale: string
 ): Promise<void> {
-  const res = await fetch(`/api/v1/ops/workers/status/summary/export`, {
+  const res = await apiFetch(`/api/v1/ops/workers/status/summary/export`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`workers-summary-export ${res.status}`);
@@ -3365,7 +3395,7 @@ export async function confirmCompiledDynamicRule(
   listingId: string,
   compile_id: string
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/listings/${listingId}/dynamic-repricing-rule/confirm-compiled`,
     {
       method: "POST",
@@ -3373,7 +3403,7 @@ export async function confirmCompiledDynamicRule(
       body: JSON.stringify({ compile_id }),
     }
   );
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) throw new Error(`confirm rule ${res.status}`);
   return json as { rule: { action: string; anchor_type: string }; persisted: boolean };
 }
@@ -3385,7 +3415,7 @@ export async function createCopilotSession(
   channel?: Channel,
   bootstrap_context = true
 ) {
-  const res = await fetch(`/api/v1/agent/copilot/sessions`, {
+  const res = await apiFetch(`/api/v1/agent/copilot/sessions`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({
@@ -3396,7 +3426,7 @@ export async function createCopilotSession(
     }),
   });
   if (!res.ok) throw new Error(`copilot session ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     session_id: string;
     messages: CopilotChatMessage[];
     context_bootstrapped: boolean;
@@ -3407,7 +3437,7 @@ export async function downloadCopilotSessionCsv(
   locale: string,
   sessionId: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/copilot/sessions/${encodeURIComponent(sessionId)}/export`,
     { headers: headers(locale) }
   );
@@ -3429,11 +3459,11 @@ export type CopilotChatMessage = {
 
 export async function fetchDailyAgentDigest(locale: string, date?: string) {
   const q = date ? `?date=${encodeURIComponent(date)}` : "";
-  const res = await fetch(`/api/v1/agent/digest/daily${q}`, {
+  const res = await apiFetch(`/api/v1/agent/digest/daily${q}`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`digest ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     date: string;
     narrative: string;
     metrics: {
@@ -3456,7 +3486,7 @@ export async function downloadAgentDigestCsv(
   date?: string
 ): Promise<void> {
   const q = date ? `?date=${encodeURIComponent(date)}` : "";
-  const res = await fetch(`/api/v1/agent/digest/daily/export${q}`, {
+  const res = await apiFetch(`/api/v1/agent/digest/daily/export${q}`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`agent-digest-export ${res.status}`);
@@ -3473,7 +3503,7 @@ export async function downloadAgentDigestDateCsv(
   locale: string,
   date: string
 ): Promise<void> {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/digest/daily/${encodeURIComponent(date)}/export`,
     { headers: headers(locale) }
   );
@@ -3488,11 +3518,11 @@ export async function downloadAgentDigestDateCsv(
 }
 
 export async function fetchAgentReadiness(locale: string) {
-  const res = await fetch(`/api/v1/agent/readiness`, {
+  const res = await apiFetch(`/api/v1/agent/readiness`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`readiness ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     ready: boolean;
     milestone: string;
     checks: Array<{ id: string; passed: boolean; detail: string }>;
@@ -3522,11 +3552,11 @@ export interface ProductReadinessSnapshot {
 }
 
 export async function fetchProductReadiness(locale: string) {
-  const res = await fetch(`/api/v1/product/readiness`, {
+  const res = await apiFetch(`/api/v1/product/readiness`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`product-readiness ${res.status}`);
-  return res.json() as Promise<ProductReadinessSnapshot>;
+  return parseJsonResponse(res) as Promise<ProductReadinessSnapshot>;
 }
 
 export type FeatureFlagsSnapshot = Record<string, boolean | string> & {
@@ -3534,42 +3564,42 @@ export type FeatureFlagsSnapshot = Record<string, boolean | string> & {
 };
 
 export async function fetchFeatureFlags(locale: string) {
-  const res = await fetch(`/api/v1/feature-flags`, {
+  const res = await apiFetch(`/api/v1/feature-flags`, {
     headers: headers(locale),
   });
   if (!res.ok) throw new Error(`feature-flags ${res.status}`);
-  return res.json() as Promise<FeatureFlagsSnapshot>;
+  return parseJsonResponse(res) as Promise<FeatureFlagsSnapshot>;
 }
 
 export async function enqueueDailyDigest(locale: string) {
-  const res = await fetch(`/api/v1/agent/digest/daily/enqueue`, {
+  const res = await apiFetch(`/api/v1/agent/digest/daily/enqueue`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ channels: ["email_stub", "webhook_queue"] }),
   });
   if (!res.ok) throw new Error(`digest enqueue ${res.status}`);
-  return res.json() as Promise<{ job: { job_id: string; status: string } }>;
+  return parseJsonResponse(res) as Promise<{ job: { job_id: string; status: string } }>;
 }
 
 export async function processDigestJobs(locale: string, limit = 5) {
-  const res = await fetch(`/api/v1/agent/digest/jobs/process`, {
+  const res = await apiFetch(`/api/v1/agent/digest/jobs/process`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ limit }),
   });
   if (!res.ok) throw new Error(`digest process ${res.status}`);
-  return res.json() as Promise<{
+  return parseJsonResponse(res) as Promise<{
     processed: Array<{ job_id: string; status: string }>;
   }>;
 }
 
 export async function dispatchDailyAgentDigest(locale: string) {
-  const res = await fetch(`/api/v1/agent/digest/daily/dispatch`, {
+  const res = await apiFetch(`/api/v1/agent/digest/daily/dispatch`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ channels: ["email_stub"] }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) throw new Error(`digest dispatch ${res.status}`);
   return json as {
     job: {
@@ -3586,7 +3616,7 @@ export async function sendCopilotMessage(
   listing_id: string,
   content: string
 ) {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/v1/agent/copilot/sessions/${session_id}/messages`,
     {
       method: "POST",
@@ -3594,7 +3624,7 @@ export async function sendCopilotMessage(
       body: JSON.stringify({ listing_id, content }),
     }
   );
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) throw new Error(`copilot message ${res.status}`);
   return json as {
     intent?: string;
@@ -3613,12 +3643,12 @@ export async function invokeAgentTool(
   args: Record<string, unknown>,
   session_id?: string
 ) {
-  const res = await fetch(`/api/v1/agent/tools/invoke`, {
+  const res = await apiFetch(`/api/v1/agent/tools/invoke`, {
     method: "POST",
     headers: headers(locale),
     body: JSON.stringify({ tool, arguments: args, session_id }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!res.ok) throw new Error(`agent tool ${res.status}`);
   return json as { tool: string; audit_id: string; result: unknown };
 }

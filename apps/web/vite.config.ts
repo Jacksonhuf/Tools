@@ -21,4 +21,13 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 4173,
+    proxy: {
+      "/api": {
+        target: process.env.BFF_PROXY_TARGET ?? "http://127.0.0.1:3000",
+        changeOrigin: true,
+      },
+    },
+  },
 });
