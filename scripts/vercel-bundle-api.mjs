@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Bundle the Vercel serverless entry as ESM (.mjs) with workspace packages inlined.
- * Vercel treats api/*.js as CommonJS unless the repo root has "type": "module";
- * api/index.mjs is always loaded as ESM so `export default` works with hono/vercel.
+ * Bundle Vercel serverless entries:
+ * - api/index.mjs: thin bootstrap (fast cold start + /api/v1/ping)
+ * - api/bff-handler.mjs: full Hono BFF (lazy-loaded)
  */
 import * as esbuild from "esbuild";
 
@@ -15,9 +15,7 @@ const runtimeExternals = [
   "redis",
 ];
 
-await esbuild.build({
-  entryPoints: ["api/handler.ts"],
-  outfile: "api/index.mjs",
+const shared = {
   bundle: true,
   platform: "node",
   target: "node20",
@@ -25,12 +23,25 @@ await esbuild.build({
   packages: "bundle",
   external: runtimeExternals,
   logLevel: "info",
+};
+
+await esbuild.build({
+  ...shared,
+  entryPoints: ["api/handler.ts"],
+  outfile: "api/index.mjs",
+  external: [...runtimeExternals, "./bff-handler.mjs"],
+});
+
+await esbuild.build({
+  ...shared,
+  entryPoints: ["api/bff-handler.ts"],
+  outfile: "api/bff-handler.mjs",
 });
 
 console.log(
   JSON.stringify({
     ok: true,
-    outfile: "api/index.mjs",
+    outfiles: ["api/index.mjs", "api/bff-handler.mjs"],
     format: "esm",
     runtime_externals: runtimeExternals,
   })
