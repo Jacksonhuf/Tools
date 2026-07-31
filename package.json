@@ -28,7 +28,7 @@
     "test:api": "vitest run tests/api/bff.test.ts",
     "test:int-channel": "vitest run tests/api/shops.test.ts tests/api/channel-publish.test.ts tests/api/channel-publish-batch.test.ts tests/api/publish-idempotency.test.ts tests/api/competitor-ingest.test.ts tests/api/dynamic-rules.test.ts tests/api/repricing-events.test.ts tests/api/ingest-nfr.test.ts",
     "build": "npm run build -w @mx-pricing/pricing-engine && npm run build -w @mx-pricing/i18n-format && npm run build -w @mx-pricing/channel-adapters && npm run build -w @mx-pricing/db && npm run build -w @mx-pricing/bff && npm run build -w @mx-pricing/web",
-    "build:vercel": "npm run build",
+    "build:vercel": "npm run build && node scripts/vercel-bundle-api.mjs",
     "deploy:vercel": "bash scripts/vercel-deploy.sh",
     "deploy:vercel:prod": "bash scripts/vercel-deploy.sh --prod",
     "vercel:check-env": "DEPLOY_ENV=${DEPLOY_ENV:-production} node scripts/secrets/validate-env.mjs",
@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
+    "esbuild": "^0.25.12",
     "pg-mem": "^3.0.3",
     "typescript": "^5.6.3",
     "vitest": "^2.1.9"

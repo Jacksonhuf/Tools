@@ -95,6 +95,7 @@ See [go-live-checklist.md](./go-live-checklist.md) for full cutover gates.
 
 | Symptom | Fix |
 |---------|-----|
+| `FUNCTION_INVOCATION_FAILED` on `/api/*` | Redeploy after `npm run build:vercel` (bundles `api/index.js`). Ensure production env vars from `config/vercel.env.production.example` are set. |
 | `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` on many pages | API requests are hitting SPA `index.html`. Ensure root `vercel.json` rewrites `/api/*` before SPA fallback; run BFF locally with `npm run dev:bff` (or use `vite preview` with BFF on :3000). |
 | Build fails with Root Directory error | Clear Root Directory in Vercel settings |
 | 401 on all API routes | Set `AUTH_DRIVER=oidc_jwt` and JWT secret; use real Bearer JWT in production |
