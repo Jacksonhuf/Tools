@@ -18,8 +18,8 @@ await esbuild.build({
   bundle: true,
   platform: "node",
   target: "node20",
-  format: "esm",
-  packages: "external",
+  format: "cjs",
+  packages: "bundle",
   external: ["pg-native"],
   logLevel: "info",
 });
