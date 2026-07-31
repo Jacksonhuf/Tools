@@ -26019,6 +26019,20 @@ var MemoryCatalogRepository = class {
   }
 };
 
+// apps/bff/dist/repositories/types.js
+function rowToSku(row) {
+  return {
+    id: row.id,
+    tenant_id: row.tenant_id,
+    sku_code: row.sku_code,
+    name: row.name,
+    landed_cost_mxn: Number(row.landed_cost_mxn),
+    policy: row.policy_json,
+    fee_ml: row.fee_ml_json,
+    fee_amazon: row.fee_amazon_json
+  };
+}
+
 // node_modules/pg/esm/index.mjs
 var import_lib = __toESM(require_lib2(), 1);
 var Client = import_lib.default.Client;
@@ -26034,18 +26048,14 @@ var TypeOverrides = import_lib.default.TypeOverrides;
 var defaults = import_lib.default.defaults;
 var esm_default = import_lib.default;
 
-// apps/bff/dist/repositories/types.js
-function rowToSku(row) {
-  return {
-    id: row.id,
-    tenant_id: row.tenant_id,
-    sku_code: row.sku_code,
-    name: row.name,
-    landed_cost_mxn: Number(row.landed_cost_mxn),
-    policy: row.policy_json,
-    fee_ml: row.fee_ml_json,
-    fee_amazon: row.fee_amazon_json
-  };
+// apps/bff/dist/pg-pool.js
+function createPgPool(connectionString) {
+  return new esm_default.Pool({
+    connectionString,
+    connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS ?? 5e3),
+    idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS ?? 1e4),
+    max: Number(process.env.PG_POOL_MAX ?? 2)
+  });
 }
 
 // apps/bff/dist/repositories/postgres-catalog.js
@@ -26068,7 +26078,7 @@ var PostgresCatalogRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionStringOrPool) {
-    this.pool = typeof connectionStringOrPool === "string" ? new esm_default.Pool({ connectionString: connectionStringOrPool }) : connectionStringOrPool;
+    this.pool = typeof connectionStringOrPool === "string" ? createPgPool(connectionStringOrPool) : connectionStringOrPool;
   }
   async getSku(tenantId, skuId) {
     const r = await this.pool.query(`SELECT * FROM skus WHERE tenant_id = $1 AND id = $2`, [tenantId, skuId]);
@@ -40168,6 +40178,9 @@ var honoHandler;
 async function handler(req) {
   try {
     if (!honoHandler) {
+      if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+        process.env.CATALOG_DRIVER = "memory";
+      }
       getCatalogRepository();
       honoHandler = handle(createApp());
     }

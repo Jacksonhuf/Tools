@@ -95,6 +95,7 @@ See [go-live-checklist.md](./go-live-checklist.md) for full cutover gates.
 
 | Symptom | Fix |
 |---------|-----|
+| `FUNCTION_INVOCATION_TIMEOUT` on `/api/*` | Set `VERCEL_USE_PG=1` + valid `DATABASE_URL` for Postgres; otherwise the handler defaults to in-memory stores on Vercel. |
 | `FUNCTION_INVOCATION_FAILED` on `/api/*` | Redeploy after `npm run build:vercel` (bundles `api/index.js`). Ensure production env vars from `config/vercel.env.production.example` are set. |
 | `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` on many pages | API requests are hitting SPA `index.html`. Ensure root `vercel.json` rewrites `/api/*` before SPA fallback; run BFF locally with `npm run dev:bff` (or use `vite preview` with BFF on :3000). |
 | Build fails with Root Directory error | Clear Root Directory in Vercel settings |
