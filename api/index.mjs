@@ -1,43 +1,10 @@
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key3 of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key3) && key3 !== except)
-        __defProp(to, key3, { get: () => from[key3], enumerable: !(desc = __getOwnPropDesc(from, key3)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
 // api/handler.ts
-var handler_exports = {};
-__export(handler_exports, {
-  default: () => handler
-});
-module.exports = __toCommonJS(handler_exports);
-var import_vercel = require("hono/vercel");
+import { handle } from "hono/vercel";
 
 // apps/bff/dist/app.js
-var import_hono = require("hono");
-var import_cors = require("hono/cors");
-var import_http_exception3 = require("hono/http-exception");
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { HTTPException as HTTPException3 } from "hono/http-exception";
 
 // packages/i18n-format/dist/formatMoney.js
 var localeMap = {
@@ -760,9 +727,9 @@ function rowToSku(row) {
 }
 
 // apps/bff/dist/pg-pool.js
-var import_pg = __toESM(require("pg"), 1);
+import pg from "pg";
 function createPgPool(connectionString) {
-  return new import_pg.default.Pool({
+  return new pg.Pool({
     connectionString,
     connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS ?? 5e3),
     idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS ?? 1e4),
@@ -1026,7 +993,7 @@ var MemoryAdjustmentRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-adjustment.js
-var import_pg2 = __toESM(require("pg"), 1);
+import pg2 from "pg";
 function mapBatch(row, items) {
   return {
     id: `adj-${row.id}`,
@@ -1043,7 +1010,7 @@ var PostgresAdjustmentRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionStringOrPool) {
-    this.pool = typeof connectionStringOrPool === "string" ? new import_pg2.default.Pool({ connectionString: connectionStringOrPool }) : connectionStringOrPool;
+    this.pool = typeof connectionStringOrPool === "string" ? new pg2.Pool({ connectionString: connectionStringOrPool }) : connectionStringOrPool;
   }
   async createBatch(input) {
     const client2 = await this.pool.connect();
@@ -1774,15 +1741,15 @@ var AmazonMxPublishAdapter = class {
 };
 
 // apps/bff/dist/shop-credential-crypto.js
-var import_node_crypto = require("node:crypto");
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 var ALGO = "aes-256-gcm";
 function keyFromEnv() {
   const raw = process.env.SHOP_CREDENTIAL_KEY ?? "dev-shop-credential-key-change-me";
-  return (0, import_node_crypto.createHash)("sha256").update(raw).digest();
+  return createHash("sha256").update(raw).digest();
 }
 function encryptSecret(plaintext) {
-  const iv = (0, import_node_crypto.randomBytes)(12);
-  const cipher = (0, import_node_crypto.createCipheriv)(ALGO, keyFromEnv(), iv);
+  const iv = randomBytes(12);
+  const cipher = createCipheriv(ALGO, keyFromEnv(), iv);
   const enc = Buffer.concat([
     cipher.update(plaintext, "utf8"),
     cipher.final()
@@ -1795,7 +1762,7 @@ function decryptSecret(ciphertext) {
   const iv = buf.subarray(0, 12);
   const tag = buf.subarray(12, 28);
   const data = buf.subarray(28);
-  const decipher = (0, import_node_crypto.createDecipheriv)(ALGO, keyFromEnv(), iv);
+  const decipher = createDecipheriv(ALGO, keyFromEnv(), iv);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8");
 }
@@ -1889,7 +1856,7 @@ var MemoryShopRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-shop.js
-var import_pg3 = __toESM(require("pg"), 1);
+import pg3 from "pg";
 function rowToShop(row) {
   return {
     id: row.id,
@@ -1906,7 +1873,7 @@ var PostgresShopRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg3.default.Pool({ connectionString });
+    this.pool = new pg3.Pool({ connectionString });
   }
   async listShops(tenantId) {
     const res = await this.pool.query(`SELECT id, tenant_id, channel, name, external_seller_id, auth_status,
@@ -2089,7 +2056,7 @@ var MemoryCompetitorRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-competitor.js
-var import_pg4 = __toESM(require("pg"), 1);
+import pg4 from "pg";
 function mapOffer(row) {
   return {
     id: row.id,
@@ -2124,7 +2091,7 @@ var PostgresCompetitorRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg4.default.Pool({ connectionString });
+    this.pool = new pg4.Pool({ connectionString });
   }
   async listOffers(listingId) {
     const res = await this.pool.query(`SELECT id, listing_id, channel, external_ref, seller_id, label, is_primary, created_at
@@ -2318,7 +2285,7 @@ var MemoryRepricingRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-repricing.js
-var import_pg5 = __toESM(require("pg"), 1);
+import pg5 from "pg";
 function mapEvent(row) {
   return {
     id: row.id,
@@ -2337,7 +2304,7 @@ var PostgresRepricingRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg5.default.Pool({ connectionString });
+    this.pool = new pg5.Pool({ connectionString });
   }
   async enqueueEvent(input) {
     if (input.dedupe_key) {
@@ -2893,12 +2860,12 @@ var MemoryPublishIdempotencyRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-publish-idempotency.js
-var import_pg6 = require("pg");
+import { Pool } from "pg";
 var PostgresPublishIdempotencyRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg6.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool({ connectionString: databaseUrl });
   }
   async get(compositeKey) {
     const r = await this.pool.query(`SELECT outcome_json FROM publish_idempotency WHERE composite_key = $1`, [compositeKey]);
@@ -3765,7 +3732,7 @@ var MemoryListingHealthRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-dynamic-rule.js
-var import_pg7 = __toESM(require("pg"), 1);
+import pg6 from "pg";
 function mapRule(row) {
   return {
     id: row.id,
@@ -3788,7 +3755,7 @@ var PostgresDynamicRuleRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg7.default.Pool({ connectionString });
+    this.pool = new pg6.Pool({ connectionString });
   }
   async getRule(listingId) {
     const res = await this.pool.query(`SELECT id, listing_id, enabled, action, anchor_type, offset_json, triggers_json,
@@ -3857,7 +3824,7 @@ var PostgresListingHealthRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg7.default.Pool({ connectionString });
+    this.pool = new pg6.Pool({ connectionString });
   }
   async getStale(listingId) {
     const res = await this.pool.query(`SELECT competitor_stale_frozen, competitor_stale_since
@@ -4029,11 +3996,11 @@ function repricingQueueToCsv(rows3, exportedAt) {
 }
 
 // apps/bff/dist/repricing-batch-shard.js
-var import_node_crypto2 = require("node:crypto");
+import { createHash as createHash2 } from "node:crypto";
 function repricingShardIndex(listingId, shardTotal) {
   if (shardTotal < 1)
     return 0;
-  const hash = (0, import_node_crypto2.createHash)("sha256").update(listingId).digest();
+  const hash = createHash2("sha256").update(listingId).digest();
   const num = hash.readUInt32BE(0);
   return num % shardTotal;
 }
@@ -4270,7 +4237,7 @@ var MemoryRepricingBatchJobStore = class {
 };
 
 // apps/bff/dist/repositories/postgres-repricing-batch-job-store.js
-var import_pg8 = __toESM(require("pg"), 1);
+import pg7 from "pg";
 function mapRow(row) {
   return {
     job_id: row.job_id,
@@ -4292,7 +4259,7 @@ var PostgresRepricingBatchJobStore = class {
   driver = "postgres";
   pool;
   constructor(connectionOrPool) {
-    this.pool = typeof connectionOrPool === "string" ? new import_pg8.default.Pool({ connectionString: connectionOrPool }) : connectionOrPool;
+    this.pool = typeof connectionOrPool === "string" ? new pg7.Pool({ connectionString: connectionOrPool }) : connectionOrPool;
   }
   async enqueue(input) {
     if (input.scope === "sku" && !input.sku_id?.trim()) {
@@ -4611,12 +4578,12 @@ var MemoryRepricingActivityRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-repricing-activity.js
-var import_pg9 = __toESM(require("pg"), 1);
+import pg8 from "pg";
 var PostgresRepricingActivityRepository = class {
   driver = "postgres";
   pool;
   constructor(connectionString) {
-    this.pool = new import_pg9.default.Pool({ connectionString });
+    this.pool = new pg8.Pool({ connectionString });
   }
   async recordApply(listingId, at) {
     const id = `ract-${Date.now()}`;
@@ -4682,13 +4649,13 @@ var MemoryReconciliationAlertRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-reconciliation.js
-var import_pg10 = require("pg");
+import { Pool as Pool2 } from "pg";
 var seq5 = 0;
 var PostgresReconciliationAlertRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg10.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool2({ connectionString: databaseUrl });
   }
   async createAlert(input) {
     seq5 += 1;
@@ -5293,13 +5260,13 @@ var MemoryDigestJobRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-digest-job.js
-var import_pg11 = require("pg");
+import { Pool as Pool3 } from "pg";
 var seq7 = 0;
 var PostgresDigestJobRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg11.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool3({ connectionString: databaseUrl });
   }
   async list(tenantId, limit = 20) {
     const r = await this.pool.query(`SELECT * FROM digest_jobs WHERE tenant_id = $1
@@ -6871,16 +6838,16 @@ function validateVersionBackupSnapshot(snapshot) {
 }
 
 // apps/bff/dist/repositories/memory-export-file.js
-var import_node_crypto3 = require("node:crypto");
-var exports2 = /* @__PURE__ */ new Map();
+import { randomBytes as randomBytes2 } from "node:crypto";
+var exports = /* @__PURE__ */ new Map();
 var MemoryExportFileRepository = class {
   driver = "memory";
   async create(input) {
-    const export_id = `exp-${Date.now()}-${exports2.size + 1}`;
-    const token = (0, import_node_crypto3.randomBytes)(16).toString("hex");
+    const export_id = `exp-${Date.now()}-${exports.size + 1}`;
+    const token = randomBytes2(16).toString("hex");
     const ttl = input.ttl_sec ?? 3600;
     const expires_at = new Date(Date.now() + ttl * 1e3).toISOString();
-    exports2.set(export_id, {
+    exports.set(export_id, {
       export_id,
       tenant_id: input.tenant_id,
       kind: input.kind,
@@ -6894,33 +6861,33 @@ var MemoryExportFileRepository = class {
     return { export_id, token, expires_at };
   }
   async get(tenantId, exportId, token) {
-    const row = exports2.get(exportId);
+    const row = exports.get(exportId);
     if (!row || row.tenant_id !== tenantId || row.token !== token) {
       return void 0;
     }
     if (new Date(row.expires_at).getTime() < Date.now()) {
-      exports2.delete(exportId);
+      exports.delete(exportId);
       return void 0;
     }
     return row;
   }
   async resetForTests() {
-    exports2.clear();
+    exports.clear();
   }
 };
 
 // apps/bff/dist/repositories/postgres-export-file.js
-var import_node_crypto4 = require("node:crypto");
-var import_pg12 = require("pg");
+import { randomBytes as randomBytes3 } from "node:crypto";
+import { Pool as Pool4 } from "pg";
 var PostgresExportFileRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg12.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool4({ connectionString: databaseUrl });
   }
   async create(input) {
-    const export_id = `exp-${Date.now()}-${(0, import_node_crypto4.randomBytes)(4).toString("hex")}`;
-    const token = (0, import_node_crypto4.randomBytes)(16).toString("hex");
+    const export_id = `exp-${Date.now()}-${randomBytes3(4).toString("hex")}`;
+    const token = randomBytes3(16).toString("hex");
     const ttl = input.ttl_sec ?? 3600;
     const expires_at = new Date(Date.now() + ttl * 1e3).toISOString();
     await this.pool.query(`INSERT INTO export_files
@@ -6968,14 +6935,14 @@ var PostgresExportFileRepository = class {
 };
 
 // apps/bff/dist/export-object-storage.js
-var import_node_crypto5 = require("node:crypto");
+import { randomBytes as randomBytes4 } from "node:crypto";
 async function uploadExportToObjectStorage(input) {
   const bucket = process.env.EXPORT_S3_BUCKET?.trim();
   const endpoint = process.env.EXPORT_S3_ENDPOINT?.trim();
   if (!bucket || !endpoint) {
     return null;
   }
-  const key3 = `exports/${input.tenant_id}/${input.kind}/${Date.now()}-${(0, import_node_crypto5.randomBytes)(4).toString("hex")}.csv`;
+  const key3 = `exports/${input.tenant_id}/${input.kind}/${Date.now()}-${randomBytes4(4).toString("hex")}.csv`;
   const url = `${endpoint.replace(/\/$/, "")}/${bucket}/${key3}`;
   const res = await fetch(url, {
     method: "PUT",
@@ -7100,7 +7067,7 @@ var MemoryFxRateRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-fx-rate.js
-var import_pg13 = require("pg");
+import { Pool as Pool5 } from "pg";
 var DEFAULT_RATES2 = [
   {
     base: "USD",
@@ -7115,7 +7082,7 @@ var PostgresFxRateRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg13.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool5({ connectionString: databaseUrl });
   }
   async list(tenantId) {
     const r = await this.pool.query(`SELECT * FROM fx_rates WHERE tenant_id = $1 ORDER BY valid_from DESC`, [tenantId]);
@@ -7319,7 +7286,7 @@ var MemoryTariffHsRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-tariff-hs.js
-var import_pg14 = require("pg");
+import { Pool as Pool6 } from "pg";
 var DEFAULT_ROWS2 = [
   {
     hs_code: "HS-ELECTRONICS-MX",
@@ -7338,7 +7305,7 @@ var PostgresTariffHsRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg14.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool6({ connectionString: databaseUrl });
   }
   async list(tenantId) {
     const r = await this.pool.query(`SELECT * FROM tariff_rules WHERE tenant_id = $1 ORDER BY hs_code`, [tenantId]);
@@ -7511,13 +7478,13 @@ var MemoryCostSheetRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-cost-sheet.js
-var import_pg15 = require("pg");
+import { Pool as Pool7 } from "pg";
 var seq9 = 0;
 var PostgresCostSheetRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg15.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool7({ connectionString: databaseUrl });
   }
   async list(tenantId, skuId) {
     const r = await this.pool.query(`SELECT * FROM cost_sheets
@@ -8454,12 +8421,12 @@ var MemoryWorkerHeartbeatRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-worker-heartbeat.js
-var import_pg16 = require("pg");
+import { Pool as Pool8 } from "pg";
 var PostgresWorkerHeartbeatRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg16.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool8({ connectionString: databaseUrl });
   }
   async record(input) {
     const beat = {
@@ -9448,13 +9415,13 @@ var MemoryAgentToolAuditRepository = class {
 };
 
 // apps/bff/dist/repositories/postgres-agent-audit.js
-var import_pg17 = require("pg");
+import { Pool as Pool9 } from "pg";
 var seq12 = 0;
 var PostgresAgentToolAuditRepository = class {
   driver = "postgres";
   pool;
   constructor(databaseUrl) {
-    this.pool = new import_pg17.Pool({ connectionString: databaseUrl });
+    this.pool = new Pool9({ connectionString: databaseUrl });
   }
   async recordInvocation(input) {
     seq12 += 1;
@@ -9512,7 +9479,7 @@ function getAgentToolAuditRepository() {
 }
 
 // apps/bff/dist/oidc-jwt.js
-var import_node_crypto6 = require("node:crypto");
+import { createHmac, createPublicKey, createSign, createVerify, timingSafeEqual } from "node:crypto";
 
 // apps/bff/dist/jwt-claims.js
 function resolveJwtClaimExpectations() {
@@ -9572,9 +9539,9 @@ function verifyHs256Jwt(token, secret) {
     return null;
   const { headerSeg, payloadSeg, sigSeg } = segments;
   const signingInput = `${headerSeg}.${payloadSeg}`;
-  const expected = (0, import_node_crypto6.createHmac)("sha256", secret).update(signingInput).digest();
+  const expected = createHmac("sha256", secret).update(signingInput).digest();
   const actual = Buffer.from(sigSeg.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((sigSeg.length + 3) % 4), "base64");
-  if (actual.length !== expected.length || !(0, import_node_crypto6.timingSafeEqual)(actual, expected)) {
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
     return null;
   }
   const header = base64UrlDecodeJson(headerSeg);
@@ -9595,7 +9562,7 @@ function verifyRs256Jwt(token, publicKey) {
     return null;
   const signingInput = `${headerSeg}.${payloadSeg}`;
   const sig = Buffer.from(sigSeg.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((sigSeg.length + 3) % 4), "base64");
-  const ok = (0, import_node_crypto6.createVerify)("RSA-SHA256").update(signingInput).verify(publicKey, sig);
+  const ok = createVerify("RSA-SHA256").update(signingInput).verify(publicKey, sig);
   if (!ok)
     return null;
   const payload = readJwtPayload(payloadSeg);
@@ -9604,7 +9571,7 @@ function verifyRs256Jwt(token, publicKey) {
   return { sub: payload.sub };
 }
 function publicKeyFromJwk(jwk) {
-  return (0, import_node_crypto6.createPublicKey)({ key: jwk, format: "jwk" });
+  return createPublicKey({ key: jwk, format: "jwk" });
 }
 
 // apps/bff/dist/oidc-jwks.js
@@ -9896,9 +9863,9 @@ async function resolveAuthPrincipal(token, headerTenantId, driver) {
 }
 
 // apps/bff/dist/go-live-readiness.js
-var import_node_fs = require("node:fs");
-var import_node_path = require("node:path");
-var import_node_url = require("node:url");
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // apps/bff/dist/secrets-registry.js
 var SECRET_REQUIREMENTS = [
@@ -9982,7 +9949,7 @@ function evaluateSecretsStatus() {
 }
 
 // apps/bff/dist/waf-middleware.js
-var import_http_exception = require("hono/http-exception");
+import { HTTPException } from "hono/http-exception";
 var SUSPICIOUS_PATH = /\.\.|\/\/|<script|union\s+select/i;
 function parseList(raw) {
   return (raw ?? "").split(",").map((v) => v.trim()).filter(Boolean);
@@ -10028,21 +9995,21 @@ function createWafMiddleware(options = {}) {
       return;
     }
     if (SUSPICIOUS_PATH.test(c.req.path)) {
-      throw new import_http_exception.HTTPException(403, { message: "WAF_BLOCKED" });
+      throw new HTTPException(403, { message: "WAF_BLOCKED" });
     }
     const ip = clientIp(c);
     if (blocklist.includes(ip)) {
-      throw new import_http_exception.HTTPException(403, { message: "WAF_IP_BLOCKED" });
+      throw new HTTPException(403, { message: "WAF_IP_BLOCKED" });
     }
     if (allowlist.length > 0 && !allowlist.includes(ip)) {
-      throw new import_http_exception.HTTPException(403, { message: "WAF_IP_NOT_ALLOWED" });
+      throw new HTTPException(403, { message: "WAF_IP_NOT_ALLOWED" });
     }
     if (!checkRateLimit(ip, rateLimit)) {
-      throw new import_http_exception.HTTPException(429, { message: "WAF_RATE_LIMITED" });
+      throw new HTTPException(429, { message: "WAF_RATE_LIMITED" });
     }
     const contentLength = Number(c.req.header("content-length") ?? "0");
     if (contentLength > maxBody) {
-      throw new import_http_exception.HTTPException(413, { message: "WAF_BODY_TOO_LARGE" });
+      throw new HTTPException(413, { message: "WAF_BODY_TOO_LARGE" });
     }
     if (status.security_headers) {
       c.header("X-Content-Type-Options", "nosniff");
@@ -10096,15 +10063,14 @@ function evaluateBackupPitrStatus() {
 }
 
 // apps/bff/dist/go-live-readiness.js
-var import_meta = {};
 function goldenFixtureCount() {
   const candidates = [
-    (0, import_node_path.join)(process.cwd(), "tests/golden/manifest.json"),
-    (0, import_node_path.join)((0, import_node_path.dirname)((0, import_node_url.fileURLToPath)(import_meta.url)), "../../../tests/golden/manifest.json")
+    join(process.cwd(), "tests/golden/manifest.json"),
+    join(dirname(fileURLToPath(import.meta.url)), "../../../tests/golden/manifest.json")
   ];
   for (const manifestPath of candidates) {
     try {
-      const manifest = JSON.parse((0, import_node_fs.readFileSync)(manifestPath, "utf-8"));
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
       return manifest.fixtures?.length ?? 0;
     } catch {
     }
@@ -10193,7 +10159,7 @@ function evaluateGoLiveReadiness() {
 }
 
 // apps/bff/dist/rbac-middleware.js
-var import_http_exception2 = require("hono/http-exception");
+import { HTTPException as HTTPException2 } from "hono/http-exception";
 
 // apps/bff/dist/rbac.js
 var ROLES = {
@@ -10260,19 +10226,19 @@ function principalFromContext(c) {
 }
 function assertPrincipalRoles(c, required) {
   if (!principalHasRole(principalFromContext(c), required)) {
-    throw new import_http_exception2.HTTPException(403, { message: "FORBIDDEN" });
+    throw new HTTPException2(403, { message: "FORBIDDEN" });
   }
 }
 
 // apps/bff/dist/audit-log.js
-var import_pg18 = require("pg");
+import { Pool as Pool10 } from "pg";
 var pool = null;
 function getPool() {
   const url = process.env.DATABASE_URL?.trim();
   if (!url)
     return null;
   if (!pool) {
-    pool = new import_pg18.Pool({ connectionString: url });
+    pool = new Pool10({ connectionString: url });
   }
   return pool;
 }
@@ -10713,10 +10679,10 @@ function createApp(options = {}) {
   const agentAudit = options.agentAudit ?? getAgentToolAuditRepository();
   const listingAdapter = options.listingAdapter ?? createChannelListingAdapter();
   const publishAdapter = options.publishAdapter ?? createChannelPublishAdapter();
-  const app = new import_hono.Hono();
+  const app = new Hono();
   const deployStatus = getDeployEnvironmentStatus();
   const corsOrigins = deployStatus.cors_origins.length > 0 ? deployStatus.cors_origins : ["http://localhost:5173", "http://127.0.0.1:5173"];
-  app.use("*", (0, import_cors.cors)({
+  app.use("*", cors({
     origin: corsOrigins,
     allowHeaders: ["Authorization", "Content-Type", "X-Tenant-Id", "Accept-Language"]
   }));
@@ -10728,7 +10694,7 @@ function createApp(options = {}) {
     }
     const auth = c.req.header("Authorization");
     if (!auth?.startsWith("Bearer ")) {
-      throw new import_http_exception3.HTTPException(401, { message: "UNAUTHORIZED" });
+      throw new HTTPException3(401, { message: "UNAUTHORIZED" });
     }
     const token = auth.slice("Bearer ".length);
     const headerTenantId = c.req.header("X-Tenant-Id") ?? "tenant-demo";
@@ -10736,7 +10702,7 @@ function createApp(options = {}) {
     const result = await resolveAuthPrincipal(token, headerTenantId, driver);
     if (!result.ok) {
       const status = result.code === "TENANT_MISMATCH" ? 403 : 401;
-      throw new import_http_exception3.HTTPException(status, { message: result.code });
+      throw new HTTPException3(status, { message: result.code });
     }
     c.set("tenantId", result.principal.tenantId);
     c.set("authSubject", result.principal.subject);
@@ -10810,7 +10776,7 @@ function createApp(options = {}) {
     const flagKey = c.req.param("flagKey");
     const flag2 = getFeatureFlagValue(flagKey);
     if (!flag2) {
-      throw new import_http_exception3.HTTPException(404, { message: "FEATURE_FLAG_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "FEATURE_FLAG_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = featureFlagKeyToCsv(flag2.key, flag2.enabled, exportedAt);
@@ -10839,11 +10805,11 @@ function createApp(options = {}) {
   app.get("/api/v1/i18n/glossary/terms/export", (c) => {
     const termKey = c.req.query("term_key")?.trim();
     if (!termKey) {
-      throw new import_http_exception3.HTTPException(400, { message: "TERM_KEY_REQUIRED" });
+      throw new HTTPException3(400, { message: "TERM_KEY_REQUIRED" });
     }
     const term = getGlossaryTerm(termKey);
     if (!term) {
-      throw new import_http_exception3.HTTPException(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
     }
     const locale = c.get("locale");
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -10873,11 +10839,11 @@ function createApp(options = {}) {
   app.get("/api/v1/notifications/templates/row/export", (c) => {
     const templateId = c.req.query("template_id")?.trim();
     if (!templateId) {
-      throw new import_http_exception3.HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "TEMPLATE_ID_REQUIRED" });
     }
     const template = getNotificationTemplate(templateId);
     if (!template) {
-      throw new import_http_exception3.HTTPException(404, { message: "NOTIFICATION_TEMPLATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "NOTIFICATION_TEMPLATE_NOT_FOUND" });
     }
     const locale = c.get("locale");
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -10912,7 +10878,7 @@ function createApp(options = {}) {
     const notificationId = c.req.param("notificationId");
     const updated = await markNotificationRead(tenantId, notificationId);
     if (!updated) {
-      throw new import_http_exception3.HTTPException(404, { message: "NOTIFICATION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "NOTIFICATION_NOT_FOUND" });
     }
     return c.json({ notification: updated });
   });
@@ -10922,7 +10888,7 @@ function createApp(options = {}) {
     const channel = c.req.query("channel");
     const view = await buildSkuPricingContextView({ catalog, competitors }, tenantId, skuId, c.get("locale"), channel);
     if (!view) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = pricingContextToCsv(view, exportedAt);
@@ -10940,7 +10906,7 @@ function createApp(options = {}) {
     const channel = c.req.query("channel");
     const view = await buildSkuPricingContextView({ catalog, competitors }, tenantId, skuId, c.get("locale"), channel);
     if (!view) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     return c.json(view.context);
   });
@@ -10948,7 +10914,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const guard = await getCrossChannelGuardForSku(catalog, sku.id);
     return c.json(guard);
@@ -10958,7 +10924,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const guard = await getCrossChannelGuardForSku(catalog, sku.id);
@@ -10990,12 +10956,12 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
     const item = snapshot.items.find((i) => i.sku_id === skuId);
     if (!item) {
-      throw new import_http_exception3.HTTPException(404, {
+      throw new HTTPException3(404, {
         message: "CROSS_CHANNEL_DASHBOARD_ROW_NOT_FOUND"
       });
     }
@@ -11020,7 +10986,7 @@ function createApp(options = {}) {
     if (contentType.includes("application/json")) {
       const body = await c.req.json();
       if (!body.csv?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "CSV_REQUIRED" });
+        throw new HTTPException3(400, { message: "CSV_REQUIRED" });
       }
       csvText = body.csv;
     } else {
@@ -11028,7 +10994,7 @@ function createApp(options = {}) {
     }
     const parsed = parseLandedCostCsv(csvText);
     if (parsed.rows.length === 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "IMPORT_PARSE_FAILED" });
+      throw new HTTPException3(400, { message: "IMPORT_PARSE_FAILED" });
     }
     const result = await applyLandedCostImport(catalog, tenantId, parsed.rows);
     return c.json({ parse_errors: parsed.errors, ...result });
@@ -11050,7 +11016,7 @@ function createApp(options = {}) {
     if (contentType.includes("application/json")) {
       const body = await c.req.json();
       if (!body.csv?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "CSV_REQUIRED" });
+        throw new HTTPException3(400, { message: "CSV_REQUIRED" });
       }
       csvText = body.csv;
     } else {
@@ -11058,7 +11024,7 @@ function createApp(options = {}) {
     }
     const parsed = parseCostSheetCsv(csvText);
     if (parsed.rows.length === 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "IMPORT_PARSE_FAILED" });
+      throw new HTTPException3(400, { message: "IMPORT_PARSE_FAILED" });
     }
     const result = await applyCostSheetImport(catalog, tenantId, parsed.rows);
     return c.json({ parse_errors: parsed.errors, ...result });
@@ -11067,7 +11033,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const listing = await catalog.getListing(tenantId, c.req.param("listingId"));
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     const sku = listing.sku;
@@ -11105,7 +11071,7 @@ function createApp(options = {}) {
     const versionId = c.req.param("versionId");
     const version = await catalog.getVersion(tenantId, versionId);
     if (!version) {
-      throw new import_http_exception3.HTTPException(404, { message: "VERSION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "VERSION_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = priceVersionToCsv(version, exportedAt);
@@ -11121,7 +11087,7 @@ function createApp(options = {}) {
     const versionId = c.req.param("versionId");
     const version = await catalog.getVersion(tenantId, versionId);
     if (!version) {
-      throw new import_http_exception3.HTTPException(404, { message: "VERSION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "VERSION_NOT_FOUND" });
     }
     return c.json({ version });
   });
@@ -11165,7 +11131,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = skusCatalogToCsv([
@@ -11188,11 +11154,11 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (body.landed_cost_mxn === void 0 || body.landed_cost_mxn < 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_LANDED_COST" });
+      throw new HTTPException3(400, { message: "INVALID_LANDED_COST" });
     }
     const updated = await catalog.updateSkuLandedCost(tenantId, c.req.param("skuId"), body.landed_cost_mxn);
     if (!updated) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const locale = c.get("locale");
     return c.json({
@@ -11213,14 +11179,14 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const body = await c.req.json();
     if (body.target_margin_pct !== void 0 && (body.target_margin_pct < 0 || body.target_margin_pct > 100)) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_TARGET_MARGIN" });
+      throw new HTTPException3(400, { message: "INVALID_TARGET_MARGIN" });
     }
     if (body.min_margin_pct !== void 0 && (body.min_margin_pct < 0 || body.min_margin_pct > 100)) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_MIN_MARGIN" });
+      throw new HTTPException3(400, { message: "INVALID_MIN_MARGIN" });
     }
     const updated = await catalog.updateSkuPolicy(tenantId, skuId, body);
     if (!updated) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     return c.json({ id: updated.id, policy: updated.policy });
   });
@@ -11229,7 +11195,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!body.items?.length) {
-      throw new import_http_exception3.HTTPException(400, { message: "ITEMS_REQUIRED" });
+      throw new HTTPException3(400, { message: "ITEMS_REQUIRED" });
     }
     const result = await batchPatchSkuPolicies(catalog, tenantId, body.items);
     return c.json(result);
@@ -11239,7 +11205,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     return c.json({ items: await listCostSheets(tenantId, skuId) });
   });
@@ -11248,7 +11214,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = costSheetsToCsv(await listCostSheets(tenantId, skuId), exportedAt);
@@ -11265,11 +11231,11 @@ function createApp(options = {}) {
     const sheetId = c.req.param("sheetId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const sheet = await getCostSheet(tenantId, skuId, sheetId);
     if (!sheet) {
-      throw new import_http_exception3.HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "COST_SHEET_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = costSheetsToCsv([sheet], exportedAt);
@@ -11286,7 +11252,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
     try {
@@ -11303,7 +11269,7 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("BATCH_NO_REQUIRED") || msg.includes("COGS_AMOUNT_INVALID")) {
-        throw new import_http_exception3.HTTPException(400, { message: msg.split(":")[0] });
+        throw new HTTPException3(400, { message: msg.split(":")[0] });
       }
       throw e;
     }
@@ -11313,7 +11279,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const channel = c.req.query("channel") ?? "MERCADO_LIBRE";
     const pricing_mode = c.req.query("pricing_mode") ?? "cost";
@@ -11336,7 +11302,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
     const t0 = performance.now();
@@ -11377,7 +11343,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!body.items?.length) {
-      throw new import_http_exception3.HTTPException(400, { message: "ITEMS_REQUIRED" });
+      throw new HTTPException3(400, { message: "ITEMS_REQUIRED" });
     }
     try {
       const preview = await previewAdjustmentBatch(catalog, tenantId, body);
@@ -11388,7 +11354,7 @@ function createApp(options = {}) {
         return c.json({ error: "GUARD_REJECTED", code: msg.split(":")[1] }, 422);
       }
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -11398,7 +11364,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!body.items?.length) {
-      throw new import_http_exception3.HTTPException(400, { message: "ITEMS_REQUIRED" });
+      throw new HTTPException3(400, { message: "ITEMS_REQUIRED" });
     }
     try {
       const built = await buildAdjustmentBatchInput(catalog, tenantId, body);
@@ -11420,7 +11386,7 @@ function createApp(options = {}) {
         return c.json({ error: "GUARD_REJECTED", code: msg.split(":")[1] }, 422);
       }
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -11430,7 +11396,7 @@ function createApp(options = {}) {
     const batchId = c.req.param("batchId");
     const batch = await adjustments.getBatch(tenantId, batchId);
     if (!batch) {
-      throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
     }
     const csv = adjustmentBatchToCsv(batch);
     return new Response(csv, {
@@ -11445,7 +11411,7 @@ function createApp(options = {}) {
     const batchId = c.req.param("batchId");
     const batch = await adjustments.getBatch(tenantId, batchId);
     if (!batch) {
-      throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = adjustmentBatchesIndexToCsv([batch], exportedAt);
@@ -11459,7 +11425,7 @@ function createApp(options = {}) {
   app.get("/api/v1/adjustment-batches/:batchId", async (c) => {
     const batch = await adjustments.getBatch(c.get("tenantId"), c.req.param("batchId"));
     if (!batch) {
-      throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
     }
     return c.json(batch);
   });
@@ -11469,7 +11435,7 @@ function createApp(options = {}) {
     const batchId = c.req.param("batchId");
     const batch = await adjustments.getBatch(tenantId, batchId);
     if (!batch) {
-      throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
     }
     if (batch.status !== "pending_approval") {
       return c.json({ error: "INVALID_STATUS", status: batch.status }, 400);
@@ -11490,7 +11456,7 @@ function createApp(options = {}) {
     const batchId = c.req.param("batchId");
     const result = await applyAdjustmentBatch(catalog, adjustments, tenantId, batchId);
     if (result.error === "NOT_FOUND") {
-      throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
     }
     if (result.error === "APPROVAL_REQUIRED") {
       return c.json({ error: "APPROVAL_REQUIRED" }, 422);
@@ -11509,7 +11475,7 @@ function createApp(options = {}) {
     const shopId = c.req.param("shopId");
     const shop = await shops2.getShop(tenantId, shopId);
     if (!shop) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = shopsToCsv([shopPublicView(shop)], exportedAt);
@@ -11604,7 +11570,7 @@ function createApp(options = {}) {
   app.post("/api/v1/ops/version-backup/validate", async (c) => {
     const body = await c.req.json();
     if (body.snapshot === void 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "SNAPSHOT_REQUIRED" });
+      throw new HTTPException3(400, { message: "SNAPSHOT_REQUIRED" });
     }
     return c.json(validateVersionBackupSnapshot(body.snapshot));
   });
@@ -11630,7 +11596,7 @@ function createApp(options = {}) {
     const quote = c.req.param("quote").toUpperCase();
     const row = await getFxRate(tenantId, base, quote);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "FX_RATE_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = fxRatesToCsv([row], exportedAt);
@@ -11645,7 +11611,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (body.rate === void 0 || body.rate <= 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "RATE_REQUIRED" });
+      throw new HTTPException3(400, { message: "RATE_REQUIRED" });
     }
     const items = await upsertFxRate(tenantId, {
       base: c.req.param("base").toUpperCase(),
@@ -11666,7 +11632,7 @@ function createApp(options = {}) {
     const hsCode = decodeURIComponent(c.req.param("hsCode"));
     const row = await getTariffHsRate(tenantId, hsCode);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "TARIFF_HS_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = tariffHsRatesToCsv([row], exportedAt);
@@ -11693,7 +11659,7 @@ function createApp(options = {}) {
     const hsCode = decodeURIComponent(c.req.param("hsCode"));
     const body = await c.req.json();
     if (body.tariff_rate === void 0 || body.tariff_rate < 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "TARIFF_RATE_REQUIRED" });
+      throw new HTTPException3(400, { message: "TARIFF_RATE_REQUIRED" });
     }
     const existing = (await listTariffHsRates(tenantId)).find((r) => r.hs_code === hsCode);
     const items = await upsertTariffHsRate(tenantId, {
@@ -11710,12 +11676,12 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
     const hsCode = body.hs_code ?? sku.hs_code;
     if (!hsCode) {
-      throw new import_http_exception3.HTTPException(400, { message: "HS_CODE_REQUIRED" });
+      throw new HTTPException3(400, { message: "HS_CODE_REQUIRED" });
     }
     try {
       const { tariff, computed } = await computeLandedFromHs(tenantId, hsCode, {
@@ -11738,10 +11704,10 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("HS_CODE_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "HS_CODE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "HS_CODE_NOT_FOUND" });
       }
       if (msg.includes("HS_LANDED_MXN_ONLY")) {
-        throw new import_http_exception3.HTTPException(400, { message: "HS_LANDED_MXN_ONLY" });
+        throw new HTTPException3(400, { message: "HS_LANDED_MXN_ONLY" });
       }
       throw e;
     }
@@ -11764,7 +11730,7 @@ function createApp(options = {}) {
     if (contentType.includes("application/json")) {
       const body = await c.req.json();
       if (!body.csv?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "CSV_REQUIRED" });
+        throw new HTTPException3(400, { message: "CSV_REQUIRED" });
       }
       csvText = body.csv;
       reason_code = body.reason_code;
@@ -11814,7 +11780,7 @@ function createApp(options = {}) {
         return c.json({ parse_errors: parsed.errors, error: "GUARD_REJECTED", code: msg.split(":")[1] }, 422);
       }
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -11825,11 +11791,11 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
     if (!body.cost_sheet_id?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "COST_SHEET_ID_REQUIRED" });
     }
     try {
       const result = await computeLandedFromCostSheet(catalog, tenantId, skuId, body.cost_sheet_id, { hs_code: body.hs_code });
@@ -11847,13 +11813,13 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("COST_SHEET_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "COST_SHEET_NOT_FOUND" });
       }
       if (msg.includes("HS_CODE_NOT_FOUND") || msg.includes("HS_CODE_REQUIRED")) {
-        throw new import_http_exception3.HTTPException(400, { message: msg.split(":")[0] });
+        throw new HTTPException3(400, { message: msg.split(":")[0] });
       }
       if (msg.includes("FX_RATE_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "FX_RATE_NOT_FOUND" });
       }
       throw e;
     }
@@ -11864,7 +11830,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const body = await c.req.json();
     try {
@@ -11885,7 +11851,7 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("FX_RATE_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "FX_RATE_NOT_FOUND" });
       }
       throw e;
     }
@@ -11908,7 +11874,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       content = buildWaterfallExportCsv(sku, {
         channel: body.channel ?? "MERCADO_LIBRE",
@@ -11921,7 +11887,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const range = body.range ?? "7d";
       const days = range === "30d" ? 30 : 7;
@@ -11936,11 +11902,11 @@ function createApp(options = {}) {
     } else if (kind === "adjustment_batch_csv") {
       const batchId = body.batch_id?.trim();
       if (!batchId) {
-        throw new import_http_exception3.HTTPException(400, { message: "BATCH_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "BATCH_ID_REQUIRED" });
       }
       const batch = await adjustments.getBatch(tenantId, batchId);
       if (!batch) {
-        throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
       }
       content = adjustmentBatchToCsv(batch);
       content_type = "text/csv";
@@ -11961,7 +11927,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       content = costSheetsToCsv(await listCostSheets(tenantId, skuId), (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12021,7 +11987,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const range = body.range ?? "7d";
       const days = range === "30d" ? 30 : 7;
@@ -12033,7 +11999,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const items = await repricing.listEvents(tenantId, listingId, 200);
       content = repricingEventsToCsv(items, (/* @__PURE__ */ new Date()).toISOString());
@@ -12063,7 +12029,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const offers2 = await mapOffersWithLatestObservations(competitors, listingId);
       content = competitorOffersToCsv(listingId, offers2, (/* @__PURE__ */ new Date()).toISOString());
@@ -12085,7 +12051,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const limit = Math.min(100, Math.max(1, Number(body.limit ?? 50) || 50));
       const jobs2 = listListingSyncJobs(tenantId, listingId, limit);
@@ -12103,7 +12069,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const status = await buildListingIngestStatus({ catalog, repricing, listingHealth }, tenantId, listingId);
       if (!status) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       content = listingIngestStatusToCsv(status, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12117,7 +12083,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const withLatest = await mapOffersWithLatestObservations(competitors, listingId);
       const anchor = buildCompetitorAnchorSummary(withLatest);
@@ -12166,7 +12132,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const guard = await getCrossChannelGuardForSku(catalog, skuId);
       content = crossChannelGuardToCsv(skuId, guard, (/* @__PURE__ */ new Date()).toISOString());
@@ -12178,7 +12144,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const view = await buildListingDynamicRepricingRuleView({ catalog, dynamicRules, listingHealth }, tenantId, listingId);
       if (!view) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       content = dynamicRepricingRuleToCsv(view, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12186,7 +12152,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const rows3 = await buildSkuRepricingQueueRows(catalog, tenantId, skuId);
       content = repricingQueueToCsv(rows3, (/* @__PURE__ */ new Date()).toISOString());
@@ -12195,7 +12161,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const shardTotal = Math.min(64, Math.max(1, Number(body.shard_total ?? 2) || 2));
       const plan = planRepricingShards(tenantId, skuId, shardTotal);
@@ -12205,7 +12171,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const categoryId = sku.category_id ?? null;
       const template = categoryId ? getCategoryRuleTemplate(tenantId, categoryId) : void 0;
@@ -12216,18 +12182,18 @@ function createApp(options = {}) {
       const channel = body.channel ?? "MERCADO_LIBRE";
       const view = await buildSkuPricingContextView({ catalog, competitors }, tenantId, skuId, c.get("locale"), channel);
       if (!view) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       content = pricingContextToCsv(view, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "repricing_batch_job_csv") {
       const jobId = body.job_id;
       if (!jobId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "JOB_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "JOB_ID_REQUIRED" });
       }
       const job = await getRepricingBatchJob(tenantId, jobId);
       if (!job) {
-        throw new import_http_exception3.HTTPException(404, { message: "JOB_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "JOB_NOT_FOUND" });
       }
       content = repricingBatchJobsToCsv([job], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12235,29 +12201,29 @@ function createApp(options = {}) {
       const categoryId = body.category_id ?? "cat-electronics-mx";
       const tpl = getCategoryRuleTemplate(tenantId, categoryId);
       if (!tpl) {
-        throw new import_http_exception3.HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
       }
       content = categoryRuleTemplatesToCsv([tpl], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "copilot_session_csv") {
       const sessionId = body.session_id;
       if (!sessionId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "SESSION_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "SESSION_ID_REQUIRED" });
       }
       const session = getCopilotSession(tenantId, sessionId);
       if (!session) {
-        throw new import_http_exception3.HTTPException(404, { message: "SESSION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SESSION_NOT_FOUND" });
       }
       content = copilotSessionToCsv(session, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "price_version_csv") {
       const versionId = body.version_id;
       if (!versionId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "VERSION_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "VERSION_ID_REQUIRED" });
       }
       const version = await catalog.getVersion(tenantId, versionId);
       if (!version) {
-        throw new import_http_exception3.HTTPException(404, { message: "VERSION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "VERSION_NOT_FOUND" });
       }
       content = priceVersionToCsv(version, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12272,7 +12238,7 @@ function createApp(options = {}) {
       const shopId = body.shop_id ?? "shop-ml-demo";
       const shop = await shops2.getShop(tenantId, shopId);
       if (!shop) {
-        throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
       }
       content = shopsToCsv([shopPublicView(shop)], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12286,7 +12252,7 @@ function createApp(options = {}) {
       const templateId = body.fee_template_id ?? "fee-tpl-ml-electronics";
       const tpl = getSharedFeeTemplate(tenantId, templateId);
       if (!tpl) {
-        throw new import_http_exception3.HTTPException(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
       }
       content = sharedFeeTemplatesToCsv([tpl], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12297,7 +12263,7 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       content = skusCatalogToCsv([
         {
@@ -12312,7 +12278,7 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       content = listingsToCsv([
         {
@@ -12326,7 +12292,7 @@ function createApp(options = {}) {
       const hsCode = body.hs_code ?? "HS-ELECTRONICS-MX";
       const row = await getTariffHsRate(tenantId, hsCode);
       if (!row) {
-        throw new import_http_exception3.HTTPException(404, { message: "TARIFF_HS_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "TARIFF_HS_NOT_FOUND" });
       }
       content = tariffHsRatesToCsv([row], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12335,7 +12301,7 @@ function createApp(options = {}) {
       const quote = (body.fx_quote ?? "MXN").toUpperCase();
       const row = await getFxRate(tenantId, base, quote);
       if (!row) {
-        throw new import_http_exception3.HTTPException(404, { message: "FX_RATE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "FX_RATE_NOT_FOUND" });
       }
       content = fxRatesToCsv([row], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12343,65 +12309,65 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sheetId = body.cost_sheet_id;
       if (!sheetId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "COST_SHEET_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "COST_SHEET_ID_REQUIRED" });
       }
       const sheet = await getCostSheet(tenantId, skuId, sheetId.trim());
       if (!sheet) {
-        throw new import_http_exception3.HTTPException(404, { message: "COST_SHEET_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "COST_SHEET_NOT_FOUND" });
       }
       content = costSheetsToCsv([sheet], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "competitor_offer_csv") {
       const offerId = body.offer_id;
       if (!offerId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "OFFER_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "OFFER_ID_REQUIRED" });
       }
       const offer = await competitors.getOffer(offerId.trim());
       if (!offer) {
-        throw new import_http_exception3.HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
       }
       const listing = await catalog.getListing(tenantId, offer.listing_id);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const withLatest = await mapOffersWithLatestObservations(competitors, offer.listing_id);
       const row = withLatest.find((o) => o.id === offerId.trim());
       if (!row) {
-        throw new import_http_exception3.HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
       }
       content = competitorOffersToCsv(offer.listing_id, [row], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "reconciliation_alert_csv") {
       const alertId = body.alert_id;
       if (!alertId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "ALERT_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "ALERT_ID_REQUIRED" });
       }
       const items = await reconciliationAlerts.listAlerts(tenantId);
       const alert = items.find((a) => a.id === alertId.trim());
       if (!alert) {
-        throw new import_http_exception3.HTTPException(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
       }
       content = reconciliationAlertsToCsv([alert], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "listing_sync_job_csv") {
       const jobId = body.sync_job_id;
       if (!jobId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "SYNC_JOB_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "SYNC_JOB_ID_REQUIRED" });
       }
       const job = getListingSyncJob(tenantId, jobId.trim());
       if (!job) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
       }
       content = listingSyncJobsToCsv([job], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "digest_queued_job_csv") {
       const jobId = body.digest_job_id;
       if (!jobId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
       const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job) {
-        throw new import_http_exception3.HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "DIGEST_JOB_NOT_FOUND" });
       }
       content = digestQueuedJobsToCsv([job], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12409,7 +12375,7 @@ function createApp(options = {}) {
       const workerId = body.worker_id ?? "repricing-batch-1";
       const beat = await getWorkerHeartbeat(workerId);
       if (!beat) {
-        throw new import_http_exception3.HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
       }
       const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");
       const stale = Date.now() - new Date(beat.reported_at).getTime() > staleSec * 1e3;
@@ -12418,33 +12384,33 @@ function createApp(options = {}) {
     } else if (kind === "digest_dispatch_csv") {
       const jobId = body.dispatch_job_id;
       if (!jobId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "DISPATCH_JOB_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "DISPATCH_JOB_ID_REQUIRED" });
       }
       const dispatch = getDigestDispatch(tenantId, jobId.trim());
       if (!dispatch) {
-        throw new import_http_exception3.HTTPException(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
       }
       content = digestDispatchesToCsv([dispatch], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "channel_sandbox_event_csv") {
       const eventId = body.sandbox_event_id;
       if (!eventId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "SANDBOX_EVENT_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "SANDBOX_EVENT_ID_REQUIRED" });
       }
       const ev = getChannelSandboxEvent(tenantId, eventId.trim());
       if (!ev) {
-        throw new import_http_exception3.HTTPException(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
       }
       content = channelSandboxEventsToCsv([ev], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "digest_dead_letter_job_csv") {
       const jobId = body.digest_job_id;
       if (!jobId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "DIGEST_JOB_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "DIGEST_JOB_ID_REQUIRED" });
       }
       const job = await getDigestQueuedJob(tenantId, jobId.trim());
       if (!job || job.status !== "dead_letter") {
-        throw new import_http_exception3.HTTPException(404, {
+        throw new HTTPException3(404, {
           message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND"
         });
       }
@@ -12453,60 +12419,60 @@ function createApp(options = {}) {
     } else if (kind === "agent_tool_audit_csv") {
       const auditId = body.audit_id;
       if (!auditId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "AUDIT_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "AUDIT_ID_REQUIRED" });
       }
       const items = await agentAudit.listInvocations(tenantId, 200);
       const row = items.find((a) => a.id === auditId.trim());
       if (!row) {
-        throw new import_http_exception3.HTTPException(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
       }
       content = agentToolAuditToCsv([row], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "price_observation_csv") {
       const observationId = body.observation_id;
       if (!observationId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "OBSERVATION_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "OBSERVATION_ID_REQUIRED" });
       }
       const obs = await competitors.getObservation(observationId.trim());
       if (!obs) {
-        throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
       }
       const offer = await competitors.getOffer(obs.offer_id);
       if (!offer) {
-        throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
       }
       const listing = await catalog.getListing(tenantId, offer.listing_id);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
       }
       content = priceHistoryToCsv(offer.listing_id, [obs], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "repricing_event_csv") {
       const eventId = body.repricing_event_id;
       if (!eventId?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "REPRICING_EVENT_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "REPRICING_EVENT_ID_REQUIRED" });
       }
       const event = await repricing.getEvent(eventId.trim());
       if (!event || event.tenant_id !== tenantId) {
-        throw new import_http_exception3.HTTPException(404, { message: "REPRICING_EVENT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "REPRICING_EVENT_NOT_FOUND" });
       }
       content = repricingEventsToCsv([event], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "adjustment_batch_index_csv") {
       const batchId = body.batch_id?.trim();
       if (!batchId) {
-        throw new import_http_exception3.HTTPException(400, { message: "BATCH_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "BATCH_ID_REQUIRED" });
       }
       const batch = await adjustments.getBatch(tenantId, batchId);
       if (!batch) {
-        throw new import_http_exception3.HTTPException(404, { message: "BATCH_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "BATCH_NOT_FOUND" });
       }
       content = adjustmentBatchesIndexToCsv([batch], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "agent_digest_date_csv") {
       const date = body.date?.trim();
       if (!date) {
-        throw new import_http_exception3.HTTPException(400, { message: "DIGEST_DATE_REQUIRED" });
+        throw new HTTPException3(400, { message: "DIGEST_DATE_REQUIRED" });
       }
       const digest = await buildDailyAgentDigest({ catalog, reconciliationAlerts, agentAudit }, tenantId, c.get("locale"), date);
       content = agentDigestToCsv(digest);
@@ -12515,16 +12481,16 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const channel = body.channel ?? "MERCADO_LIBRE";
       if (channel !== "MERCADO_LIBRE" && channel !== "AMAZON_MX") {
-        throw new import_http_exception3.HTTPException(400, { message: "INVALID_CHANNEL" });
+        throw new HTTPException3(400, { message: "INVALID_CHANNEL" });
       }
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const rows3 = await buildPricingSnapshotRows(catalog, tenantId, skuId);
       const row = rows3.find((r) => r.channel === channel);
       if (!row) {
-        throw new import_http_exception3.HTTPException(404, { message: "PRICING_SNAPSHOT_ROW_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "PRICING_SNAPSHOT_ROW_NOT_FOUND" });
       }
       content = pricingSnapshotToCsv([row], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12532,12 +12498,12 @@ function createApp(options = {}) {
       const skuId = body.sku_id ?? "demo-sku-001";
       const sku = await catalog.getSku(tenantId, skuId);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       const snapshot = await buildCrossChannelDashboard(catalog, tenantId);
       const item = snapshot.items.find((i) => i.sku_id === skuId);
       if (!item) {
-        throw new import_http_exception3.HTTPException(404, {
+        throw new HTTPException3(404, {
           message: "CROSS_CHANNEL_DASHBOARD_ROW_NOT_FOUND"
         });
       }
@@ -12552,11 +12518,11 @@ function createApp(options = {}) {
       const listingId = body.listing_id ?? "listing-ml-001";
       const listing = await catalog.getListing(tenantId, listingId);
       if (!listing) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       const curveDate = body.curve_date?.trim() ?? body.date?.trim();
       if (!curveDate) {
-        throw new import_http_exception3.HTTPException(400, { message: "CURVE_DATE_REQUIRED" });
+        throw new HTTPException3(400, { message: "CURVE_DATE_REQUIRED" });
       }
       const range = body.range ?? "7d";
       const days = range === "30d" ? 30 : 7;
@@ -12568,49 +12534,49 @@ function createApp(options = {}) {
       })));
       const point = points.find((p) => p.date === curveDate);
       if (!point) {
-        throw new import_http_exception3.HTTPException(404, { message: "COMPETITOR_CURVE_POINT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "COMPETITOR_CURVE_POINT_NOT_FOUND" });
       }
       content = competitorCurvePointsToCsv([point]);
       content_type = "text/csv";
     } else if (kind === "agent_tool_row_csv") {
       const toolName = body.tool_name?.trim();
       if (!toolName) {
-        throw new import_http_exception3.HTTPException(400, { message: "TOOL_NAME_REQUIRED" });
+        throw new HTTPException3(400, { message: "TOOL_NAME_REQUIRED" });
       }
       const tool = getAgentTool(toolName);
       if (!tool) {
-        throw new import_http_exception3.HTTPException(404, { message: "AGENT_TOOL_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "AGENT_TOOL_NOT_FOUND" });
       }
       content = agentToolsToCsv([tool], (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "agent_readiness_check_csv") {
       const checkId = body.check_id?.trim();
       if (!checkId) {
-        throw new import_http_exception3.HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "CHECK_ID_REQUIRED" });
       }
       const snapshot = evaluateAgentReadiness();
       const check = snapshot.checks.find((c2) => c2.id === checkId);
       if (!check) {
-        throw new import_http_exception3.HTTPException(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
       }
       content = agentReadinessToCsv({ ...snapshot, checks: [check] }, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "agent_milestone_csv") {
       const milestoneId = body.milestone_id?.trim();
       if (!milestoneId) {
-        throw new import_http_exception3.HTTPException(400, { message: "MILESTONE_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "MILESTONE_ID_REQUIRED" });
       }
       const status = getProductMilestoneStatus();
       const milestone = status.milestones.find((m) => m.id === milestoneId);
       if (!milestone) {
-        throw new import_http_exception3.HTTPException(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
       }
       content = agentMilestonesToCsv({ ...status, milestones: [milestone] }, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else if (kind === "product_readiness_check_csv") {
       const checkId = body.check_id?.trim();
       if (!checkId) {
-        throw new import_http_exception3.HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "CHECK_ID_REQUIRED" });
       }
       const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
       const summary = getProductReadinessSummary();
@@ -12624,7 +12590,7 @@ function createApp(options = {}) {
         } else {
           const p5 = summary.p5.checks.find((c2) => c2.id === checkId);
           if (!p5) {
-            throw new import_http_exception3.HTTPException(404, {
+            throw new HTTPException3(404, {
               message: "PRODUCT_READINESS_CHECK_NOT_FOUND"
             });
           }
@@ -12635,11 +12601,11 @@ function createApp(options = {}) {
     } else if (kind === "feature_flag_csv") {
       const flagKey = body.flag_key?.trim();
       if (!flagKey) {
-        throw new import_http_exception3.HTTPException(400, { message: "FLAG_KEY_REQUIRED" });
+        throw new HTTPException3(400, { message: "FLAG_KEY_REQUIRED" });
       }
       const flag2 = getFeatureFlagValue(flagKey);
       if (!flag2) {
-        throw new import_http_exception3.HTTPException(404, { message: "FEATURE_FLAG_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "FEATURE_FLAG_NOT_FOUND" });
       }
       content = featureFlagKeyToCsv(flag2.key, flag2.enabled, (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12650,11 +12616,11 @@ function createApp(options = {}) {
     } else if (kind === "i18n_glossary_term_csv") {
       const termKey = body.term_key?.trim();
       if (!termKey) {
-        throw new import_http_exception3.HTTPException(400, { message: "TERM_KEY_REQUIRED" });
+        throw new HTTPException3(400, { message: "TERM_KEY_REQUIRED" });
       }
       const term = getGlossaryTerm(termKey);
       if (!term) {
-        throw new import_http_exception3.HTTPException(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "GLOSSARY_TERM_NOT_FOUND" });
       }
       content = i18nGlossaryTermToCsv(term, c.get("locale"), (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
@@ -12664,18 +12630,18 @@ function createApp(options = {}) {
     } else if (kind === "notification_template_csv") {
       const templateId = body.template_id?.trim();
       if (!templateId) {
-        throw new import_http_exception3.HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "TEMPLATE_ID_REQUIRED" });
       }
       const template = getNotificationTemplate(templateId);
       if (!template) {
-        throw new import_http_exception3.HTTPException(404, {
+        throw new HTTPException3(404, {
           message: "NOTIFICATION_TEMPLATE_NOT_FOUND"
         });
       }
       content = notificationTemplateToCsv(template, c.get("locale"), (/* @__PURE__ */ new Date()).toISOString());
       content_type = "text/csv";
     } else {
-      throw new import_http_exception3.HTTPException(400, { message: "UNSUPPORTED_EXPORT_KIND" });
+      throw new HTTPException3(400, { message: "UNSUPPORTED_EXPORT_KIND" });
     }
     const stored = await createStoredExport({
       tenant_id: tenantId,
@@ -12695,7 +12661,7 @@ function createApp(options = {}) {
     const token = c.req.query("token") ?? "";
     const row = await getStoredExport(tenantId, c.req.param("exportId"), token);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, { message: "EXPORT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "EXPORT_NOT_FOUND" });
     }
     return new Response(row.body, {
       status: 200,
@@ -12734,7 +12700,7 @@ function createApp(options = {}) {
     const workerId = c.req.param("workerId");
     const beat = await getWorkerHeartbeat(workerId);
     if (!beat) {
-      throw new import_http_exception3.HTTPException(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "WORKER_HEARTBEAT_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const staleSec = Number(process.env.WORKER_HEARTBEAT_STALE_SEC ?? "120");
@@ -12750,7 +12716,7 @@ function createApp(options = {}) {
   app.post("/api/v1/ops/workers/heartbeat", async (c) => {
     const body = await c.req.json();
     if (!body.worker_id?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "WORKER_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "WORKER_ID_REQUIRED" });
     }
     const beat = await recordWorkerHeartbeat({
       worker_id: body.worker_id.trim(),
@@ -12765,7 +12731,7 @@ function createApp(options = {}) {
     const format = (c.req.query("format") ?? "json").toLowerCase();
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const rows3 = await buildPricingSnapshotRows(catalog, tenantId, skuId);
@@ -12786,7 +12752,7 @@ function createApp(options = {}) {
     const skuId = c.req.query("sku_id") ?? "demo-sku-001";
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const rows3 = await buildPricingSnapshotRows(catalog, tenantId, skuId);
@@ -12815,16 +12781,16 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const channel = c.req.param("channel");
     if (channel !== "MERCADO_LIBRE" && channel !== "AMAZON_MX") {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_CHANNEL" });
+      throw new HTTPException3(400, { message: "INVALID_CHANNEL" });
     }
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const rows3 = await buildPricingSnapshotRows(catalog, tenantId, skuId);
     const row = rows3.find((r) => r.channel === channel);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, {
+      throw new HTTPException3(404, {
         message: "PRICING_SNAPSHOT_ROW_NOT_FOUND"
       });
     }
@@ -12890,7 +12856,7 @@ function createApp(options = {}) {
     const eventId = c.req.param("eventId");
     const ev = getChannelSandboxEvent(tenantId, eventId);
     if (!ev) {
-      throw new import_http_exception3.HTTPException(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SANDBOX_EVENT_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = channelSandboxEventsToCsv([ev], exportedAt);
@@ -12905,7 +12871,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!body.channel || !body.name?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHOP" });
+      throw new HTTPException3(400, { message: "INVALID_SHOP" });
     }
     const shop = await shops2.createShop({
       tenant_id: tenantId,
@@ -12920,7 +12886,7 @@ function createApp(options = {}) {
     const shopId = c.req.param("shopId");
     const shop = await shops2.getShop(tenantId, shopId);
     if (!shop) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
     }
     const result = startOAuth(tenantId, shopId, shop.channel);
     return c.json({
@@ -12950,7 +12916,7 @@ function createApp(options = {}) {
     const shopId = c.req.param("shopId");
     const shop = await shops2.getShop(tenantId, shopId);
     if (!shop) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
     }
     const body = await c.req.json().catch(() => ({}));
     if (!body.code?.trim()) {
@@ -12973,7 +12939,7 @@ function createApp(options = {}) {
     const shopId = c.req.param("shopId");
     const shop = await shops2.getShop(tenantId, shopId);
     if (!shop) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
     }
     if (shop.auth_status !== "connected" || !shop.external_seller_id) {
       return c.json({ error: "AUTH_REQUIRED" }, 401);
@@ -12984,7 +12950,7 @@ function createApp(options = {}) {
     }
     const body = await c.req.json();
     if (!body.external_ref) {
-      throw new import_http_exception3.HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+      throw new HTTPException3(400, { message: "EXTERNAL_REF_REQUIRED" });
     }
     const snapshot = await listingAdapter.pullListing({
       shop_id: shopId,
@@ -13010,7 +12976,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = listingsToCsv([
@@ -13032,7 +12998,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const withLatest = await mapOffersWithLatestObservations(competitors, listingId);
     const anchor = buildCompetitorAnchorSummary(withLatest);
@@ -13050,7 +13016,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const offers2 = await mapOffersWithLatestObservations(competitors, listingId);
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -13067,7 +13033,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const withLatest = await mapOffersWithLatestObservations(competitors, listingId);
     return c.json({
@@ -13082,11 +13048,11 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     if (!body.external_ref?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+      throw new HTTPException3(400, { message: "EXTERNAL_REF_REQUIRED" });
     }
     const offer = await competitors.createOffer({
       listing_id: listingId,
@@ -13103,16 +13069,16 @@ function createApp(options = {}) {
     const offerId = c.req.param("offerId");
     const offer = await competitors.getOffer(offerId);
     if (!offer) {
-      throw new import_http_exception3.HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
     }
     const listing = await catalog.getListing(tenantId, offer.listing_id);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const withLatest = await mapOffersWithLatestObservations(competitors, offer.listing_id);
     const row = withLatest.find((o) => o.id === offerId);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "COMPETITOR_OFFER_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = competitorOffersToCsv(offer.listing_id, [row], exportedAt);
@@ -13128,11 +13094,11 @@ function createApp(options = {}) {
     const offerId = c.req.param("offerId");
     const offer = await competitors.getOffer(offerId);
     if (!offer) {
-      throw new import_http_exception3.HTTPException(404, { message: "OFFER_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "OFFER_NOT_FOUND" });
     }
     const listing = await catalog.getListing(tenantId, offer.listing_id);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     const include_shipping = body.include_shipping ?? false;
@@ -13143,7 +13109,7 @@ function createApp(options = {}) {
       include_shipping
     });
     if (effective_price <= 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_PRICE" });
+      throw new HTTPException3(400, { message: "INVALID_PRICE" });
     }
     const previous = await competitors.latestObservation(offerId);
     const observation = await competitors.addObservation({
@@ -13176,15 +13142,15 @@ function createApp(options = {}) {
     const observationId = c.req.param("observationId");
     const obs = await competitors.getObservation(observationId);
     if (!obs) {
-      throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
     }
     const offer = await competitors.getOffer(obs.offer_id);
     if (!offer) {
-      throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
     }
     const listing = await catalog.getListing(tenantId, offer.listing_id);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "PRICE_OBSERVATION_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = priceHistoryToCsv(offer.listing_id, [obs], exportedAt);
@@ -13200,7 +13166,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const range = c.req.query("range") ?? "7d";
     const days = range === "30d" ? 30 : 7;
@@ -13220,7 +13186,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const range = c.req.query("range") ?? "7d";
     const days = range === "30d" ? 30 : 7;
@@ -13237,7 +13203,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const range = c.req.query("range") ?? "7d";
     const days = range === "30d" ? 30 : 7;
@@ -13254,7 +13220,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const range = c.req.query("range") ?? "7d";
     const days = range === "30d" ? 30 : 7;
@@ -13278,7 +13244,7 @@ function createApp(options = {}) {
     const curveDate = c.req.param("curveDate");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const range = c.req.query("range") ?? "7d";
     const days = range === "30d" ? 30 : 7;
@@ -13290,7 +13256,7 @@ function createApp(options = {}) {
     })));
     const point = points.find((p) => p.date === curveDate);
     if (!point) {
-      throw new import_http_exception3.HTTPException(404, {
+      throw new HTTPException3(404, {
         message: "COMPETITOR_CURVE_POINT_NOT_FOUND"
       });
     }
@@ -13307,7 +13273,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const status = await buildListingIngestStatus({ catalog, repricing, listingHealth }, tenantId, listingId);
     if (!status) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = listingIngestStatusToCsv(status, exportedAt);
@@ -13323,7 +13289,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const status = await buildListingIngestStatus({ catalog, repricing, listingHealth }, tenantId, listingId);
     if (!status) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     return c.json(status);
   });
@@ -13341,7 +13307,7 @@ function createApp(options = {}) {
         return c.json({ error: "INGEST_FAILED" }, 503);
       }
       if (String(e).includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -13365,7 +13331,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const event = await flushListingDebounce(repricing, tenantId, listingId);
     return c.json({ event });
@@ -13375,7 +13341,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const limit = Math.min(200, Math.max(1, Number(c.req.query("limit") ?? "100") || 100));
     const items = await repricing.listEvents(tenantId, listingId, limit);
@@ -13393,7 +13359,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const items = await repricing.listEvents(tenantId, listingId);
     return c.json({ items });
@@ -13403,7 +13369,7 @@ function createApp(options = {}) {
     const eventId = c.req.param("eventId");
     const event = await repricing.getEvent(eventId);
     if (!event || event.tenant_id !== tenantId) {
-      throw new import_http_exception3.HTTPException(404, { message: "REPRICING_EVENT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "REPRICING_EVENT_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = repricingEventsToCsv([event], exportedAt);
@@ -13422,7 +13388,7 @@ function createApp(options = {}) {
       return c.json(result);
     } catch (e) {
       if (String(e).includes("EVENT_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "EVENT_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "EVENT_NOT_FOUND" });
       }
       throw e;
     }
@@ -13432,7 +13398,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const view = await buildListingDynamicRepricingRuleView({ catalog, dynamicRules, listingHealth }, tenantId, listingId);
     if (!view) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = dynamicRepricingRuleToCsv(view, exportedAt);
@@ -13448,7 +13414,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const view = await buildListingDynamicRepricingRuleView({ catalog, dynamicRules, listingHealth }, tenantId, listingId);
     if (!view) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     return c.json({
       rule: view.rule,
@@ -13461,7 +13427,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     const rule = await dynamicRules.upsertRule(listingId, {
@@ -13482,11 +13448,11 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     if (!body.natural_language?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "NATURAL_LANGUAGE_REQUIRED" });
+      throw new HTTPException3(400, { message: "NATURAL_LANGUAGE_REQUIRED" });
     }
     const locale = c.get("locale");
     const { draft, explanation, compiler } = await compileRuleViaAdapter(body.natural_language, locale);
@@ -13520,15 +13486,15 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const body = await c.req.json();
     if (!body.compile_id) {
-      throw new import_http_exception3.HTTPException(400, { message: "COMPILE_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "COMPILE_ID_REQUIRED" });
     }
     const compiled = takeCompiledDraft(tenantId, listingId, body.compile_id);
     if (!compiled) {
-      throw new import_http_exception3.HTTPException(404, { message: "COMPILE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "COMPILE_NOT_FOUND" });
     }
     const merged = { ...compiled.draft, ...body.draft };
     const rule = await dynamicRules.upsertRule(listingId, merged);
@@ -13549,7 +13515,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const rule = await dynamicRules.unfreeze(listingId);
     return c.json(rule ?? { listing_id: listingId, frozen: false });
@@ -13559,7 +13525,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const result = await evaluateListingStale(competitors, listingHealth, listingId);
     const stale = await listingHealth.getStale(listingId);
@@ -13582,7 +13548,7 @@ function createApp(options = {}) {
       return c.json(result);
     } catch (e) {
       if (String(e).includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -13593,7 +13559,7 @@ function createApp(options = {}) {
     const shopId = c.req.param("shopId");
     const listingId = LISTING_ID_BY_SHOP[shopId];
     if (!listingId) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHOP_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHOP_NOT_FOUND" });
     }
     const body = await c.req.json().catch(() => ({}));
     try {
@@ -13608,7 +13574,7 @@ function createApp(options = {}) {
       return c.json({ shop_id: shopId, listing_id: listingId, ...result });
     } catch (e) {
       if (String(e).includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -13618,7 +13584,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!Array.isArray(body.listing_ids) || body.listing_ids.length === 0) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_LISTING_IDS" });
+      throw new HTTPException3(400, { message: "INVALID_LISTING_IDS" });
     }
     try {
       const result = await publishListingPriceBatch(catalog, shops2, dynamicRules, publishAdapter, tenantId, body.listing_ids, {
@@ -13629,7 +13595,7 @@ function createApp(options = {}) {
       return c.json(result, status);
     } catch (e) {
       if (String(e).includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       throw e;
     }
@@ -13649,7 +13615,7 @@ function createApp(options = {}) {
       });
     } catch (e) {
       if (String(e).includes("SKU_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       throw e;
     }
@@ -13662,7 +13628,7 @@ function createApp(options = {}) {
       return c.json(queue3);
     } catch (e) {
       if (String(e).includes("SKU_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       throw e;
     }
@@ -13682,7 +13648,7 @@ function createApp(options = {}) {
   app.post("/api/v1/repricing-queue/promote-pending", async (c) => {
     const body = await c.req.json();
     if (!body.version_ids?.length) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_VERSION_IDS" });
+      throw new HTTPException3(400, { message: "INVALID_VERSION_IDS" });
     }
     const result = await promoteVersionsToPending(catalog, body.version_ids);
     return c.json(result);
@@ -13692,12 +13658,12 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const shardTotalRaw = c.req.query("shard_total") ?? "2";
     const shardTotal = Number.parseInt(shardTotalRaw, 10);
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_TOTAL" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const plan = planRepricingShards(tenantId, skuId, shardTotal);
@@ -13714,12 +13680,12 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const shardTotalRaw = c.req.query("shard_total") ?? "2";
     const shardTotal = Number.parseInt(shardTotalRaw, 10);
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_TOTAL" });
     }
     return c.json(planRepricingShards(tenantId, skuId, shardTotal));
   });
@@ -13730,7 +13696,7 @@ function createApp(options = {}) {
     const shardTotal = body.shard_total ?? 2;
     const shardIndex = body.shard_index ?? 0;
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64 || !Number.isFinite(shardIndex) || shardIndex < 0 || shardIndex >= shardTotal) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_PARAMS" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_PARAMS" });
     }
     const result = await runRepricingBatchShard({
       catalog,
@@ -13746,9 +13712,9 @@ function createApp(options = {}) {
     });
     if ("error" in result) {
       if (result.error === "SKU_NOT_FOUND") {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
-      throw new import_http_exception3.HTTPException(400, { message: result.error });
+      throw new HTTPException3(400, { message: result.error });
     }
     return c.json(result);
   });
@@ -13758,7 +13724,7 @@ function createApp(options = {}) {
     const body = await c.req.json().catch(() => ({}));
     const shardTotal = body.shard_total ?? 2;
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_TOTAL" });
     }
     const result = await runRepricingBatchAllShards({
       catalog,
@@ -13772,7 +13738,7 @@ function createApp(options = {}) {
       shardTotal
     });
     if ("error" in result) {
-      throw new import_http_exception3.HTTPException(404, { message: result.error });
+      throw new HTTPException3(404, { message: result.error });
     }
     return c.json(result);
   });
@@ -13781,7 +13747,7 @@ function createApp(options = {}) {
     const body = await c.req.json().catch(() => ({}));
     const shardTotal = body.shard_total ?? 2;
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_TOTAL" });
     }
     const result = await runRepricingBatchForTenant({
       catalog,
@@ -13802,15 +13768,15 @@ function createApp(options = {}) {
     const scope = body.scope ?? "tenant";
     const shardTotal = body.shard_total ?? 2;
     if (!Number.isFinite(shardTotal) || shardTotal < 1 || shardTotal > 64) {
-      throw new import_http_exception3.HTTPException(400, { message: "INVALID_SHARD_TOTAL" });
+      throw new HTTPException3(400, { message: "INVALID_SHARD_TOTAL" });
     }
     if (scope === "sku") {
       if (!body.sku_id?.trim()) {
-        throw new import_http_exception3.HTTPException(400, { message: "SKU_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "SKU_ID_REQUIRED" });
       }
       const sku = await catalog.getSku(tenantId, body.sku_id);
       if (!sku) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
     }
     try {
@@ -13824,7 +13790,7 @@ function createApp(options = {}) {
       return c.json({ job }, 201);
     } catch (e) {
       if (String(e).includes("SKU_ID_REQUIRED")) {
-        throw new import_http_exception3.HTTPException(400, { message: "SKU_ID_REQUIRED" });
+        throw new HTTPException3(400, { message: "SKU_ID_REQUIRED" });
       }
       throw e;
     }
@@ -13870,7 +13836,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const job = await getRepricingBatchJob(tenantId, c.req.param("jobId"));
     if (!job) {
-      throw new import_http_exception3.HTTPException(404, { message: "JOB_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "JOB_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = repricingBatchJobsToCsv([job], exportedAt);
@@ -13885,7 +13851,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const job = await getRepricingBatchJob(tenantId, c.req.param("jobId"));
     if (!job) {
-      throw new import_http_exception3.HTTPException(404, { message: "JOB_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "JOB_NOT_FOUND" });
     }
     return c.json(job);
   });
@@ -13925,7 +13891,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const tpl = getCategoryRuleTemplate(tenantId, c.req.param("categoryId"));
     if (!tpl) {
-      throw new import_http_exception3.HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = categoryRuleTemplatesToCsv([tpl], exportedAt);
@@ -13940,7 +13906,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const tpl = getCategoryRuleTemplate(tenantId, c.req.param("categoryId"));
     if (!tpl) {
-      throw new import_http_exception3.HTTPException(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "CATEGORY_TEMPLATE_NOT_FOUND" });
     }
     return c.json(tpl);
   });
@@ -13948,7 +13914,7 @@ function createApp(options = {}) {
     const tenantId = c.req.param("tenantId");
     const headerTenant = c.get("tenantId");
     if (tenantId !== headerTenant) {
-      throw new import_http_exception3.HTTPException(403, { message: "TENANT_MISMATCH" });
+      throw new HTTPException3(403, { message: "TENANT_MISMATCH" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = sharedFeeTemplatesToCsv(listSharedFeeTemplates(tenantId), exportedAt);
@@ -13963,7 +13929,7 @@ function createApp(options = {}) {
     const tenantId = c.req.param("tenantId");
     const headerTenant = c.get("tenantId");
     if (tenantId !== headerTenant) {
-      throw new import_http_exception3.HTTPException(403, { message: "TENANT_MISMATCH" });
+      throw new HTTPException3(403, { message: "TENANT_MISMATCH" });
     }
     return c.json({ items: listSharedFeeTemplates(tenantId) });
   });
@@ -13972,7 +13938,7 @@ function createApp(options = {}) {
     const templateId = c.req.param("templateId");
     const tpl = getSharedFeeTemplate(tenantId, templateId);
     if (!tpl) {
-      throw new import_http_exception3.HTTPException(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SHARED_FEE_TEMPLATE_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = sharedFeeTemplatesToCsv([tpl], exportedAt);
@@ -14000,11 +13966,11 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const body = await c.req.json();
     if (!body.template_id?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "TEMPLATE_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "TEMPLATE_ID_REQUIRED" });
     }
     const result = await applySharedFeeTemplateToSku(catalog, tenantId, skuId, body.template_id.trim());
     if (!result) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_OR_TEMPLATE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_OR_TEMPLATE_NOT_FOUND" });
     }
     return c.json(result);
   });
@@ -14013,7 +13979,7 @@ function createApp(options = {}) {
     const skuId = c.req.param("skuId");
     const sku = await catalog.getSku(tenantId, skuId);
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     const categoryId = sku.category_id ?? null;
     const template = categoryId ? getCategoryRuleTemplate(tenantId, categoryId) : void 0;
@@ -14030,7 +13996,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const sku = await catalog.getSku(tenantId, c.req.param("skuId"));
     if (!sku) {
-      throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
     }
     if (!sku.category_id) {
       return c.json({ template: null });
@@ -14059,7 +14025,7 @@ function createApp(options = {}) {
     const items = await reconciliationAlerts.listAlerts(tenantId);
     const alert = items.find((a) => a.id === alertId);
     if (!alert) {
-      throw new import_http_exception3.HTTPException(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "RECONCILIATION_ALERT_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = reconciliationAlertsToCsv([alert], exportedAt);
@@ -14097,7 +14063,7 @@ function createApp(options = {}) {
       return c.json(upsertListingSyncSchedule(tenantId, body));
     } catch (e) {
       if (String(e).includes("INVALID_CRON_EXPRESSION")) {
-        throw new import_http_exception3.HTTPException(400, { message: "INVALID_CRON_EXPRESSION" });
+        throw new HTTPException3(400, { message: "INVALID_CRON_EXPRESSION" });
       }
       throw e;
     }
@@ -14138,7 +14104,7 @@ function createApp(options = {}) {
     const jobId = c.req.param("jobId");
     const job = getListingSyncJob(tenantId, jobId);
     if (!job) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_SYNC_JOB_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = listingSyncJobsToCsv([job], exportedAt);
@@ -14159,7 +14125,7 @@ function createApp(options = {}) {
     const force = c.req.query("force") === "true";
     const result = await runDueListingChannelSyncs(catalog, shops2, listingAdapter, tenantId, { force });
     if (result.skipped) {
-      throw new import_http_exception3.HTTPException(409, { message: "SCHEDULE_DISABLED" });
+      throw new HTTPException3(409, { message: "SCHEDULE_DISABLED" });
     }
     return c.json({
       schedule: getListingSyncSchedule(tenantId),
@@ -14181,7 +14147,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     const limit = Math.min(100, Math.max(1, Number(c.req.query("limit") ?? "50") || 50));
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -14199,7 +14165,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     return c.json({
       items: listListingSyncJobs(tenantId, listingId)
@@ -14210,7 +14176,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const body = await c.req.json();
     if (!body.external_ref?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+      throw new HTTPException3(400, { message: "EXTERNAL_REF_REQUIRED" });
     }
     try {
       const result = await runListingChannelSync(catalog, shops2, listingAdapter, tenantId, listingId, body.external_ref.trim());
@@ -14221,7 +14187,7 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       if (msg.includes("AUTH_REQUIRED") || msg.includes("AUTH_EXPIRED")) {
         return c.json({ error: msg.split(":")[0] }, 401);
@@ -14234,7 +14200,7 @@ function createApp(options = {}) {
     const listingId = c.req.param("listingId");
     const body = await c.req.json();
     if (!body.external_ref?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "EXTERNAL_REF_REQUIRED" });
+      throw new HTTPException3(400, { message: "EXTERNAL_REF_REQUIRED" });
     }
     try {
       const result = await reconcileListingChannelPrice(catalog, shops2, listingAdapter, reconciliationAlerts, tenantId, listingId, body);
@@ -14242,7 +14208,7 @@ function createApp(options = {}) {
     } catch (e) {
       const msg = String(e);
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       if (msg.includes("AUTH_REQUIRED") || msg.includes("AUTH_EXPIRED")) {
         return c.json({ error: msg.includes("AUTH_EXPIRED") ? "AUTH_EXPIRED" : "AUTH_REQUIRED" }, 401);
@@ -14267,7 +14233,7 @@ function createApp(options = {}) {
     const toolName = decodeURIComponent(c.req.param("toolName"));
     const tool = getAgentTool(toolName);
     if (!tool) {
-      throw new import_http_exception3.HTTPException(404, { message: "AGENT_TOOL_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "AGENT_TOOL_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = agentToolsToCsv([tool], exportedAt);
@@ -14297,12 +14263,12 @@ function createApp(options = {}) {
   app.get("/api/v1/agent/readiness/checks/export", async (c) => {
     const checkId = c.req.query("check_id")?.trim();
     if (!checkId) {
-      throw new import_http_exception3.HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "CHECK_ID_REQUIRED" });
     }
     const snapshot = evaluateAgentReadiness();
     const check = snapshot.checks.find((ch) => ch.id === checkId);
     if (!check) {
-      throw new import_http_exception3.HTTPException(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "AGENT_READINESS_CHECK_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = agentReadinessToCsv({ ...snapshot, checks: [check] }, exportedAt);
@@ -14331,7 +14297,7 @@ function createApp(options = {}) {
     const status = getProductMilestoneStatus();
     const milestone = status.milestones.find((m) => m.id === milestoneId);
     if (!milestone) {
-      throw new import_http_exception3.HTTPException(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "AGENT_MILESTONE_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = agentMilestonesToCsv({ ...status, milestones: [milestone] }, exportedAt);
@@ -14375,7 +14341,7 @@ function createApp(options = {}) {
   app.get("/api/v1/product/readiness/checks/export", async (c) => {
     const checkId = c.req.query("check_id")?.trim();
     if (!checkId) {
-      throw new import_http_exception3.HTTPException(400, { message: "CHECK_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "CHECK_ID_REQUIRED" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const summary = getProductReadinessSummary();
@@ -14390,7 +14356,7 @@ function createApp(options = {}) {
       } else {
         const p5 = summary.p5.checks.find((ch) => ch.id === checkId);
         if (!p5) {
-          throw new import_http_exception3.HTTPException(404, {
+          throw new HTTPException3(404, {
             message: "PRODUCT_READINESS_CHECK_NOT_FOUND"
           });
         }
@@ -14532,7 +14498,7 @@ function createApp(options = {}) {
       return c.json(schedule);
     } catch (e) {
       if (String(e).includes("INVALID_CRON_EXPRESSION")) {
-        throw new import_http_exception3.HTTPException(400, { message: "INVALID_CRON_EXPRESSION" });
+        throw new HTTPException3(400, { message: "INVALID_CRON_EXPRESSION" });
       }
       throw e;
     }
@@ -14544,7 +14510,7 @@ function createApp(options = {}) {
     const date = c.req.query("date");
     const result = await runDueDigestDispatch({ catalog, reconciliationAlerts, agentAudit }, tenantId, locale, { force, date });
     if (result.skipped) {
-      throw new import_http_exception3.HTTPException(409, { message: "DIGEST_SCHEDULE_DISABLED" });
+      throw new HTTPException3(409, { message: "DIGEST_SCHEDULE_DISABLED" });
     }
     await agentAudit.recordInvocation({
       tenant_id: tenantId,
@@ -14597,7 +14563,7 @@ function createApp(options = {}) {
     const jobId = c.req.param("jobId");
     const dispatch = getDigestDispatch(tenantId, jobId);
     if (!dispatch) {
-      throw new import_http_exception3.HTTPException(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "DIGEST_DISPATCH_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = digestDispatchesToCsv([dispatch], exportedAt);
@@ -14698,7 +14664,7 @@ function createApp(options = {}) {
     const jobId = c.req.param("jobId");
     const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job || job.status !== "dead_letter") {
-      throw new import_http_exception3.HTTPException(404, {
+      throw new HTTPException3(404, {
         message: "DIGEST_DEAD_LETTER_JOB_NOT_FOUND"
       });
     }
@@ -14716,7 +14682,7 @@ function createApp(options = {}) {
     const jobId = c.req.param("jobId");
     const job = await getDigestQueuedJob(tenantId, jobId);
     if (!job) {
-      throw new import_http_exception3.HTTPException(404, { message: "DIGEST_JOB_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "DIGEST_JOB_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = digestQueuedJobsToCsv([job], exportedAt);
@@ -14756,7 +14722,7 @@ function createApp(options = {}) {
     const sessionId = c.req.param("sessionId");
     const session = getCopilotSession(tenantId, sessionId);
     if (!session) {
-      throw new import_http_exception3.HTTPException(404, { message: "SESSION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SESSION_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = copilotSessionToCsv(session, exportedAt);
@@ -14772,7 +14738,7 @@ function createApp(options = {}) {
     const sessionId = c.req.param("sessionId");
     const session = getCopilotSession(tenantId, sessionId);
     if (!session) {
-      throw new import_http_exception3.HTTPException(404, { message: "SESSION_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "SESSION_NOT_FOUND" });
     }
     return c.json(session);
   });
@@ -14781,15 +14747,15 @@ function createApp(options = {}) {
     const sessionId = c.req.param("sessionId");
     const body = await c.req.json();
     if (!body.content?.trim()) {
-      throw new import_http_exception3.HTTPException(400, { message: "CONTENT_REQUIRED" });
+      throw new HTTPException3(400, { message: "CONTENT_REQUIRED" });
     }
     const listingId = body.listing_id ?? getCopilotSession(tenantId, sessionId)?.listing_id ?? null;
     if (!listingId) {
-      throw new import_http_exception3.HTTPException(400, { message: "LISTING_ID_REQUIRED" });
+      throw new HTTPException3(400, { message: "LISTING_ID_REQUIRED" });
     }
     const listing = await catalog.getListing(tenantId, listingId);
     if (!listing) {
-      throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
     }
     try {
       const session = getCopilotSession(tenantId, sessionId);
@@ -14828,7 +14794,7 @@ function createApp(options = {}) {
       });
     } catch (e) {
       if (String(e).includes("SESSION_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "SESSION_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SESSION_NOT_FOUND" });
       }
       throw e;
     }
@@ -14859,7 +14825,7 @@ function createApp(options = {}) {
     const items = await agentAudit.listInvocations(tenantId, 200);
     const row = items.find((a) => a.id === auditId);
     if (!row) {
-      throw new import_http_exception3.HTTPException(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
+      throw new HTTPException3(404, { message: "AGENT_TOOL_AUDIT_NOT_FOUND" });
     }
     const exportedAt = (/* @__PURE__ */ new Date()).toISOString();
     const csv = agentToolAuditToCsv([row], exportedAt);
@@ -14874,7 +14840,7 @@ function createApp(options = {}) {
     const tenantId = c.get("tenantId");
     const body = await c.req.json();
     if (!body.tool) {
-      throw new import_http_exception3.HTTPException(400, { message: "TOOL_REQUIRED" });
+      throw new HTTPException3(400, { message: "TOOL_REQUIRED" });
     }
     try {
       const out = await invokeAgentTool({ catalog, competitors, adjustments, audit: agentAudit }, {
@@ -14889,16 +14855,16 @@ function createApp(options = {}) {
         return c.json({ error: msg.includes("TOOL_NOT_ALLOWED") ? "TOOL_NOT_ALLOWED" : "UNKNOWN_TOOL" }, 400);
       }
       if (msg.includes("SKU_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "SKU_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "SKU_NOT_FOUND" });
       }
       if (msg.includes("LISTING_NOT_FOUND")) {
-        throw new import_http_exception3.HTTPException(404, { message: "LISTING_NOT_FOUND" });
+        throw new HTTPException3(404, { message: "LISTING_NOT_FOUND" });
       }
       if (msg.includes("GUARD_REJECTED")) {
         return c.json({ error: "GUARD_REJECTED" }, 422);
       }
       if (msg.includes("ITEMS_REQUIRED")) {
-        throw new import_http_exception3.HTTPException(400, { message: "ITEMS_REQUIRED" });
+        throw new HTTPException3(400, { message: "ITEMS_REQUIRED" });
       }
       throw e;
     }
@@ -14906,16 +14872,26 @@ function createApp(options = {}) {
   return app;
 }
 
+// api/vercel-serverless-env.ts
+function applyVercelServerlessDefaults() {
+  if (process.env.VERCEL !== "1" || process.env.VERCEL_USE_PG === "1") {
+    return;
+  }
+  process.env.CATALOG_DRIVER = "memory";
+  process.env.AGENT_AUDIT_DRIVER = "memory";
+  process.env.RECONCILIATION_DRIVER = "memory";
+  process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
+  process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+}
+
 // api/handler.ts
 var honoHandler;
 async function handler(req) {
   try {
     if (!honoHandler) {
-      if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
-        process.env.CATALOG_DRIVER = "memory";
-      }
+      applyVercelServerlessDefaults();
       getCatalogRepository();
-      honoHandler = (0, import_vercel.handle)(createApp());
+      honoHandler = handle(createApp());
     }
     return honoHandler(req);
   } catch (error) {
@@ -14926,3 +14902,6 @@ async function handler(req) {
     );
   }
 }
+export {
+  handler as default
+};

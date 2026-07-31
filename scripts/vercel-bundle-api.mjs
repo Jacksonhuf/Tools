@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Bundle the Vercel serverless entry as CommonJS with workspace packages inlined.
- * Vercel treats api/*.js as CJS unless the repo root has "type": "module"; ESM output
- * caused FUNCTION_INVOCATION_FAILED. Heavy runtime deps stay external (hono, pg, redis).
+ * Bundle the Vercel serverless entry as ESM (.mjs) with workspace packages inlined.
+ * Vercel treats api/*.js as CommonJS unless the repo root has "type": "module";
+ * api/index.mjs is always loaded as ESM so `export default` works with hono/vercel.
  */
 import * as esbuild from "esbuild";
 
@@ -17,11 +17,11 @@ const runtimeExternals = [
 
 await esbuild.build({
   entryPoints: ["api/handler.ts"],
-  outfile: "api/index.js",
+  outfile: "api/index.mjs",
   bundle: true,
   platform: "node",
   target: "node20",
-  format: "cjs",
+  format: "esm",
   packages: "bundle",
   external: runtimeExternals,
   logLevel: "info",
@@ -30,8 +30,8 @@ await esbuild.build({
 console.log(
   JSON.stringify({
     ok: true,
-    outfile: "api/index.js",
-    format: "cjs",
+    outfile: "api/index.mjs",
+    format: "esm",
     runtime_externals: runtimeExternals,
   })
 );
