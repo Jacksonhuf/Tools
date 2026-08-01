@@ -457,9 +457,8 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
     const access_token = issueBrowserDemoToken(tenantId);
     if (!access_token) {
-      const enabled = isBrowserDemoAuthEnabled();
       throw new HTTPException(404, {
-        message: enabled
+        message: isBrowserDemoAuthEnabled()
           ? "BROWSER_DEMO_AUTH_MISCONFIGURED"
           : "BROWSER_DEMO_AUTH_DISABLED",
       });

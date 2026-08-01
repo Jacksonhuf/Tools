@@ -1,6 +1,10 @@
 import { resolveJwtClaimExpectations } from "./jwt-claims.js";
 import { signHs256Jwt } from "./oidc-jwt.js";
 
+/** Built-in JWT secret for Vercel in-memory demo only — not for real production. */
+export const VERCEL_DEMO_JWT_SECRET =
+  "mx-pricing-vercel-demo-jwt-secret-replace-me";
+
 export function isBrowserDemoAuthEnabled(): boolean {
   const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "no") return false;
@@ -9,9 +13,18 @@ export function isBrowserDemoAuthEnabled(): boolean {
   return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
 }
 
+export function resolveBrowserDemoJwtSecret(): string | null {
+  const configured = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  if (configured) return configured;
+  if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+    return VERCEL_DEMO_JWT_SECRET;
+  }
+  return null;
+}
+
 export function issueBrowserDemoToken(tenantId: string): string | null {
   if (!isBrowserDemoAuthEnabled()) return null;
-  const secret = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  const secret = resolveBrowserDemoJwtSecret();
   if (!secret) return null;
 
   const claims = resolveJwtClaimExpectations();
