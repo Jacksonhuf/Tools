@@ -15,12 +15,12 @@ const TERMS: GlossaryTerm[] = [
     category: "waterfall_layer",
     labels: {
       en: "Landed cost",
-      "zh-CN": "落地成本",
+      "zh-CN": "进货价",
       "es-MX": "Costo landed",
     },
     descriptions: {
       en: "COGS + freight + duty allocated to the SKU (SDD §6.2).",
-      "zh-CN": "含头程与关税分摊的 SKU 到岸成本（SDD §6.2）。",
+      "zh-CN": "含头程与关税分摊的 SKU 到岸/进货成本（瀑布终点）。",
       "es-MX": "COGS + flete + arancel asignado al SKU (SDD §6.2).",
     },
   },
@@ -71,13 +71,69 @@ const TERMS: GlossaryTerm[] = [
     category: "waterfall_layer",
     labels: {
       en: "List price",
-      "zh-CN": "标价",
+      "zh-CN": "零售价",
       "es-MX": "Precio de lista",
     },
     descriptions: {
       en: "Customer-facing publish price before channel fees display.",
-      "zh-CN": "对外发布价（展示层）。",
+      "zh-CN": "对外零售标价（瀑布起点）。",
       "es-MX": "Precio publicado al cliente.",
+    },
+  },
+  {
+    key: "PLATFORM_COMMISSION",
+    category: "waterfall_layer",
+    labels: {
+      en: "Platform commission",
+      "zh-CN": "平台佣金",
+      "es-MX": "Comisión plataforma",
+    },
+    descriptions: {
+      en: "Marketplace commission as % of list price.",
+      "zh-CN": "平台佣金（占零售价比例）。",
+      "es-MX": "Comisión del marketplace sobre precio de lista.",
+    },
+  },
+  {
+    key: "PAYMENT_FEE",
+    category: "waterfall_layer",
+    labels: {
+      en: "Payment fee",
+      "zh-CN": "支付手续费",
+      "es-MX": "Comisión de pago",
+    },
+    descriptions: {
+      en: "Payment processing fee as % of list price.",
+      "zh-CN": "支付通道手续费（占零售价比例）。",
+      "es-MX": "Comisión de procesamiento de pago.",
+    },
+  },
+  {
+    key: "FULFILLMENT",
+    category: "waterfall_layer",
+    labels: {
+      en: "Fulfillment",
+      "zh-CN": "履约费用",
+      "es-MX": "Logística",
+    },
+    descriptions: {
+      en: "Fixed per-unit fulfillment / logistics fee.",
+      "zh-CN": "单件履约/物流固定费用。",
+      "es-MX": "Tarifa fija de fulfillment por unidad.",
+    },
+  },
+  {
+    key: "MERCHANT_MARGIN",
+    category: "waterfall_layer",
+    labels: {
+      en: "Merchant margin",
+      "zh-CN": "商家毛利",
+      "es-MX": "Margen del vendedor",
+    },
+    descriptions: {
+      en: "Seller profit after fees and landed cost.",
+      "zh-CN": "扣除费用与进货成本后的商家毛利。",
+      "es-MX": "Utilidad del vendedor tras costos y comisiones.",
     },
   },
   {

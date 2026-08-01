@@ -31,7 +31,7 @@ test.describe("Web smoke", () => {
     });
 
     await page.getByTestId("simulate-both").click();
-    await expect(page.getByTestId("waterfall-chart").first()).toBeVisible({
+    await expect(page.getByTestId("waterfall-ladder-chart").first()).toBeVisible({
       timeout: 15_000,
     });
 

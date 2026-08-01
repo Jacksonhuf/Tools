@@ -408,6 +408,7 @@ export function PricingPage() {
                 );
               }}
               layerLabels={layerLabels}
+              waterfallTitle={t("waterfallLadderHint")}
             />
           </Surface>
         )}
@@ -446,6 +447,7 @@ export function PricingPage() {
                 );
               }}
               layerLabels={layerLabels}
+              waterfallTitle={t("waterfallLadderHint")}
             />
           </Surface>
         )}

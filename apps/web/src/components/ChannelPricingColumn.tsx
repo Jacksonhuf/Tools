@@ -1,6 +1,7 @@
 import type { Channel } from "../api/client";
 import { CompetitorCurveMini, type CompetitorCurvePoint } from "./CompetitorCurveMini";
-import { WaterfallChart } from "./WaterfallChart";
+import { WaterfallLadderChart } from "./WaterfallLadderChart";
+import type { WaterfallStep } from "../utils/waterfall";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +10,7 @@ export interface ChannelSimulation {
   publish_price_mxn: number;
   publish_price: { formatted: string };
   waterfall: Array<{ layer_id: string; amount_mxn: number }>;
+  waterfall_steps?: WaterfallStep[];
   guards: string[];
 }
 
@@ -49,6 +51,7 @@ interface Props {
   competitorCurveLabel: string;
   curvePoints?: CompetitorCurvePoint[];
   layerLabels?: Record<string, string>;
+  waterfallTitle?: string;
 }
 
 function formatDelta(
@@ -87,6 +90,7 @@ export function ChannelPricingColumn({
   competitorCurveLabel,
   curvePoints = [],
   layerLabels,
+  waterfallTitle,
 }: Props) {
   const floor =
     channel === "MERCADO_LIBRE"
@@ -152,10 +156,13 @@ export function ChannelPricingColumn({
           <p className="text-3xl font-bold tabular-nums tracking-tight text-primary">
             {simulation.publish_price.formatted}
           </p>
-          <WaterfallChart
-            rows={simulation.waterfall}
+          <WaterfallLadderChart
+            steps={simulation.waterfall_steps}
+            fallbackRows={simulation.waterfall}
+            publishPriceMxn={simulation.publish_price_mxn}
             formatAmount={formatAmount}
             layerLabels={layerLabels}
+            title={waterfallTitle}
           />
           <Separator />
           <h3 className="text-sm font-semibold">{guardsLabel}</h3>

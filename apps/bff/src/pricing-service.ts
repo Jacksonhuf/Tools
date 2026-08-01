@@ -7,6 +7,7 @@ import {
 } from "@mx-pricing/pricing-engine";
 import { formatMoney, type AppLocale } from "@mx-pricing/i18n-format";
 import type { SkuRecord } from "./fixtures.js";
+import { buildPriceWaterfallSteps } from "./pricing-waterfall.js";
 
 type Channel = "MERCADO_LIBRE" | "AMAZON_MX";
 
@@ -105,6 +106,18 @@ export function runSimulate(
   const money = (amount: number) =>
     formatMoney({ locale, currency: "MXN", amount });
 
+  const waterfall_steps = buildPriceWaterfallSteps({
+    publish_price_mxn,
+    landed_cost_mxn: sku.landed_cost_mxn,
+    fee_template: fee,
+    tax_strategy: sku.policy.tax_strategy,
+    iva_rate: sku.policy.iva_rate,
+    target_margin_pct:
+      body.pricing_mode === "cost"
+        ? (body.target_margin_pct ?? sku.policy.target_margin_pct)
+        : undefined,
+  });
+
   return {
     sku_id: sku.id,
     channel,
@@ -114,6 +127,7 @@ export function runSimulate(
     floor_price_mxn: floor,
     floor_price: money(floor),
     waterfall,
+    waterfall_steps,
     guards,
   };
 }
