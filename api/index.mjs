@@ -9875,6 +9875,20 @@ async function resolveAuthPrincipal(token, headerTenantId, driver) {
 
 // apps/bff/dist/browser-demo-auth.js
 var VERCEL_DEMO_JWT_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
+var PLACEHOLDER_SECRETS = new Set([
+  "use-vercel-sensitive-secret",
+  "change-me",
+  "changeme",
+  "please-replace"
+].map((s) => s.toLowerCase()));
+function normalizeSecret(raw) {
+  const value = raw?.trim();
+  if (!value)
+    return null;
+  if (PLACEHOLDER_SECRETS.has(value.toLowerCase()))
+    return null;
+  return value;
+}
 function isBrowserDemoAuthEnabled() {
   const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "no")
@@ -9884,10 +9898,10 @@ function isBrowserDemoAuthEnabled() {
   return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
 }
 function resolveBrowserDemoJwtSecret() {
-  const configured = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
   if (configured)
     return configured;
-  if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+  if (isBrowserDemoAuthEnabled()) {
     return VERCEL_DEMO_JWT_SECRET;
   }
   return null;
@@ -14940,25 +14954,56 @@ function createApp(options = {}) {
   return app;
 }
 
-// api/vercel-serverless-env.ts
-function applyVercelServerlessDefaults() {
-  if (process.env.VERCEL !== "1" || process.env.VERCEL_USE_PG === "1") {
+// apps/bff/src/browser-demo-auth.ts
+var VERCEL_DEMO_JWT_SECRET2 = "mx-pricing-vercel-demo-jwt-secret-replace-me";
+var PLACEHOLDER_SECRETS2 = new Set(
+  [
+    "use-vercel-sensitive-secret",
+    "change-me",
+    "changeme",
+    "please-replace"
+  ].map((s) => s.toLowerCase())
+);
+function normalizeSecret2(raw) {
+  const value = raw?.trim();
+  if (!value) return null;
+  if (PLACEHOLDER_SECRETS2.has(value.toLowerCase())) return null;
+  return value;
+}
+function isBrowserDemoAuthEnabled2() {
+  const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "no") return false;
+  if (raw === "1" || raw === "true" || raw === "yes") return true;
+  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+}
+function applyVercelDemoAuthDefaults() {
+  if (process.env.VERCEL !== "1" || !isBrowserDemoAuthEnabled2()) {
     return;
   }
-  process.env.CATALOG_DRIVER = "memory";
-  process.env.AGENT_AUDIT_DRIVER = "memory";
-  process.env.RECONCILIATION_DRIVER = "memory";
-  process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
-  process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+  if (!normalizeSecret2(process.env.OIDC_JWT_HS256_SECRET)) {
+    process.env.OIDC_JWT_HS256_SECRET = VERCEL_DEMO_JWT_SECRET2;
+  }
   if (!process.env.AUTH_DRIVER?.trim()) {
     process.env.AUTH_DRIVER = "oidc_jwt";
-  }
-  if (!process.env.OIDC_JWT_HS256_SECRET?.trim()) {
-    process.env.OIDC_JWT_HS256_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
   }
   if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
     process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY = "vercel-demo-shop-credential-key!!";
   }
+}
+
+// api/vercel-serverless-env.ts
+function applyVercelServerlessDefaults() {
+  if (process.env.VERCEL !== "1") {
+    return;
+  }
+  if (process.env.VERCEL_USE_PG !== "1") {
+    process.env.CATALOG_DRIVER = "memory";
+    process.env.AGENT_AUDIT_DRIVER = "memory";
+    process.env.RECONCILIATION_DRIVER = "memory";
+    process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
+    process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+  }
+  applyVercelDemoAuthDefaults();
 }
 
 // api/bff-handler.ts
