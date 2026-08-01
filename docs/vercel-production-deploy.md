@@ -99,6 +99,7 @@ See [go-live-checklist.md](./go-live-checklist.md) for full cutover gates.
 | `FUNCTION_INVOCATION_FAILED` on `/api/*` | Redeploy after `npm run build:vercel` (bundles `api/index.mjs` exporting the Hono app). Use `export default app` or `export default { fetch() {} }` — not `export default function`. `vercel.json` rewrites `/api/*` → `/api`; use `curl …/api/v1/ping` for a fast health check. |
 | `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` on many pages | API requests are hitting SPA `index.html`. Ensure root `vercel.json` rewrites `/api/*` before SPA fallback; run BFF locally with `npm run dev:bff` (or use `vite preview` with BFF on :3000). |
 | Build fails with Root Directory error | Clear Root Directory in Vercel settings |
+| GitHub shows **Vercel: Deployment has failed** | Open the failed deployment in Vercel → **Logs**. Common fix: clear **Root Directory** (must be repo root, not `apps/bff`). Demo deploys must not set `VERCEL_USE_PG=1`. Production may stay on an older successful deployment until a new one succeeds. |
 | 401 on all API routes | Set `AUTH_DRIVER=oidc_jwt` and JWT secret; use real Bearer JWT in production |
 | In-memory catalog | Set `DATABASE_URL` in Vercel production env |
 | `production/readiness` not ready | Run `npm run vercel:check-env` locally with same env |

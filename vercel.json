@@ -6,8 +6,6 @@
   "outputDirectory": "apps/web/dist",
   "framework": null,
   "rewrites": [
-    { "source": "/api/v1/ping", "destination": "/api/v1/ping" },
-    { "source": "/api/v1/browser-token", "destination": "/api/v1/browser-token" },
     { "source": "/api/:path*", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
