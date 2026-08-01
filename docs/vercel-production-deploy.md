@@ -10,7 +10,7 @@ Deploy the mx-pricing monorepo (Vite SPA + Hono BFF serverless) to Vercel produc
 | **Framework Preset** | Other |
 | **Build Command** | `npm run build:vercel` (from `vercel.json`) |
 | **Output Directory** | `apps/web/dist` |
-| **Install Command** | `npm ci` |
+| **Install Command** | `npm ci --include=dev` (from `vercel.json`; required so TypeScript/Vite/esbuild devDependencies are available at build time) |
 
 If Root Directory is set to `apps/bff`, builds fail by design (`apps/bff/vercel.json` guard).
 
