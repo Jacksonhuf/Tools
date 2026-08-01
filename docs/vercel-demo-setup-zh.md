@@ -106,9 +106,20 @@ curl -sS https://tools-bff.vercel.app/api/v1/channels/adapters/status \
 | 日志关键词 | 处理 |
 |------------|------|
 | `Root Directory must be the repository root` | **Settings → Build and Deployment → Root Directory** 留空（不要填 `apps/bff`） |
+| **Preview 成功、Production 失败** | 多为 Production 专属环境变量或部署保护：见下方「仅 Production 失败」 |
 | `npm ci` / lockfile | 本地执行 `npm ci` 确认能通过；必要时提交更新后的 `package-lock.json` |
 | `vercel.json` / rewrite | 已移除自引用 rewrite；拉取最新 `main` 后重试 |
 | 环境变量校验 | 演示模式**不要**设 `VERCEL_USE_PG=1`；可暂时删除冲突变量后 Redeploy |
+
+### 2b. 仅 Production 失败（Preview 是绿色）
+
+说明**构建本身没问题**，是 Production 环境配置或提升（promote）阶段失败：
+
+1. **Deployments** 里找一条绿色的 **Preview**（分支 `main`）→ **⋯ → Promote to Production**
+2. 检查 **Settings → Environment Variables → Production** 是否缺少必填项，或存在冲突：
+   - 演示模式：删除 `VERCEL_USE_PG`、`DATABASE_URL`（若不需要真实库）
+   - 若设置了 `DEPLOY_ENV=production`，需补齐 [config/vercel.env.production.example](../config/vercel.env.production.example) 中全部变量，否则部分校验会失败
+3. **Settings → Deployment Protection**：若开启了生产门禁，确认检查项能通过
 
 ### 3. 临时恢复（在修复构建前）
 
