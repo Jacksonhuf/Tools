@@ -9688,7 +9688,7 @@ function isBrowserDemoAuthEnabled() {
     return false;
   if (raw === "1" || raw === "true" || raw === "yes")
     return true;
-  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+  return process.env.VERCEL === "1";
 }
 function resolveOidcHs256Secret() {
   const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
@@ -14981,7 +14981,7 @@ function isBrowserDemoAuthEnabled2() {
   const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "no") return false;
   if (raw === "1" || raw === "true" || raw === "yes") return true;
-  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+  return process.env.VERCEL === "1";
 }
 function applyVercelDemoAuthDefaults() {
   if (process.env.VERCEL !== "1") {
