@@ -10763,7 +10763,7 @@ function createApp(options = {}) {
   }));
   app.use("*", createWafMiddleware());
   app.use("*", async (c, next) => {
-    if (c.req.method === "OPTIONS" || c.req.path === "/health" || c.req.path === "/api/v1/auth/browser-token") {
+    if (c.req.method === "OPTIONS" || c.req.path === "/health" || c.req.path === "/api/v1/browser-token" || c.req.path === "/api/v1/auth/browser-token") {
       await next();
       return;
     }
@@ -10790,7 +10790,7 @@ function createApp(options = {}) {
     service: "mx-pricing-bff",
     catalog: catalog.driver
   }));
-  app.get("/api/v1/auth/browser-token", (c) => {
+  const browserTokenHandler = (c) => {
     const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
     const access_token = issueBrowserDemoToken(tenantId);
     if (!access_token) {
@@ -10803,7 +10803,9 @@ function createApp(options = {}) {
       token_type: "Bearer",
       expires_in: 3600
     });
-  });
+  };
+  app.get("/api/v1/browser-token", browserTokenHandler);
+  app.get("/api/v1/auth/browser-token", browserTokenHandler);
   app.get("/api/v1/auth/status", (c) => c.json({
     ...getAuthStatus(),
     production: evaluateProductionConfig(),

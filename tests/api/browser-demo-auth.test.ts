@@ -35,6 +35,23 @@ describe("browser demo auth", () => {
     expect(res.status).toBe(200);
   });
 
+  it("issues token at /api/v1/browser-token when rewritten to Hono", async () => {
+    process.env.VERCEL = "1";
+    applyVercelServerlessDefaults();
+    const { app } = createTestApp();
+
+    const tokenRes = await app.request("/api/v1/browser-token", {
+      headers: TENANT,
+    });
+    expect(tokenRes.status).toBe(200);
+    const { access_token } = (await tokenRes.json()) as { access_token: string };
+
+    const res = await app.request("/api/v1/channels/adapters/status", {
+      headers: { Authorization: `Bearer ${access_token}`, ...TENANT },
+    });
+    expect(res.status).toBe(200);
+  });
+
   it("returns 404 when browser demo auth is disabled", async () => {
     process.env.BROWSER_DEMO_AUTH = "0";
     process.env.AUTH_DRIVER = "oidc_jwt";

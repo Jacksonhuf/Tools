@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { parseAcceptLanguage, formatMoney, type AppLocale } from "@mx-pricing/i18n-format";
@@ -421,6 +421,7 @@ export function createApp(options: CreateAppOptions = {}) {
     if (
       c.req.method === "OPTIONS" ||
       c.req.path === "/health" ||
+      c.req.path === "/api/v1/browser-token" ||
       c.req.path === "/api/v1/auth/browser-token"
     ) {
       await next();
@@ -453,7 +454,7 @@ export function createApp(options: CreateAppOptions = {}) {
     })
   );
 
-  app.get("/api/v1/auth/browser-token", (c) => {
+  const browserTokenHandler = (c: Context<AppEnv>) => {
     const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
     const access_token = issueBrowserDemoToken(tenantId);
     if (!access_token) {
@@ -468,7 +469,10 @@ export function createApp(options: CreateAppOptions = {}) {
       token_type: "Bearer",
       expires_in: 3600,
     });
-  });
+  };
+
+  app.get("/api/v1/browser-token", browserTokenHandler);
+  app.get("/api/v1/auth/browser-token", browserTokenHandler);
 
   app.get("/api/v1/auth/status", (c) =>
     c.json({
