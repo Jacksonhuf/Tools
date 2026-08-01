@@ -33,7 +33,7 @@ function isBrowserDemoAuthEnabled() {
   const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "no") return false;
   if (raw === "1" || raw === "true" || raw === "yes") return true;
-  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+  return process.env.VERCEL === "1";
 }
 
 function resolveSecret() {
@@ -41,7 +41,7 @@ function resolveSecret() {
   if (configured && !PLACEHOLDERS.has(configured.toLowerCase())) {
     return configured;
   }
-  if (isBrowserDemoAuthEnabled() || process.env.VERCEL === "1") {
+  if (process.env.VERCEL === "1") {
     return DEMO_SECRET;
   }
   return null;

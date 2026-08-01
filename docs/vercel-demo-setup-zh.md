@@ -68,11 +68,11 @@ openssl rand -hex 16
 curl -sS https://tools-bff.vercel.app/api/v1/ping
 
 # 2. 浏览器 Token — 应返回 JSON，含 access_token（不是 404）
-curl -sS https://tools-bff.vercel.app/api/v1/auth/browser-token \
+curl -sS https://tools-bff.vercel.app/api/v1/browser-token \
   -H "X-Tenant-Id: tenant-demo"
 
 # 3. 用 Token 调 API — 应返回 200 JSON（不是 401）
-TOKEN=$(curl -sS https://tools-bff.vercel.app/api/v1/auth/browser-token \
+TOKEN=$(curl -sS https://tools-bff.vercel.app/api/v1/browser-token \
   -H "X-Tenant-Id: tenant-demo" | jq -r .access_token)
 curl -sS https://tools-bff.vercel.app/api/v1/channels/adapters/status \
   -H "Authorization: Bearer $TOKEN" \
@@ -85,7 +85,7 @@ curl -sS https://tools-bff.vercel.app/api/v1/channels/adapters/status \
 
 | 现象 | 处理 |
 |------|------|
-| `browser-token` 返回 `BROWSER_DEMO_AUTH_DISABLED` | 设置 `BROWSER_DEMO_AUTH=1`，并确认**未**设置 `VERCEL_USE_PG=1`；同时必须设置 `OIDC_JWT_HS256_SECRET` |
+| `browser-token` 返回 `BROWSER_DEMO_AUTH_DISABLED` | 确认未设置 `BROWSER_DEMO_AUTH=0`；Vercel 演示部署默认已开启，无需额外变量 |
 | 页面仍 401 | 环境变量改完后是否 **Redeploy**；浏览器清缓存 |
 | `OIDC_JWT_HS256_SECRET` 填什么 | 任意足够长的随机串，用 `openssl rand -hex 32` 生成即可 |
 

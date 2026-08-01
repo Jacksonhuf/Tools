@@ -27,7 +27,7 @@ export async function ensureAuthToken(): Promise<string> {
         authToken = AUTH_LOCAL;
         return authToken;
       }
-      const res = await fetch(apiUrl("/api/v1/auth/browser-token"), {
+      const res = await fetch(apiUrl("/api/v1/browser-token"), {
         headers: { "X-Tenant-Id": TENANT },
       });
       if (!res.ok) {

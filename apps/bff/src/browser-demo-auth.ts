@@ -26,7 +26,7 @@ export function isBrowserDemoAuthEnabled(): boolean {
   if (raw === "0" || raw === "false" || raw === "no") return false;
   if (raw === "1" || raw === "true" || raw === "yes") return true;
   // Vercel in-memory demo deploys (no Postgres cutover).
-  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+  return process.env.VERCEL === "1";
 }
 
 export function resolveOidcHs256Secret(): string | null {
