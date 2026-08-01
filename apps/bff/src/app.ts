@@ -318,7 +318,7 @@ import {
 } from "./repositories/agent-audit-index.js";
 import { getAuthStatus, resolveAuthDriver } from "./auth.js";
 import { resolveAuthPrincipal } from "./auth-principal.js";
-import { issueBrowserDemoToken } from "./browser-demo-auth.js";
+import { issueBrowserDemoToken, isBrowserDemoAuthEnabled } from "./browser-demo-auth.js";
 import { evaluateProductionConfig } from "./production-config.js";
 import { evaluateProductionLlm } from "./production-llm.js";
 import { evaluateGoLiveReadiness } from "./go-live-readiness.js";
@@ -457,7 +457,12 @@ export function createApp(options: CreateAppOptions = {}) {
     const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
     const access_token = issueBrowserDemoToken(tenantId);
     if (!access_token) {
-      throw new HTTPException(404, { message: "BROWSER_DEMO_AUTH_DISABLED" });
+      const enabled = isBrowserDemoAuthEnabled();
+      throw new HTTPException(404, {
+        message: enabled
+          ? "BROWSER_DEMO_AUTH_MISCONFIGURED"
+          : "BROWSER_DEMO_AUTH_DISABLED",
+      });
     }
     return c.json({
       access_token,
