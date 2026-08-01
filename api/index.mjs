@@ -9666,13 +9666,75 @@ async function resolveJwksKey(kid) {
   return first ?? null;
 }
 
+// apps/bff/dist/browser-demo-auth.js
+var VERCEL_DEMO_JWT_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
+var PLACEHOLDER_SECRETS = new Set([
+  "use-vercel-sensitive-secret",
+  "change-me",
+  "changeme",
+  "please-replace"
+].map((s) => s.toLowerCase()));
+function normalizeSecret(raw) {
+  const value = raw?.trim();
+  if (!value)
+    return null;
+  if (PLACEHOLDER_SECRETS.has(value.toLowerCase()))
+    return null;
+  return value;
+}
+function isBrowserDemoAuthEnabled() {
+  const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "no")
+    return false;
+  if (raw === "1" || raw === "true" || raw === "yes")
+    return true;
+  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+}
+function resolveOidcHs256Secret() {
+  const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
+  if (configured)
+    return configured;
+  if (isBrowserDemoAuthEnabled() || process.env.VERCEL === "1") {
+    return VERCEL_DEMO_JWT_SECRET;
+  }
+  return null;
+}
+function resolveBrowserDemoJwtSecret() {
+  if (!isBrowserDemoAuthEnabled())
+    return null;
+  return resolveOidcHs256Secret();
+}
+function issueBrowserDemoToken(tenantId) {
+  if (!isBrowserDemoAuthEnabled())
+    return null;
+  const secret = resolveBrowserDemoJwtSecret();
+  if (!secret)
+    return null;
+  const claims = resolveJwtClaimExpectations();
+  const payload = {
+    sub: "browser-demo-user",
+    tenant_id: tenantId,
+    roles: [
+      "pricing:read",
+      "pricing:write",
+      "channel:admin",
+      "finance:approve"
+    ]
+  };
+  if (claims.issuer)
+    payload.iss = claims.issuer;
+  if (claims.audience)
+    payload.aud = claims.audience;
+  return signHs256Jwt(payload, secret);
+}
+
 // apps/bff/dist/auth-jwt-integration.js
 function isOidcJwtDriver() {
   const key3 = (process.env.AUTH_DRIVER ?? "dev").trim().toLowerCase();
   return key3 === "oidc_jwt" || key3 === "jwt";
 }
 function getJwtAuthConfig() {
-  const secret = process.env.OIDC_JWT_HS256_SECRET?.trim() || null;
+  const secret = resolveOidcHs256Secret();
   const jwksUrl = process.env.OIDC_JWKS_URL?.trim() || null;
   const jwksJson = Boolean(process.env.OIDC_JWKS_JSON?.trim());
   const claims = resolveJwtClaimExpectations();
@@ -9690,6 +9752,8 @@ function jwtDriverReady() {
   const cfg = getJwtAuthConfig();
   if (cfg.hs256_secret_configured)
     return true;
+  if (resolveOidcHs256Secret())
+    return true;
   const staticKeys = getStaticJwksKeys();
   if (staticKeys && staticKeys.size > 0)
     return true;
@@ -9703,7 +9767,7 @@ async function tryValidateJwtBearerAsync(token) {
     return null;
   const header = base64UrlDecodeJson(segments.headerSeg);
   if (header.alg === "HS256") {
-    const secret = process.env.OIDC_JWT_HS256_SECRET?.trim();
+    const secret = resolveOidcHs256Secret();
     if (!secret)
       return null;
     return verifyHs256Jwt(token, secret);
@@ -9725,7 +9789,7 @@ function tryValidateJwtBearer(token) {
   const header = base64UrlDecodeJson(segments.headerSeg);
   if (header.alg !== "HS256")
     return null;
-  const secret = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  const secret = resolveOidcHs256Secret();
   if (!secret)
     return null;
   return verifyHs256Jwt(token, secret);
@@ -9871,63 +9935,6 @@ async function resolveAuthPrincipal(token, headerTenantId, driver) {
     }
   }
   return { ok: false, code: "INVALID_TOKEN" };
-}
-
-// apps/bff/dist/browser-demo-auth.js
-var VERCEL_DEMO_JWT_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
-var PLACEHOLDER_SECRETS = new Set([
-  "use-vercel-sensitive-secret",
-  "change-me",
-  "changeme",
-  "please-replace"
-].map((s) => s.toLowerCase()));
-function normalizeSecret(raw) {
-  const value = raw?.trim();
-  if (!value)
-    return null;
-  if (PLACEHOLDER_SECRETS.has(value.toLowerCase()))
-    return null;
-  return value;
-}
-function isBrowserDemoAuthEnabled() {
-  const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
-  if (raw === "0" || raw === "false" || raw === "no")
-    return false;
-  if (raw === "1" || raw === "true" || raw === "yes")
-    return true;
-  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
-}
-function resolveBrowserDemoJwtSecret() {
-  const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
-  if (configured)
-    return configured;
-  if (isBrowserDemoAuthEnabled()) {
-    return VERCEL_DEMO_JWT_SECRET;
-  }
-  return null;
-}
-function issueBrowserDemoToken(tenantId) {
-  if (!isBrowserDemoAuthEnabled())
-    return null;
-  const secret = resolveBrowserDemoJwtSecret();
-  if (!secret)
-    return null;
-  const claims = resolveJwtClaimExpectations();
-  const payload = {
-    sub: "browser-demo-user",
-    tenant_id: tenantId,
-    roles: [
-      "pricing:read",
-      "pricing:write",
-      "channel:admin",
-      "finance:approve"
-    ]
-  };
-  if (claims.issuer)
-    payload.iss = claims.issuer;
-  if (claims.audience)
-    payload.aud = claims.audience;
-  return signHs256Jwt(payload, secret);
 }
 
 // apps/bff/dist/go-live-readiness.js
@@ -14977,7 +14984,13 @@ function isBrowserDemoAuthEnabled2() {
   return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
 }
 function applyVercelDemoAuthDefaults() {
-  if (process.env.VERCEL !== "1" || !isBrowserDemoAuthEnabled2()) {
+  if (process.env.VERCEL !== "1") {
+    return;
+  }
+  if (!process.env.AUTH_DRIVER?.trim()) {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+  }
+  if (!isBrowserDemoAuthEnabled2()) {
     return;
   }
   if (!normalizeSecret2(process.env.OIDC_JWT_HS256_SECRET)) {
@@ -14996,14 +15009,15 @@ function applyVercelServerlessDefaults() {
   if (process.env.VERCEL !== "1") {
     return;
   }
-  if (process.env.VERCEL_USE_PG !== "1") {
-    process.env.CATALOG_DRIVER = "memory";
-    process.env.AGENT_AUDIT_DRIVER = "memory";
-    process.env.RECONCILIATION_DRIVER = "memory";
-    process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
-    process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
-  }
   applyVercelDemoAuthDefaults();
+  if (process.env.VERCEL_USE_PG === "1") {
+    return;
+  }
+  process.env.CATALOG_DRIVER = "memory";
+  process.env.AGENT_AUDIT_DRIVER = "memory";
+  process.env.RECONCILIATION_DRIVER = "memory";
+  process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
+  process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
 }
 
 // api/bff-handler.ts
