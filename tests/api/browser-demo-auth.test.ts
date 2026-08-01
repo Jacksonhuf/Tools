@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { createTestApp } from "../../apps/bff/src/app.js";
+import { applyVercelServerlessDefaults } from "../../api/vercel-serverless-env.js";
 
 const TENANT = { "X-Tenant-Id": "tenant-demo" };
 const SECRET = "browser-demo-test-secret";
@@ -45,10 +46,9 @@ describe("browser demo auth", () => {
     expect(tokenRes.status).toBe(404);
   });
 
-  it("auto-enables on Vercel in-memory demo deploys", async () => {
+  it("auto-enables on Vercel in-memory demo deploys without explicit JWT secret", async () => {
     process.env.VERCEL = "1";
-    process.env.AUTH_DRIVER = "oidc_jwt";
-    process.env.OIDC_JWT_HS256_SECRET = SECRET;
+    applyVercelServerlessDefaults();
     const { app } = createTestApp();
 
     const tokenRes = await app.request("/api/v1/auth/browser-token", {

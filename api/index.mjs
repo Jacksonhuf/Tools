@@ -9505,6 +9505,10 @@ function validateStandardClaims(payload, expected) {
 }
 
 // apps/bff/dist/oidc-jwt.js
+function base64UrlEncode(data) {
+  const buf = typeof data === "string" ? Buffer.from(data, "utf8") : data;
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
 function base64UrlDecodeJson(segment) {
   const padded = segment.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((segment.length + 3) % 4);
   const json = Buffer.from(padded, "base64").toString("utf8");
@@ -9529,6 +9533,16 @@ function readJwtPayload(payloadSeg, claimExpectations = resolveJwtClaimExpectati
   if (!validateStandardClaims(payload, claimExpectations))
     return null;
   return { sub: payload.sub };
+}
+function signHs256Jwt(payload, secret) {
+  const header = base64UrlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const body = base64UrlEncode(JSON.stringify({
+    ...payload,
+    exp: payload.exp ?? Math.floor(Date.now() / 1e3) + 3600
+  }));
+  const signingInput = `${header}.${body}`;
+  const sig = createHmac("sha256", secret).update(signingInput).digest();
+  return `${signingInput}.${base64UrlEncode(sig)}`;
 }
 function verifyHs256Jwt(token, secret) {
   const segments = decodeJwtSegments(token);
@@ -9857,6 +9871,49 @@ async function resolveAuthPrincipal(token, headerTenantId, driver) {
     }
   }
   return { ok: false, code: "INVALID_TOKEN" };
+}
+
+// apps/bff/dist/browser-demo-auth.js
+var VERCEL_DEMO_JWT_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
+function isBrowserDemoAuthEnabled() {
+  const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
+  if (raw === "0" || raw === "false" || raw === "no")
+    return false;
+  if (raw === "1" || raw === "true" || raw === "yes")
+    return true;
+  return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
+}
+function resolveBrowserDemoJwtSecret() {
+  const configured = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  if (configured)
+    return configured;
+  if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+    return VERCEL_DEMO_JWT_SECRET;
+  }
+  return null;
+}
+function issueBrowserDemoToken(tenantId) {
+  if (!isBrowserDemoAuthEnabled())
+    return null;
+  const secret = resolveBrowserDemoJwtSecret();
+  if (!secret)
+    return null;
+  const claims = resolveJwtClaimExpectations();
+  const payload = {
+    sub: "browser-demo-user",
+    tenant_id: tenantId,
+    roles: [
+      "pricing:read",
+      "pricing:write",
+      "channel:admin",
+      "finance:approve"
+    ]
+  };
+  if (claims.issuer)
+    payload.iss = claims.issuer;
+  if (claims.audience)
+    payload.aud = claims.audience;
+  return signHs256Jwt(payload, secret);
 }
 
 // apps/bff/dist/go-live-readiness.js
@@ -10685,7 +10742,7 @@ function createApp(options = {}) {
   }));
   app.use("*", createWafMiddleware());
   app.use("*", async (c, next) => {
-    if (c.req.method === "OPTIONS" || c.req.path === "/health") {
+    if (c.req.method === "OPTIONS" || c.req.path === "/health" || c.req.path === "/api/v1/auth/browser-token") {
       await next();
       return;
     }
@@ -10712,6 +10769,20 @@ function createApp(options = {}) {
     service: "mx-pricing-bff",
     catalog: catalog.driver
   }));
+  app.get("/api/v1/auth/browser-token", (c) => {
+    const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
+    const access_token = issueBrowserDemoToken(tenantId);
+    if (!access_token) {
+      throw new HTTPException3(404, {
+        message: isBrowserDemoAuthEnabled() ? "BROWSER_DEMO_AUTH_MISCONFIGURED" : "BROWSER_DEMO_AUTH_DISABLED"
+      });
+    }
+    return c.json({
+      access_token,
+      token_type: "Bearer",
+      expires_in: 3600
+    });
+  });
   app.get("/api/v1/auth/status", (c) => c.json({
     ...getAuthStatus(),
     production: evaluateProductionConfig(),
@@ -14879,6 +14950,15 @@ function applyVercelServerlessDefaults() {
   process.env.RECONCILIATION_DRIVER = "memory";
   process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
   process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+  if (!process.env.AUTH_DRIVER?.trim()) {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+  }
+  if (!process.env.OIDC_JWT_HS256_SECRET?.trim()) {
+    process.env.OIDC_JWT_HS256_SECRET = "mx-pricing-vercel-demo-jwt-secret-replace-me";
+  }
+  if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
+    process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY = "vercel-demo-shop-credential-key!!";
+  }
 }
 
 // api/bff-handler.ts

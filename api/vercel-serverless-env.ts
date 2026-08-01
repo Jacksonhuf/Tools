@@ -9,4 +9,16 @@ export function applyVercelServerlessDefaults(): void {
   process.env.RECONCILIATION_DRIVER = "memory";
   process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
   process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+
+  if (!process.env.AUTH_DRIVER?.trim()) {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+  }
+  if (!process.env.OIDC_JWT_HS256_SECRET?.trim()) {
+    process.env.OIDC_JWT_HS256_SECRET =
+      "mx-pricing-vercel-demo-jwt-secret-replace-me";
+  }
+  if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
+    process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY =
+      "vercel-demo-shop-credential-key!!";
+  }
 }
