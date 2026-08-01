@@ -105,6 +105,7 @@ See [go-live-checklist.md](./go-live-checklist.md) for full cutover gates.
 
 ## Related
 
+- [vercel-demo-setup-zh.md](./vercel-demo-setup-zh.md) — **中文：Vercel 演示环境最小配置（解决 401）**
 - [staging-deploy-runbook.md](./staging-deploy-runbook.md)
 - [infra-environments.md](./infra-environments.md)
 - [go-live-checklist.md](./go-live-checklist.md)
