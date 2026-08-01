@@ -6,13 +6,15 @@ export function applyVercelServerlessDefaults(): void {
     return;
   }
 
-  if (process.env.VERCEL_USE_PG !== "1") {
-    process.env.CATALOG_DRIVER = "memory";
-    process.env.AGENT_AUDIT_DRIVER = "memory";
-    process.env.RECONCILIATION_DRIVER = "memory";
-    process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
-    process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
+  applyVercelDemoAuthDefaults();
+
+  if (process.env.VERCEL_USE_PG === "1") {
+    return;
   }
 
-  applyVercelDemoAuthDefaults();
+  process.env.CATALOG_DRIVER = "memory";
+  process.env.AGENT_AUDIT_DRIVER = "memory";
+  process.env.RECONCILIATION_DRIVER = "memory";
+  process.env.REPRICING_DEBOUNCE_DRIVER = "memory";
+  process.env.REPRICING_BATCH_QUEUE_DRIVER = "memory";
 }

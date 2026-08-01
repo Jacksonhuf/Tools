@@ -29,13 +29,18 @@ export function isBrowserDemoAuthEnabled(): boolean {
   return process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1";
 }
 
-export function resolveBrowserDemoJwtSecret(): string | null {
+export function resolveOidcHs256Secret(): string | null {
   const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
   if (configured) return configured;
-  if (isBrowserDemoAuthEnabled()) {
+  if (isBrowserDemoAuthEnabled() || process.env.VERCEL === "1") {
     return VERCEL_DEMO_JWT_SECRET;
   }
   return null;
+}
+
+export function resolveBrowserDemoJwtSecret(): string | null {
+  if (!isBrowserDemoAuthEnabled()) return null;
+  return resolveOidcHs256Secret();
 }
 
 export function issueBrowserDemoToken(tenantId: string): string | null {
@@ -67,7 +72,13 @@ export function issueBrowserDemoToken(tenantId: string): string | null {
 }
 
 export function applyVercelDemoAuthDefaults(): void {
-  if (process.env.VERCEL !== "1" || !isBrowserDemoAuthEnabled()) {
+  if (process.env.VERCEL !== "1") {
+    return;
+  }
+  if (!process.env.AUTH_DRIVER?.trim()) {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+  }
+  if (!isBrowserDemoAuthEnabled()) {
     return;
   }
   if (!normalizeSecret(process.env.OIDC_JWT_HS256_SECRET)) {

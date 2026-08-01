@@ -4,9 +4,9 @@ import {
   verifyRs256Jwt,
   base64UrlDecodeJson,
 } from "./oidc-jwt.js";
-import { getStaticJwksKeys, resolveJwksKey } from "./oidc-jwks.js";
+import { getStaticJwksKeys, resolveJwksKey, getJwksCacheStatus } from "./oidc-jwks.js";
 import { resolveJwtClaimExpectations } from "./jwt-claims.js";
-import { getJwksCacheStatus } from "./oidc-jwks.js";
+import { resolveOidcHs256Secret } from "./browser-demo-auth.js";
 
 export { signHs256Jwt, signRs256Jwt, verifyHs256Jwt, verifyRs256Jwt } from "./oidc-jwt.js";
 
@@ -16,7 +16,7 @@ function isOidcJwtDriver(): boolean {
 }
 
 export function getJwtAuthConfig() {
-  const secret = process.env.OIDC_JWT_HS256_SECRET?.trim() || null;
+  const secret = resolveOidcHs256Secret();
   const jwksUrl = process.env.OIDC_JWKS_URL?.trim() || null;
   const jwksJson = Boolean(process.env.OIDC_JWKS_JSON?.trim());
   const claims = resolveJwtClaimExpectations();
@@ -34,6 +34,7 @@ export function getJwtAuthConfig() {
 export function jwtDriverReady(): boolean {
   const cfg = getJwtAuthConfig();
   if (cfg.hs256_secret_configured) return true;
+  if (resolveOidcHs256Secret()) return true;
   const staticKeys = getStaticJwksKeys();
   if (staticKeys && staticKeys.size > 0) return true;
   return Boolean(cfg.jwks_url);
@@ -50,7 +51,7 @@ export async function tryValidateJwtBearerAsync(
     kid?: string;
   };
   if (header.alg === "HS256") {
-    const secret = process.env.OIDC_JWT_HS256_SECRET?.trim();
+    const secret = resolveOidcHs256Secret();
     if (!secret) return null;
     return verifyHs256Jwt(token, secret);
   }
@@ -68,7 +69,7 @@ export function tryValidateJwtBearer(token: string): { sub: string } | null {
   if (!segments) return null;
   const header = base64UrlDecodeJson(segments.headerSeg) as { alg?: string };
   if (header.alg !== "HS256") return null;
-  const secret = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  const secret = resolveOidcHs256Secret();
   if (!secret) return null;
   return verifyHs256Jwt(token, secret);
 }
