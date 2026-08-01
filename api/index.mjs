@@ -233,6 +233,72 @@ function evaluateCrossChannelSpread(input) {
   };
 }
 
+// apps/bff/dist/pricing-waterfall.js
+var ROUNDING = { type: "NONE", decimals: 2 };
+function round(n) {
+  return roundPrice(n, ROUNDING);
+}
+function buildPriceWaterfallSteps(input) {
+  const P = input.publish_price_mxn;
+  const fee = input.fee_template;
+  let ivaAmount = 0;
+  if (input.tax_strategy === "PRICE_INCLUDES_IVA") {
+    const netBeforeTax = P / (1 + input.iva_rate);
+    ivaAmount = round(P - netBeforeTax);
+  }
+  const commission = round(P * fee.commission_pct_of_price / 100);
+  const payment = round(P * fee.payment_pct_of_price / 100);
+  const fulfillment = round(fee.fulfillment_fixed_mxn);
+  let margin = 0;
+  if (input.target_margin_pct !== void 0) {
+    margin = round(P * input.target_margin_pct / 100);
+  } else {
+    const { implied_margin_pct } = computeCostReverse({
+      landed_cost_mxn: input.landed_cost_mxn,
+      publish_price_mxn: P,
+      fee_template: fee,
+      tax_strategy: input.tax_strategy,
+      iva_rate: input.iva_rate
+    });
+    margin = round(P * implied_margin_pct / 100);
+  }
+  const residual = round(P - ivaAmount - commission - payment - fulfillment - input.landed_cost_mxn);
+  if (Math.abs(residual - margin) > 0.05) {
+    margin = Math.max(0, residual);
+  }
+  const steps = [];
+  let running = P;
+  steps.push({
+    layer_id: "LIST_PRICE",
+    kind: "total",
+    amount_mxn: P,
+    running_total_mxn: P
+  });
+  const pushDecrease = (layer_id, amount) => {
+    if (amount <= 0)
+      return;
+    running = round(running - amount);
+    steps.push({
+      layer_id,
+      kind: "decrease",
+      amount_mxn: amount,
+      running_total_mxn: running
+    });
+  };
+  pushDecrease("IVA_DISPLAY", ivaAmount);
+  pushDecrease("PLATFORM_COMMISSION", commission);
+  pushDecrease("PAYMENT_FEE", payment);
+  pushDecrease("FULFILLMENT", fulfillment);
+  pushDecrease("MERCHANT_MARGIN", margin);
+  steps.push({
+    layer_id: "LANDED",
+    kind: "subtotal",
+    amount_mxn: input.landed_cost_mxn,
+    running_total_mxn: input.landed_cost_mxn
+  });
+  return steps;
+}
+
 // apps/bff/dist/pricing-service.js
 function feeForChannel(sku, channel) {
   return channel === "MERCADO_LIBRE" ? sku.fee_ml : sku.fee_amazon;
@@ -300,6 +366,14 @@ function runSimulate(sku, body, locale) {
   if (guard)
     guards.push(guard);
   const money = (amount) => formatMoney({ locale, currency: "MXN", amount });
+  const waterfall_steps = buildPriceWaterfallSteps({
+    publish_price_mxn,
+    landed_cost_mxn: sku.landed_cost_mxn,
+    fee_template: fee,
+    tax_strategy: sku.policy.tax_strategy,
+    iva_rate: sku.policy.iva_rate,
+    target_margin_pct: body.pricing_mode === "cost" ? body.target_margin_pct ?? sku.policy.target_margin_pct : void 0
+  });
   return {
     sku_id: sku.id,
     channel,
@@ -309,6 +383,7 @@ function runSimulate(sku, body, locale) {
     floor_price_mxn: floor,
     floor_price: money(floor),
     waterfall,
+    waterfall_steps,
     guards
   };
 }
@@ -10468,12 +10543,12 @@ var TERMS = [
     category: "waterfall_layer",
     labels: {
       en: "Landed cost",
-      "zh-CN": "\u843D\u5730\u6210\u672C",
+      "zh-CN": "\u8FDB\u8D27\u4EF7",
       "es-MX": "Costo landed"
     },
     descriptions: {
       en: "COGS + freight + duty allocated to the SKU (SDD \xA76.2).",
-      "zh-CN": "\u542B\u5934\u7A0B\u4E0E\u5173\u7A0E\u5206\u644A\u7684 SKU \u5230\u5CB8\u6210\u672C\uFF08SDD \xA76.2\uFF09\u3002",
+      "zh-CN": "\u542B\u5934\u7A0B\u4E0E\u5173\u7A0E\u5206\u644A\u7684 SKU \u5230\u5CB8/\u8FDB\u8D27\u6210\u672C\uFF08\u7011\u5E03\u7EC8\u70B9\uFF09\u3002",
       "es-MX": "COGS + flete + arancel asignado al SKU (SDD \xA76.2)."
     }
   },
@@ -10524,13 +10599,69 @@ var TERMS = [
     category: "waterfall_layer",
     labels: {
       en: "List price",
-      "zh-CN": "\u6807\u4EF7",
+      "zh-CN": "\u96F6\u552E\u4EF7",
       "es-MX": "Precio de lista"
     },
     descriptions: {
       en: "Customer-facing publish price before channel fees display.",
-      "zh-CN": "\u5BF9\u5916\u53D1\u5E03\u4EF7\uFF08\u5C55\u793A\u5C42\uFF09\u3002",
+      "zh-CN": "\u5BF9\u5916\u96F6\u552E\u6807\u4EF7\uFF08\u7011\u5E03\u8D77\u70B9\uFF09\u3002",
       "es-MX": "Precio publicado al cliente."
+    }
+  },
+  {
+    key: "PLATFORM_COMMISSION",
+    category: "waterfall_layer",
+    labels: {
+      en: "Platform commission",
+      "zh-CN": "\u5E73\u53F0\u4F63\u91D1",
+      "es-MX": "Comisi\xF3n plataforma"
+    },
+    descriptions: {
+      en: "Marketplace commission as % of list price.",
+      "zh-CN": "\u5E73\u53F0\u4F63\u91D1\uFF08\u5360\u96F6\u552E\u4EF7\u6BD4\u4F8B\uFF09\u3002",
+      "es-MX": "Comisi\xF3n del marketplace sobre precio de lista."
+    }
+  },
+  {
+    key: "PAYMENT_FEE",
+    category: "waterfall_layer",
+    labels: {
+      en: "Payment fee",
+      "zh-CN": "\u652F\u4ED8\u624B\u7EED\u8D39",
+      "es-MX": "Comisi\xF3n de pago"
+    },
+    descriptions: {
+      en: "Payment processing fee as % of list price.",
+      "zh-CN": "\u652F\u4ED8\u901A\u9053\u624B\u7EED\u8D39\uFF08\u5360\u96F6\u552E\u4EF7\u6BD4\u4F8B\uFF09\u3002",
+      "es-MX": "Comisi\xF3n de procesamiento de pago."
+    }
+  },
+  {
+    key: "FULFILLMENT",
+    category: "waterfall_layer",
+    labels: {
+      en: "Fulfillment",
+      "zh-CN": "\u5C65\u7EA6\u8D39\u7528",
+      "es-MX": "Log\xEDstica"
+    },
+    descriptions: {
+      en: "Fixed per-unit fulfillment / logistics fee.",
+      "zh-CN": "\u5355\u4EF6\u5C65\u7EA6/\u7269\u6D41\u56FA\u5B9A\u8D39\u7528\u3002",
+      "es-MX": "Tarifa fija de fulfillment por unidad."
+    }
+  },
+  {
+    key: "MERCHANT_MARGIN",
+    category: "waterfall_layer",
+    labels: {
+      en: "Merchant margin",
+      "zh-CN": "\u5546\u5BB6\u6BDB\u5229",
+      "es-MX": "Margen del vendedor"
+    },
+    descriptions: {
+      en: "Seller profit after fees and landed cost.",
+      "zh-CN": "\u6263\u9664\u8D39\u7528\u4E0E\u8FDB\u8D27\u6210\u672C\u540E\u7684\u5546\u5BB6\u6BDB\u5229\u3002",
+      "es-MX": "Utilidad del vendedor tras costos y comisiones."
     }
   },
   {

@@ -123,4 +123,26 @@ describe("simulate guard on low margin", () => {
     const json = (await res.json()) as { guards: string[] };
     expect(json.guards).toContain("BELOW_MIN_MARGIN");
   });
+
+  it("returns waterfall_steps ladder from retail to landed", async () => {
+    const { app } = testApp();
+    const res = await app.request("/api/v1/skus/demo-sku-001/pricing/simulate", {
+      method: "POST",
+      headers: { ...AUTH, ...TENANT, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channel: "MERCADO_LIBRE",
+        pricing_mode: "cost",
+        target_margin_pct: 20,
+      }),
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      waterfall_steps: Array<{ layer_id: string; kind: string }>;
+    };
+    expect(json.waterfall_steps[0].layer_id).toBe("LIST_PRICE");
+    expect(json.waterfall_steps.at(-1)?.layer_id).toBe("LANDED");
+    expect(json.waterfall_steps.some((s) => s.layer_id === "PLATFORM_COMMISSION")).toBe(
+      true
+    );
+  });
 });
