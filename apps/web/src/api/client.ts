@@ -19,7 +19,7 @@ function apiUrl(path: string): string {
 }
 
 function apiFetch(input: string, init?: RequestInit): Promise<Response> {
-  return apiFetch(apiUrl(input), init);
+  return fetch(apiUrl(input), init);
 }
 
 async function parseJsonResponse<T = any>(res: Response): Promise<T> {
@@ -35,7 +35,7 @@ async function parseJsonResponse<T = any>(res: Response): Promise<T> {
       `Expected JSON but got ${contentType || "unknown"}: ${preview}`
     );
   }
-  return parseJsonResponse(res) as Promise<T>;
+  return res.json() as Promise<T>;
 }
 
 export type Channel = keyof typeof LISTING_BY_CHANNEL;
