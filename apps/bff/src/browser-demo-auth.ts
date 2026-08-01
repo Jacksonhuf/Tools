@@ -5,6 +5,22 @@ import { signHs256Jwt } from "./oidc-jwt.js";
 export const VERCEL_DEMO_JWT_SECRET =
   "mx-pricing-vercel-demo-jwt-secret-replace-me";
 
+const PLACEHOLDER_SECRETS = new Set(
+  [
+    "use-vercel-sensitive-secret",
+    "change-me",
+    "changeme",
+    "please-replace",
+  ].map((s) => s.toLowerCase())
+);
+
+function normalizeSecret(raw: string | undefined): string | null {
+  const value = raw?.trim();
+  if (!value) return null;
+  if (PLACEHOLDER_SECRETS.has(value.toLowerCase())) return null;
+  return value;
+}
+
 export function isBrowserDemoAuthEnabled(): boolean {
   const raw = process.env.BROWSER_DEMO_AUTH?.trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "no") return false;
@@ -14,9 +30,9 @@ export function isBrowserDemoAuthEnabled(): boolean {
 }
 
 export function resolveBrowserDemoJwtSecret(): string | null {
-  const configured = process.env.OIDC_JWT_HS256_SECRET?.trim();
+  const configured = normalizeSecret(process.env.OIDC_JWT_HS256_SECRET);
   if (configured) return configured;
-  if (process.env.VERCEL === "1" && process.env.VERCEL_USE_PG !== "1") {
+  if (isBrowserDemoAuthEnabled()) {
     return VERCEL_DEMO_JWT_SECRET;
   }
   return null;
@@ -48,4 +64,20 @@ export function issueBrowserDemoToken(tenantId: string): string | null {
   if (claims.audience) payload.aud = claims.audience;
 
   return signHs256Jwt(payload, secret);
+}
+
+export function applyVercelDemoAuthDefaults(): void {
+  if (process.env.VERCEL !== "1" || !isBrowserDemoAuthEnabled()) {
+    return;
+  }
+  if (!normalizeSecret(process.env.OIDC_JWT_HS256_SECRET)) {
+    process.env.OIDC_JWT_HS256_SECRET = VERCEL_DEMO_JWT_SECRET;
+  }
+  if (!process.env.AUTH_DRIVER?.trim()) {
+    process.env.AUTH_DRIVER = "oidc_jwt";
+  }
+  if (!process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY?.trim()) {
+    process.env.SHOP_CREDENTIAL_ENCRYPTION_KEY =
+      "vercel-demo-shop-credential-key!!";
+  }
 }
