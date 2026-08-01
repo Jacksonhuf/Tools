@@ -107,7 +107,7 @@ curl -sS https://tools-bff.vercel.app/api/v1/channels/adapters/status \
 |------------|------|
 | `Root Directory must be the repository root` | **Settings → Build and Deployment → Root Directory** 留空（不要填 `apps/bff`） |
 | **Preview 成功、Production 失败** | 多为 Production 专属环境变量或部署保护：见下方「仅 Production 失败」 |
-| `npm ci` / lockfile | 本地执行 `npm ci` 确认能通过；必要时提交更新后的 `package-lock.json` |
+| `npm ci` 只装了约 116 个包 / `tsc: command not found` | Production 默认省略 devDependencies。`vercel.json` 已改为 `npm ci --include=dev`；或在 Dashboard **Install Command** 填同样命令 |
 | `vercel.json` / rewrite | 已移除自引用 rewrite；拉取最新 `main` 后重试 |
 | 环境变量校验 | 演示模式**不要**设 `VERCEL_USE_PG=1`；可暂时删除冲突变量后 Redeploy |
 
