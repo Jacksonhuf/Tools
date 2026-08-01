@@ -86,10 +86,44 @@ curl -sS https://tools-bff.vercel.app/api/v1/channels/adapters/status \
 | 现象 | 处理 |
 |------|------|
 | `browser-token` 返回 `BROWSER_DEMO_AUTH_DISABLED` | 确认未设置 `BROWSER_DEMO_AUTH=0`；Vercel 演示部署默认已开启，无需额外变量 |
+| `browser-token` 返回 `BROWSER_DEMO_AUTH_MISCONFIGURED` | 生产部署可能停在旧版本：见下方「部署失败」；或手动设置 `OIDC_JWT_HS256_SECRET` 后 Redeploy |
 | 页面仍 401 | 环境变量改完后是否 **Redeploy**；浏览器清缓存 |
 | `OIDC_JWT_HS256_SECRET` 填什么 | 任意足够长的随机串，用 `openssl rand -hex 32` 生成即可 |
+| **Deployments 显示 Failed** | 见下方「部署失败」 |
 
-## 七、我无法代你操作的部分
+## 七、部署失败（Deployments 红色 Failed）
+
+若 GitHub 推送后 Vercel 部署一直失败，生产环境会**停在旧版本**，新代码（含 401 修复）不会生效。
+
+### 1. 查看构建日志
+
+1. Vercel → 项目 **tools-bff** → **Deployments**
+2. 点击最新一条 **Failed** 部署
+3. 打开 **Building** / **Logs**，记下第一条红色报错
+
+### 2. 常见原因
+
+| 日志关键词 | 处理 |
+|------------|------|
+| `Root Directory must be the repository root` | **Settings → Build and Deployment → Root Directory** 留空（不要填 `apps/bff`） |
+| `npm ci` / lockfile | 本地执行 `npm ci` 确认能通过；必要时提交更新后的 `package-lock.json` |
+| `vercel.json` / rewrite | 已移除自引用 rewrite；拉取最新 `main` 后重试 |
+| 环境变量校验 | 演示模式**不要**设 `VERCEL_USE_PG=1`；可暂时删除冲突变量后 Redeploy |
+
+### 3. 临时恢复（在修复构建前）
+
+在 **Deployments** 中找到最近一次 **Ready** 的绿色部署 → **⋯ → Promote to Production**（或 Redeploy 该版本），并设置：
+
+```
+AUTH_DRIVER=oidc_jwt
+OIDC_JWT_HS256_SECRET=mx-pricing-vercel-demo-jwt-secret-replace-me
+BROWSER_DEMO_AUTH=1
+CORS_ALLOWED_ORIGINS=https://tools-bff.vercel.app
+```
+
+确认**未**设置 `VERCEL_USE_PG=1`。
+
+## 八、我无法代你操作的部分
 
 Cloud Agent **没有**你的 Vercel 账号权限，无法直接在 Dashboard 里替你点保存。请按上文自行添加变量；若你把 Vercel Team 邀请给维护者并自行配置 `VERCEL_TOKEN`，才可通过 CLI 批量导入。
 
