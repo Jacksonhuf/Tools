@@ -318,6 +318,7 @@ import {
 } from "./repositories/agent-audit-index.js";
 import { getAuthStatus, resolveAuthDriver } from "./auth.js";
 import { resolveAuthPrincipal } from "./auth-principal.js";
+import { issueBrowserDemoToken } from "./browser-demo-auth.js";
 import { evaluateProductionConfig } from "./production-config.js";
 import { evaluateProductionLlm } from "./production-llm.js";
 import { evaluateGoLiveReadiness } from "./go-live-readiness.js";
@@ -417,7 +418,11 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use("*", createWafMiddleware());
 
   app.use("*", async (c, next) => {
-    if (c.req.method === "OPTIONS" || c.req.path === "/health") {
+    if (
+      c.req.method === "OPTIONS" ||
+      c.req.path === "/health" ||
+      c.req.path === "/api/v1/auth/browser-token"
+    ) {
       await next();
       return;
     }
@@ -447,6 +452,19 @@ export function createApp(options: CreateAppOptions = {}) {
       catalog: catalog.driver,
     })
   );
+
+  app.get("/api/v1/auth/browser-token", (c) => {
+    const tenantId = c.req.header("X-Tenant-Id")?.trim() || "tenant-demo";
+    const access_token = issueBrowserDemoToken(tenantId);
+    if (!access_token) {
+      throw new HTTPException(404, { message: "BROWSER_DEMO_AUTH_DISABLED" });
+    }
+    return c.json({
+      access_token,
+      token_type: "Bearer",
+      expires_in: 3600,
+    });
+  });
 
   app.get("/api/v1/auth/status", (c) =>
     c.json({

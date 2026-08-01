@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { fetchAuthMe } from "../api/client";
+import { fetchAuthMe, ensureAuthToken } from "../api/client";
 import { AuthContext } from "./AuthContext";
 import { DEFAULT_PERMISSIONS, type AuthPrincipalView } from "./types";
 
@@ -18,7 +18,8 @@ export function AuthProvider({
   });
 
   useEffect(() => {
-    void fetchAuthMe(locale)
+    void ensureAuthToken()
+      .then(() => fetchAuthMe(locale))
       .then(setPrincipal)
       .catch(() => {
         setPrincipal({
