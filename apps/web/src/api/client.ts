@@ -5,11 +5,41 @@ const LISTING_BY_CHANNEL = {
   AMAZON_MX: "listing-amz-001",
 } as const;
 
-const AUTH = "dev-token";
+const AUTH_LOCAL = "dev-token";
 const TENANT = "tenant-demo";
 
 /** Optional override when API is on another origin (e.g. local BFF). */
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+
+let authToken = import.meta.env.DEV ? AUTH_LOCAL : "";
+let authTokenPromise: Promise<string> | undefined;
+
+export async function ensureAuthToken(): Promise<string> {
+  if (authToken) return authToken;
+  if (!authTokenPromise) {
+    authTokenPromise = (async () => {
+      const fromEnv = import.meta.env.VITE_API_BEARER_TOKEN?.trim();
+      if (fromEnv) {
+        authToken = fromEnv;
+        return authToken;
+      }
+      if (import.meta.env.DEV) {
+        authToken = AUTH_LOCAL;
+        return authToken;
+      }
+      const res = await fetch(apiUrl("/api/v1/auth/browser-token"), {
+        headers: { "X-Tenant-Id": TENANT },
+      });
+      if (!res.ok) {
+        throw new Error(`browser-token ${res.status}`);
+      }
+      const body = (await res.json()) as { access_token: string };
+      authToken = body.access_token;
+      return authToken;
+    })();
+  }
+  return authTokenPromise;
+}
 
 function apiUrl(path: string): string {
   if (path.startsWith("http://") || path.startsWith("https://")) {
@@ -19,7 +49,14 @@ function apiUrl(path: string): string {
 }
 
 function apiFetch(input: string, init?: RequestInit): Promise<Response> {
-  return fetch(apiUrl(input), init);
+  return ensureAuthToken().then((token) => {
+    const merged = new Headers(init?.headers);
+    merged.set("Authorization", `Bearer ${token}`);
+    if (!merged.has("X-Tenant-Id")) {
+      merged.set("X-Tenant-Id", TENANT);
+    }
+    return fetch(apiUrl(input), { ...init, headers: merged });
+  });
 }
 
 async function parseJsonResponse<T = any>(res: Response): Promise<T> {
@@ -42,7 +79,6 @@ export type Channel = keyof typeof LISTING_BY_CHANNEL;
 
 function headers(locale: string): HeadersInit {
   return {
-    Authorization: `Bearer ${AUTH}`,
     "X-Tenant-Id": TENANT,
     "Accept-Language": locale,
     "Content-Type": "application/json",
